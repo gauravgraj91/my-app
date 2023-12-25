@@ -1,0 +1,19 @@
+.navBar {
+    display: flex; 
+    padding-top: 1rem; 
+    padding-bottom: 1rem; 
+    padding-right: 2rem; 
+    margin-top: 0.5rem; 
+    margin-bottom: 0.5rem; 
+    margin-right: 1.5rem; 
+    justify-content: space-between; 
+    align-items: center; 
+    font-size: 1rem;
+    line-height: 1.5rem; 
+    font-weight: 500;
+  }
+
+.outlined-basic{
+    background-color: white;
+    padding: 1rem;
+    }
