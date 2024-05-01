@@ -2,18 +2,18 @@ import React from 'react';
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import { DataGrid } from '@mui/x-data-grid';
+import { responsiveFontSizes } from '@mui/material';
 
 const Shop = () => {
 
   const columns = [
-    { field: 'id', headerName: 'ID', width: 70 },
-    { field: 'firstName', headerName: 'First name', width: 130 },
-    { field: 'lastName', headerName: 'Last name', width: 130 },
-    {
-      field: 'age',
-      headerName: 'Age',
-      type: 'number',
-      width: 90,
+    { field: 'id', headerName: 'ID', width: 70, sortable: false },
+    { field: 'productName', headerName: 'Product Name', width: 150 },
+    { field: 'MRP', headerName: 'MRP', width: 130, type: 'number' },
+    { field: 'purchasePrice', headerName: 'Purchase Price', type: 'number', width: 150},
+    { field: 'quantity', headerName: 'Quantity', type: 'number', width: 100},
+    { field: 'perUnitPrice', headerName: 'Unit Price', type: 'number', width: 100},
+    { field: 'totalMargin', headerName: 'Total Margin', type: 'number', width: 100,
     },
     {
       field: 'fullName',
@@ -22,23 +22,27 @@ const Shop = () => {
       sortable: false,
       width: 160,
       valueGetter: (params) =>
-        `${params.row.firstName || ''} ${params.row.lastName || ''}`,
+        `${params.row.productName || ''} ${params.row.MRP || '' } ${params.row.MRP || '' } ${params.row.purchasePrice || '' } ${params.row.quantity || '' } ${params.row.perUnitPrice || '' } ${params.row.totalMargin || '' }`,
     },
   ];
   
   const rows = [
-    { id: 1, lastName: 'Snow', firstName: 'Jon', age: 35 }
+    { id: 1, productName: 'Product 1', MRP: 100, purchasePrice: 50, quantity: 10, perUnitPrice: 5, totalMargin: 50},
   ];
 
   return (
     <div>
-      <div>
+      <div style={{ padding: '0 16px'}}>
         <TextField 
-          label="Enter Product Name..." 
+          style={{ padding: '0 16px'}}
+          size="small"
+          label="Enter Product Name" 
           variant="outlined" 
         />
         <TextField 
-          label="Enter MRP of the Product..." 
+          style={{ padding: '0 16px'}}
+          size="small"
+          label="Enter MRP" 
           variant="outlined" 
         />
         <Button variant="contained">Save</Button>
@@ -49,10 +53,10 @@ const Shop = () => {
         columns={columns}
         initialState={{
           pagination: {
-            paginationModel: { page: 0, pageSize: 5 },
+            paginationModel: { page: 10, pageSize: 5 },
           },
         }}
-        pageSizeOptions={[5, 10]}
+        pageSizeOptions={[10, 50]}
         checkboxSelection
       />
         </div>
