@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Shop from "./shop";
+import PriceList from "./PriceList";
 
 const TodoList = () => {
   const [todos, setTodos] = useState([]);
@@ -46,11 +47,11 @@ const TodoList = () => {
   };
 
   const handleSaveEdit = () => {
-    setTasks((previousTodos) =>
-    previousTodos.map((todo) =>
-        todo.id === editableTaskId ? { ...todo, task: taskInput } : todo
-      )
-    );
+    setTodos((previousTodos) =>
+      previousTodos.map((todo) =>
+          todo.id === editableTaskId ? { ...todo, task: taskInput } : todo
+        )
+      );
     setEditableTaskId(null);
     setTaskInput('');
   };
@@ -79,6 +80,7 @@ const TodoList = () => {
             <Tab label="Personal" />
             <Tab label="Office" />
             <Tab label="Shop" />
+            <Tab label="Price List" />
           </Tabs>
         </div>
       </div>
@@ -115,40 +117,38 @@ const TodoList = () => {
           </Button>
           )}
           <div>
-            <p>{todos.text}</p>
-            <p className="text-xs text-gray-500">{todos.createdAt}</p>
-          </div>
-          <div>
             {todos.map((todo) => (
-              <div key={todo.id}>
-                <Stack direction="row">
+              <div key={todo.id} style={{ marginBottom: "0" }}>
+                <Stack direction="row" spacing={1}>
                   <input
                     type="checkbox"
                     checked={todo.isCompleted}
                     onClick={() => handleToggleTaskCompletion(todo.id)}
                   />
                   {todo.task}
-                  <p style={{ fontSize: "12px" }}>{todo.createdAt}</p>
-                  
                   <Button
                     variant="outlined"
-                    onClick={() => handleDeleteTask(todo.id)}
-                    sx={{ height: "35px" }}>
-                    Delete
+                    size="small"
+                    onClick={() => handleEditTask(todo.id)}
+                    sx={{ height: "35px", minWidth: "70px" }}>
+                    Edit
                   </Button>
                   <Button
                     variant="contained"
-                    onClick={() => handleEditTask(todo.id)}
-                    sx={{ height: "35px" }}>
-                    Edit
+                    size="small"
+                    onClick={() => handleDeleteTask(todo.id)}
+                    sx={{ height: "35px", minWidth: "70px", color: 'red', borderColor: 'red' }}>
+                    Delete
                   </Button>
                 </Stack>
+                <p style={{ fontSize: "10px", color: "gray", margin: "4px 0" }}>{todo.createdAt}</p>
               </div>
             ))}
           </div>
         </div>
       )}
       {tab === 3 && <Shop />}
+      {tab === 4 && <PriceList />}
     </div>
   );
 };
