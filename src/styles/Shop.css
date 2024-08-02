@@ -1,0 +1,110 @@
+  .dashboard {
+    padding: 1rem;
+  }
+  
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .dashboard-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  .dark-mode-toggle {
+    padding: 0.5rem;
+    border-radius: 9999px;
+    background-color: #e5e7eb;
+  }
+  
+  .chart-container {
+    margin-bottom: 2rem;
+    height: 16rem;
+  }
+  
+  .button-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .add-button {
+    background-color: #10b981;
+    color: white;
+    font-weight: bold;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    margin-right: 0.5rem;
+  }
+  
+  .save-button {
+    background-color: #3b82f6;
+    color: white;
+    font-weight: bold;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    display: flex;
+    align-items: center;
+  }
+  
+  .dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .dashboard-table th,
+  .dashboard-table td {
+    border: 1px solid #e5e7eb;
+    padding: 0.5rem;
+  }
+  
+  .dashboard-table th {
+    background-color: #f3f4f6;
+  }
+  
+  .dashboard-table tr:hover {
+    background-color: #f9fafb;
+  }
+  
+  /* Dark mode styles */
+  .dark {
+    background-color: #1f2937;
+    color: white;
+  }
+  
+  .dark .dark-mode-toggle {
+    background-color: #4b5563;
+  }
+  
+  .dark .dashboard-table th {
+    background-color: #374151;
+  }
+  
+  .dark .dashboard-table tr:hover {
+    background-color: #374151;
+  }
+  
+  .dark .dashboard-table th,
+  .dark .dashboard-table td {
+    border-color: #4b5563;
+  }
+  
+  .editable-cell {
+    cursor: pointer;
+  }
+  
+  .editable-input {
+    width: 100%;
+    padding: 0.25rem;
+    background-color: white;
+    color: black;
+  }
+  
+  .dark .editable-input {
+    background-color: #4b5563;
+    color: white;
+  }
