@@ -4,6 +4,7 @@ import { responsiveFontSizes } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Moon, Sun, Check } from 'lucide-react';
+import './styles/Shop.css';
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"]
 
@@ -228,7 +229,7 @@ const Shop = () => {
           onClick={handleAddRow}
           className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-2"
         >
-          Add Row
+          Add Product
         </Button>
         <Button variant="contained" color="success"
           onClick={handleSave}
@@ -270,7 +271,7 @@ const Shop = () => {
                   className="w-full bg-transparent"
                 />
               </td>
-              <td className="border p-2">
+              <td dir="ltr" className="border-s-4 p-2">
                 {renderEditableCell(row, "productName")}
               </td>
               <td className="border p-2">
