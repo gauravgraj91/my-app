@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Shop from "./shop";
+import ShopTransactions from "./shopTransactions";
 import PriceList from "./PriceList";
 
 const TodoList = () => {
@@ -79,7 +80,8 @@ const TodoList = () => {
             <Tab label="Home" />
             <Tab label="Personal" />
             <Tab label="Office" />
-            <Tab label="Shop" />
+            <Tab label="Shop Bills" />
+            <Tab label="Shop Transactions" />
             <Tab label="Price List" />
           </Tabs>
         </div>
@@ -148,7 +150,8 @@ const TodoList = () => {
         </div>
       )}
       {tab === 3 && <Shop />}
-      {tab === 4 && <PriceList />}
+      {tab === 4 && <ShopTransactions />}
+      {tab === 5 && <PriceList />}
     </div>
   );
 };

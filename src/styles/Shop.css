@@ -12,6 +12,8 @@
   .dashboard-title {
     font-size: 1.5rem;
     font-weight: bold;
+    text-align: center;
+    flex-grow: 1;
   }
   
   .dark-mode-toggle {

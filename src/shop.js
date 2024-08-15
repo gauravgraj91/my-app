@@ -185,17 +185,13 @@ const Shop = () => {
         darkMode ? "dark bg-gray-800 text-white" : "bg-white text-black"
       }`}
     >
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Shop Dashboard</h1>
+      <div className="header-container">
+        <h1 className="dashboard-title">Shop Dashboard</h1>
         <Button
           onClick={() => setDarkMode(!darkMode)}
-          className="p-2 rounded-full bg-gray-200 dark:bg-gray-700"
+          className="dark-mode-toggle"
         >
-          {darkMode ? (
-            <Sun className="h-5 w-5" />
-          ) : (
-            <Moon className="h-5 w-5" />
-          )}
+          {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </Button>
       </div>
 
@@ -224,21 +220,19 @@ const Shop = () => {
         </ResponsiveContainer>
       </div>
 
-      <div className="flex justify-end items-center mb-4">
+      <div className="button-container">
         <Button variant="contained"
           onClick={handleAddRow}
-          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-2"
+          className="add-button"
         >
           Add Product
         </Button>
         <Button variant="contained" color="success"
           onClick={handleSave}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center"
+          className="save-button"
         >
           Save
-          {showSaveAnimation && (
-            <Check className="ml-2 h-5 w-5 text-green-300" />
-          )}
+          {showSaveAnimation && <Check className="ml-2 h-5 w-5 text-green-300" />}
         </Button>
       </div>
 
