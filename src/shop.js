@@ -179,6 +179,18 @@ const Shop = () => {
     }
   }
 
+  const calculateTotalAmount = () => {
+    return data.reduce((total, item) => total + item.totalAmount, 0);
+  };
+
+  const calculateTotalProfit = () => {
+    return data.reduce((total, item) => total + (item.profitPerPiece * item.totalQuantity), 0);
+  };
+
+  const calculateProfitPerPiece = (mrp, pricePerPiece) => {
+    return (mrp - pricePerPiece).toFixed(2);
+  };
+
   return (
     <div
       className={`p-4 ${
@@ -238,15 +250,16 @@ const Shop = () => {
 
       <table className="w-full border-collapse">
         <thead>
-          <tr className="bg-gray-200 dark:bg-gray-700">
+          <tr className="bg-blue-200 dark:bg-gray-700">
             <th className="border p-2">Bill Number</th>
             <th className="border p-2">Date</th>
             <th className="border p-2">Product Name</th>
             <th className="border p-2">MRP</th>
-            <th className="border p-2">Total Quantity</th>
-            <th className="border p-2">Total Amount</th>
-            <th className="border p-2">Price per Piece</th>
-            <th className="border p-2">Profit per Piece</th>
+            <th className="border p-2">Qty / Units</th>
+            <th className="border p-2">Nett Amount</th>
+            <th className="border p-2">Price per Unit</th>
+            <th className="border p-2">Profit per Unit</th>
+            <th className="border p-2">Total Profit</th>
           </tr>
         </thead>
         <tbody>
@@ -265,7 +278,7 @@ const Shop = () => {
                   className="w-full bg-transparent"
                 />
               </td>
-              <td dir="ltr" className="border-s-4 p-2">
+              <td dir="ltr" className="border p-2">
                 {renderEditableCell(row, "productName")}
               </td>
               <td className="border p-2">
@@ -281,11 +294,22 @@ const Shop = () => {
                 {formatCurrency(row.pricePerPiece)}
               </td>
               <td className="border p-2">
-                {formatCurrency(row.profitPerPiece)}
+                {formatCurrency(calculateProfitPerPiece(row.mrp, row.pricePerPiece))}
+              </td>
+              <td className="border p-2">
+                {formatCurrency(calculateProfitPerPiece(row.mrp, row.pricePerPiece) * row.totalQuantity)}
               </td>
             </tr>
           ))}
         </tbody>
+        <tfoot>
+          <tr className="bg-blue-200 dark:bg-gray-700">
+            <td className="border p-2" colSpan="5">Total</td>
+            <td className="border p-2">{formatCurrency(calculateTotalAmount())}</td>
+            <td className="border p-2" colSpan="2"></td>
+            <td className="border p-2">{formatCurrency(calculateTotalProfit())}</td>
+          </tr>
+        </tfoot>
       </table>
     </div>
   )
