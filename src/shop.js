@@ -49,11 +49,13 @@ const Shop = () => {
   const [editingCell, setEditingCell] = useState(null)
   const [tempEditValue, setTempEditValue] = useState("")
   const [pieChartData, setPieChartData] = useState([])
+  const [profitPieChartData, setProfitPieChartData] = useState([])
   const [darkMode, setDarkMode] = useState(false)
   const [showSaveAnimation, setShowSaveAnimation] = useState(false)
 
   useEffect(() => {
     updatePieChartData()
+    updateProfitPieChartData()
   }, [data])
 
   useEffect(() => {
@@ -67,6 +69,16 @@ const Shop = () => {
     }))
     setPieChartData(newPieChartData)
   }
+
+  const updateProfitPieChartData = () => {
+    const totalNettAmount = calculateTotalAmount();
+    const totalProfit = calculateTotalProfit();
+    const newProfitPieChartData = [
+      { name: 'Nett Amount', value: totalNettAmount - totalProfit },
+      { name: 'Total Profit', value: totalProfit }
+    ];
+    setProfitPieChartData(newProfitPieChartData);
+  };
 
   const handleSave = () => {
     console.log("Saving data:", data)
@@ -82,12 +94,10 @@ const Shop = () => {
           if (field === "totalAmount" || field === "totalQuantity") {
             updatedItem.pricePerPiece =
               updatedItem.totalQuantity > 0
-                ? (updatedItem.totalAmount / updatedItem.totalQuantity).toFixed(
-                    2
-                  )
+                ? (updatedItem.totalAmount / updatedItem.totalQuantity).toFixed(2)
                 : 0
           }
-          if (field === "mrp" || field === "pricePerPiece") {
+          if (field === "mrp" || field === "pricePerPiece" || field === "totalAmount" || field === "totalQuantity") {
             updatedItem.profitPerPiece = (
               updatedItem.mrp - updatedItem.pricePerPiece
             ).toFixed(2)
@@ -192,44 +202,64 @@ const Shop = () => {
   };
 
   return (
-    <div
-      className={`p-4 ${
-        darkMode ? "dark bg-gray-800 text-white" : "bg-white text-black"
-      }`}
-    >
-      <div className="header-container">
+    <div className={`p-4 relative ${
+      darkMode ? "dark bg-gray-800 text-white" : "bg-white text-black"
+    }`}>
+      <div className="header-container flex justify-between items-center">
         <h1 className="dashboard-title">Shop Dashboard</h1>
         <Button
           onClick={() => setDarkMode(!darkMode)}
-          className="dark-mode-toggle"
+          className="z-10"
         >
-          {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          {darkMode ? <Sun className="h-5 w-5 text-white" /> : <Moon className="h-5 w-5 text-black" />}
         </Button>
       </div>
 
-      <div className="mb-8 h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={pieChartData}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              outerRadius={80}
-              fill="#8884d8"
-              dataKey="value"
-            >
-              {pieChartData.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={COLORS[index % COLORS.length]}
-                />
-              ))}
-            </Pie>
-            <Tooltip />
-            <Legend />
-          </PieChart>
-        </ResponsiveContainer>
+      <div className="flex mb-8 h-64">
+        <div className="w-1/2 pr-2">
+          <h2 className="text-center mb-2">Product Sales Distribution</h2>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={pieChartData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {pieChartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="w-1/2 pl-2">
+          <h2 className="text-center mb-2">Nett Amount vs Total Profit</h2>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={profitPieChartData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {profitPieChartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       <div className="button-container">
@@ -248,69 +278,71 @@ const Shop = () => {
         </Button>
       </div>
 
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="bg-blue-200 dark:bg-gray-700">
-            <th className="border p-2">Bill Number</th>
-            <th className="border p-2">Date</th>
-            <th className="border p-2">Product Name</th>
-            <th className="border p-2">MRP</th>
-            <th className="border p-2">Qty / Units</th>
-            <th className="border p-2">Nett Amount</th>
-            <th className="border p-2">Price per Unit</th>
-            <th className="border p-2">Profit per Unit</th>
-            <th className="border p-2">Total Profit</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map(row => (
-            <tr
-              key={row.id}
-              className="hover:bg-gray-100 dark:hover:bg-gray-600"
-            >
-              <td className="border p-2">{row.billNumber}</td>
-              <td className="border p-2">
-                <input
-                  type="date"
-                  value={row.date}
-                  max={new Date().toISOString().split("T")[0]}
-                  onChange={e => handleCellEdit(row.id, "date", e.target.value)}
-                  className="w-full bg-transparent"
-                />
-              </td>
-              <td dir="ltr" className="border p-2">
-                {renderEditableCell(row, "productName")}
-              </td>
-              <td className="border p-2">
-                {renderEditableCell(row, "mrp", "number")}
-              </td>
-              <td className="border p-2">
-                {renderEditableCell(row, "totalQuantity", "number")}
-              </td>
-              <td className="border p-2">
-                {renderEditableCell(row, "totalAmount", "number")}
-              </td>
-              <td className="border p-2">
-                {formatCurrency(row.pricePerPiece)}
-              </td>
-              <td className="border p-2">
-                {formatCurrency(calculateProfitPerPiece(row.mrp, row.pricePerPiece))}
-              </td>
-              <td className="border p-2">
-                {formatCurrency(calculateProfitPerPiece(row.mrp, row.pricePerPiece) * row.totalQuantity)}
-              </td>
+      <div className="relative">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-blue-500 text-white">
+              <th className="border p-2">Bill Number</th>
+              <th className="border p-2">Date</th>
+              <th className="border p-2">Product Name</th>
+              <th className="border p-2">MRP</th>
+              <th className="border p-2">Qty / Units</th>
+              <th className="border p-2">Nett Amount</th>
+              <th className="border p-2">Price per Unit</th>
+              <th className="border p-2">Profit per Unit</th>
+              <th className="border p-2">Total Profit</th>
             </tr>
-          ))}
-        </tbody>
-        <tfoot>
-          <tr className="bg-blue-200 dark:bg-gray-700">
-            <td className="border p-2" colSpan="5">Total</td>
-            <td className="border p-2">{formatCurrency(calculateTotalAmount())}</td>
-            <td className="border p-2" colSpan="2"></td>
-            <td className="border p-2">{formatCurrency(calculateTotalProfit())}</td>
-          </tr>
-        </tfoot>
-      </table>
+          </thead>
+          <tbody>
+            {data.map(row => (
+              <tr
+                key={row.id}
+                className="hover:bg-gray-100 dark:hover:bg-gray-600"
+              >
+                <td className="border p-2">{row.billNumber}</td>
+                <td className="border p-2">
+                  <input
+                    type="date"
+                    value={row.date}
+                    max={new Date().toISOString().split("T")[0]}
+                    onChange={e => handleCellEdit(row.id, "date", e.target.value)}
+                    className="w-full bg-transparent"
+                  />
+                </td>
+                <td dir="ltr" className="border p-2">
+                  {renderEditableCell(row, "productName")}
+                </td>
+                <td className="border p-2">
+                  {renderEditableCell(row, "mrp", "number")}
+                </td>
+                <td className="border p-2">
+                  {renderEditableCell(row, "totalQuantity", "number")}
+                </td>
+                <td className="border p-2">
+                  {renderEditableCell(row, "totalAmount", "number")}
+                </td>
+                <td className="border p-2">
+                  {formatCurrency(row.pricePerPiece)}
+                </td>
+                <td className="border p-2">
+                  {formatCurrency(row.profitPerPiece)}
+                </td>
+                <td className="border p-2">
+                  {formatCurrency(row.profitPerPiece * row.totalQuantity)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr className="bg-blue-500 text-white">
+              <td className="border p-2" colSpan="5">Total</td>
+              <td className="border p-2">{formatCurrency(calculateTotalAmount())}</td>
+              <td className="border p-2" colSpan="2"></td>
+              <td className="border p-2">{formatCurrency(calculateTotalProfit())}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
     </div>
   )
 }
