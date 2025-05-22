@@ -3,7 +3,7 @@ import TextField from "@mui/material/TextField";
 import { responsiveFontSizes } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Moon, Sun, Check } from 'lucide-react';
+import { Moon, Sun, Check, Trash2 } from 'lucide-react';
 import './styles/Shop.css';
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"]
@@ -134,6 +134,10 @@ const Shop = () => {
     setData([...data, newRow])
   }
 
+  const handleDeleteRow = (id) => {
+    setData(prevData => prevData.filter(item => item.id !== id));
+  };
+
   const formatCurrency = value => {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -217,7 +221,7 @@ const Shop = () => {
 
       <div className="flex mb-8 h-64">
         <div className="w-1/2 pr-2">
-          <h2 className="text-center mb-2">Product Sales Distribution</h2>
+          <h2 className="text-center mb-2 font-bold">Product Sales Distribution</h2>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -239,7 +243,7 @@ const Shop = () => {
           </ResponsiveContainer>
         </div>
         <div className="w-1/2 pl-2">
-          <h2 className="text-center mb-2">Nett Amount vs Total Profit</h2>
+          <h2 className="text-center mb-2 font-bold">Nett Amount vs Total Profit</h2>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -265,7 +269,7 @@ const Shop = () => {
       <div className="button-container">
         <Button variant="contained"
           onClick={handleAddRow}
-          className="add-button"
+          className="add-button mr-2"  // Added margin-right for spacing
         >
           Add Product
         </Button>
@@ -291,6 +295,7 @@ const Shop = () => {
               <th className="border p-2">Price per Unit</th>
               <th className="border p-2">Profit per Unit</th>
               <th className="border p-2">Total Profit</th>
+              <th className="border p-2">Actions</th> {/* New column for actions */}
             </tr>
           </thead>
           <tbody>
@@ -325,10 +330,16 @@ const Shop = () => {
                   {formatCurrency(row.pricePerPiece)}
                 </td>
                 <td className="border p-2">
-                  {formatCurrency(row.profitPerPiece)}
+                  {formatCurrency(calculateProfitPerPiece(row.mrp, row.pricePerPiece))}
                 </td>
                 <td className="border p-2">
-                  {formatCurrency(row.profitPerPiece * row.totalQuantity)}
+                  {formatCurrency(calculateProfitPerPiece(row.mrp, row.pricePerPiece) * row.totalQuantity)}
+                </td>
+                <td className="border p-2 text-center">
+                  <Trash2
+                    className="cursor-pointer text-red-500"
+                    onClick={() => handleDeleteRow(row.id)}
+                  />
                 </td>
               </tr>
             ))}
@@ -339,6 +350,7 @@ const Shop = () => {
               <td className="border p-2">{formatCurrency(calculateTotalAmount())}</td>
               <td className="border p-2" colSpan="2"></td>
               <td className="border p-2">{formatCurrency(calculateTotalProfit())}</td>
+              <td className="border p-2"></td> {/* Empty cell for the new column */}
             </tr>
           </tfoot>
         </table>

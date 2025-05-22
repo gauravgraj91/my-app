@@ -73,7 +73,7 @@ const TodoList = () => {
   };
 
   return (
-    <div>
+    <Box>
       <div>
         <div>
           <Tabs value={tab} onChange={handleTabChange}>
@@ -87,8 +87,8 @@ const TodoList = () => {
         </div>
       </div>
       {tab === 0 && (
-        <div>
-          <h1 className="heading">To-Do List</h1>
+        <Box display="flex" flexDirection="column" alignItems="center">
+          <h1 className="heading font-bold tracking-wide">To-Do List</h1>
           <Box
             component="form"
             sx={{
@@ -147,12 +147,12 @@ const TodoList = () => {
               </div>
             ))}
           </div>
-        </div>
+        </Box>
       )}
       {tab === 3 && <Shop />}
       {tab === 4 && <ShopTransactions />}
       {tab === 5 && <PriceList />}
-    </div>
+    </Box>
   );
 };
 
