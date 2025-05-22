@@ -1,12 +1,9 @@
-import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
-import { responsiveFontSizes } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Moon, Sun, Check, Trash2 } from 'lucide-react';
 import './styles/Shop.css';
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"]
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 
 const initialData = [
   {
@@ -151,7 +148,7 @@ const Shop = () => {
 
     if (isEditing) {
       return (
-        <TextField
+        <input
           type={type}
           value={tempEditValue}
           onChange={e => setTempEditValue(e.target.value)}
@@ -170,8 +167,8 @@ const Shop = () => {
               type === "number" ? parseFloat(tempEditValue) : tempEditValue
             )
           }
-          autoFocus
-          className="w-full p-1 bg-white dark:bg-gray-700 text-black dark:text-white"
+          className="dashboard-input"
+          aria-label={field}
         />
       )
     } else {
@@ -206,23 +203,22 @@ const Shop = () => {
   };
 
   return (
-    <div className={`p-4 relative ${
-      darkMode ? "dark bg-gray-800 text-white" : "bg-white text-black"
-    }`}>
-      <div className="header-container flex justify-between items-center">
+    <div className={`dashboard-container${darkMode ? ' dark' : ''}`}> 
+      <div className="dashboard-card dashboard-header">
         <h1 className="dashboard-title">Shop Dashboard</h1>
-        <Button
+        <button
+          aria-label="Toggle dark mode"
+          className="dashboard-dark-toggle"
           onClick={() => setDarkMode(!darkMode)}
-          className="z-10"
         >
-          {darkMode ? <Sun className="h-5 w-5 text-white" /> : <Moon className="h-5 w-5 text-black" />}
-        </Button>
+          {darkMode ? <Sun /> : <Moon />}
+        </button>
       </div>
 
-      <div className="flex mb-8 h-64">
-        <div className="w-1/2 pr-2">
-          <h2 className="text-center mb-2 font-bold">Product Sales Distribution</h2>
-          <ResponsiveContainer width="100%" height="100%">
+      <div className="dashboard-charts">
+        <div className="dashboard-card dashboard-chart">
+          <h2 className="dashboard-chart-title">Product Sales Distribution</h2>
+          <ResponsiveContainer width="100%" height={220}>
             <PieChart>
               <Pie
                 data={pieChartData}
@@ -242,9 +238,9 @@ const Shop = () => {
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <div className="w-1/2 pl-2">
-          <h2 className="text-center mb-2 font-bold">Nett Amount vs Total Profit</h2>
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="dashboard-card dashboard-chart">
+          <h2 className="dashboard-chart-title">Nett Amount vs Total Profit</h2>
+          <ResponsiveContainer width="100%" height={220}>
             <PieChart>
               <Pie
                 data={profitPieChartData}
@@ -266,97 +262,86 @@ const Shop = () => {
         </div>
       </div>
 
-      <div className="button-container">
-        <Button variant="contained"
+      <div className="dashboard-card dashboard-controls">
+        <button
+          className="dashboard-btn-primary"
           onClick={handleAddRow}
-          className="add-button mr-2"  // Added margin-right for spacing
+          aria-label="Add Product"
         >
           Add Product
-        </Button>
-        <Button variant="contained" color="success"
+        </button>
+        <button
+          className="dashboard-btn-secondary"
           onClick={handleSave}
-          className="save-button"
+          aria-label="Save"
         >
           Save
-          {showSaveAnimation && <Check className="ml-2 h-5 w-5 text-green-300" />}
-        </Button>
+          {showSaveAnimation && <Check className="dashboard-save-check" />}
+        </button>
       </div>
 
-      <div className="relative">
-        <table className="w-full border-collapse">
+      <div className="dashboard-card dashboard-table-container">
+        <table className="dashboard-table">
           <thead>
-            <tr className="bg-blue-500 text-white">
-              <th className="border p-2">Bill Number</th>
-              <th className="border p-2">Date</th>
-              <th className="border p-2">Product Name</th>
-              <th className="border p-2">MRP</th>
-              <th className="border p-2">Qty / Units</th>
-              <th className="border p-2">Nett Amount</th>
-              <th className="border p-2">Price per Unit</th>
-              <th className="border p-2">Profit per Unit</th>
-              <th className="border p-2">Total Profit</th>
-              <th className="border p-2">Actions</th> {/* New column for actions */}
+            <tr>
+              <th>Bill Number</th>
+              <th>Date</th>
+              <th>Product Name</th>
+              <th>MRP</th>
+              <th>Qty / Units</th>
+              <th>Nett Amount</th>
+              <th>Price per Unit</th>
+              <th>Profit per Unit</th>
+              <th>Total Profit</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {data.map(row => (
-              <tr
-                key={row.id}
-                className="hover:bg-gray-100 dark:hover:bg-gray-600"
-              >
-                <td className="border p-2">{row.billNumber}</td>
-                <td className="border p-2">
+              <tr key={row.id}>
+                <td>{row.billNumber}</td>
+                <td>
                   <input
                     type="date"
                     value={row.date}
                     max={new Date().toISOString().split("T")[0]}
                     onChange={e => handleCellEdit(row.id, "date", e.target.value)}
-                    className="w-full bg-transparent"
+                    className="dashboard-input"
+                    aria-label="Date"
                   />
                 </td>
-                <td dir="ltr" className="border p-2">
-                  {renderEditableCell(row, "productName")}
-                </td>
-                <td className="border p-2">
-                  {renderEditableCell(row, "mrp", "number")}
-                </td>
-                <td className="border p-2">
-                  {renderEditableCell(row, "totalQuantity", "number")}
-                </td>
-                <td className="border p-2">
-                  {renderEditableCell(row, "totalAmount", "number")}
-                </td>
-                <td className="border p-2">
-                  {formatCurrency(row.pricePerPiece)}
-                </td>
-                <td className="border p-2">
-                  {formatCurrency(calculateProfitPerPiece(row.mrp, row.pricePerPiece))}
-                </td>
-                <td className="border p-2">
-                  {formatCurrency(calculateProfitPerPiece(row.mrp, row.pricePerPiece) * row.totalQuantity)}
-                </td>
-                <td className="border p-2 text-center">
-                  <Trash2
-                    className="cursor-pointer text-red-500"
+                <td>{renderEditableCell(row, "productName")}</td>
+                <td>{renderEditableCell(row, "mrp", "number")}</td>
+                <td>{renderEditableCell(row, "totalQuantity", "number")}</td>
+                <td>{renderEditableCell(row, "totalAmount", "number")}</td>
+                <td>{formatCurrency(row.pricePerPiece)}</td>
+                <td>{formatCurrency(calculateProfitPerPiece(row.mrp, row.pricePerPiece))}</td>
+                <td>{formatCurrency(calculateProfitPerPiece(row.mrp, row.pricePerPiece) * row.totalQuantity)}</td>
+                <td>
+                  <button
+                    className="dashboard-btn-danger"
+                    aria-label="Delete Product"
                     onClick={() => handleDeleteRow(row.id)}
-                  />
+                  >
+                    <Trash2 />
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
           <tfoot>
-            <tr className="bg-blue-500 text-white">
-              <td className="border p-2" colSpan="5">Total</td>
-              <td className="border p-2">{formatCurrency(calculateTotalAmount())}</td>
-              <td className="border p-2" colSpan="2"></td>
-              <td className="border p-2">{formatCurrency(calculateTotalProfit())}</td>
-              <td className="border p-2"></td> {/* Empty cell for the new column */}
+            <tr>
+              <td colSpan="5">Total</td>
+              <td>{formatCurrency(calculateTotalAmount())}</td>
+              <td colSpan="2"></td>
+              <td>{formatCurrency(calculateTotalProfit())}</td>
+              <td></td>
             </tr>
           </tfoot>
         </table>
       </div>
     </div>
-  )
+  );
 }
 
 export default Shop;

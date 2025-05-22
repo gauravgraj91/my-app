@@ -9,6 +9,7 @@ import Tab from "@mui/material/Tab";
 import Shop from "./shop";
 import ShopTransactions from "./shopTransactions";
 import PriceList from "./PriceList";
+import './styles/Todolist.css';
 
 const TodoList = () => {
   const [todos, setTodos] = useState([]);
@@ -87,67 +88,63 @@ const TodoList = () => {
         </div>
       </div>
       {tab === 0 && (
-        <Box display="flex" flexDirection="column" alignItems="center">
-          <h1 className="heading font-bold tracking-wide">To-Do List</h1>
-          <Box
-            component="form"
-            sx={{
-              "& > :not(style)": { m: 1, width: "25ch" },
-            }}
-            noValidate
-            autoComplete="off"
-          ></Box>
-          <TextField
-            id="outlined-basic"
-            label="Enter a new task..."
-            variant="outlined"
+        <div className="todo-container">
+          <h1 className="todo-heading">To-Do List</h1>
+          <input
+            className="todo-input"
+            type="text"
+            placeholder="Enter a new task..."
             value={taskInput}
             onChange={(e) => setTaskInput(e.target.value)}
+            aria-label="Enter a new task"
           />
           {editableTaskId ? (
-          <Button onClick={handleSaveEdit} variant="contained">
-            Save Task
-          </Button>
+            <button className="todo-btn-primary" onClick={handleSaveEdit}>
+              Save Task
+            </button>
           ) : (
-          <Button
-            variant="contained"
-            onClick={() => {
-              handleAddTask(taskInput);
-              setTaskInput("");
-            }}>
-            Add Task
-          </Button>
+            <button
+              className="todo-btn-primary"
+              onClick={() => {
+                handleAddTask(taskInput);
+                setTaskInput("");
+              }}
+            >
+              Add Task
+            </button>
           )}
-          <div>
+          <div className="todo-list">
             {todos.map((todo) => (
-              <div key={todo.id} style={{ marginBottom: "0" }}>
-                <Stack direction="row" spacing={1}>
+              <React.Fragment key={todo.id}>
+                <div className="todo-item">
                   <input
+                    className="todo-checkbox"
                     type="checkbox"
                     checked={todo.isCompleted}
-                    onClick={() => handleToggleTaskCompletion(todo.id)}
+                    onChange={() => handleToggleTaskCompletion(todo.id)}
+                    aria-label={todo.task}
                   />
-                  {todo.task}
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={() => handleEditTask(todo.id)}
-                    sx={{ height: "35px", minWidth: "70px" }}>
-                    Edit
-                  </Button>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    onClick={() => handleDeleteTask(todo.id)}
-                    sx={{ height: "35px", minWidth: "70px", color: 'red', borderColor: 'red' }}>
-                    Delete
-                  </Button>
-                </Stack>
-                <p style={{ fontSize: "10px", color: "gray", margin: "4px 0" }}>{todo.createdAt}</p>
-              </div>
+                  <span className={`todo-task${todo.isCompleted ? ' completed' : ''}`}>{todo.task}</span>
+                  <div>
+                    <button
+                      className="todo-btn-secondary"
+                      onClick={() => handleEditTask(todo.id)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="todo-btn-danger"
+                      onClick={() => handleDeleteTask(todo.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+                <div className="todo-date">{todo.createdAt}</div>
+              </React.Fragment>
             ))}
           </div>
-        </Box>
+        </div>
       )}
       {tab === 3 && <Shop />}
       {tab === 4 && <ShopTransactions />}
