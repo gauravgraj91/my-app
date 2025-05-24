@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from 'react';
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
@@ -6,10 +6,10 @@ import Stack from "@mui/material/Stack";
 import { v4 as uuidv4 } from "uuid";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
-import Shop from "./shop";
-import ShopTransactions from "./shopTransactions";
-import PriceList from "./PriceList";
-import './styles/Todolist.css';
+import Shop from '../shop/shop';
+import ShopTransactions from '../shop/shopTransactions';
+import PriceList from '../shop/PriceList';
+import './Todolist.css';
 
 const TodoList = () => {
   const [todos, setTodos] = useState([]);
