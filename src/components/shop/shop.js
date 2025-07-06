@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Moon, Sun, Check, Trash2 } from 'lucide-react';
+import { Moon, Sun, Check, Trash2, Plus, Save as SaveIcon, Pencil, Calendar } from 'lucide-react';
 import './Shop.css';
 import ShopTransactions from './shopTransactions';
 import PriceList from './PriceList';
@@ -11,6 +11,7 @@ import {
   deleteShopProduct, 
   updateShopProduct 
 } from '../../firebase/shopProductService';
+import { format } from 'date-fns';
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 const CATEGORIES = ['Clothing', 'Electronics', 'Groceries', 'Accessories', 'Other'];
@@ -26,9 +27,13 @@ const Shop = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [lastActionType, setLastActionType] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [search, setSearch] = useState("");
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [editingDateId, setEditingDateId] = useState(null);
+  const [tempDate, setTempDate] = useState("");
 
   // Subscribe to real-time updates
   useEffect(() => {
@@ -120,6 +125,12 @@ const Shop = () => {
     }
   };
 
+  // Toast helper
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 2500);
+  };
+
   const handleAddRow = async () => {
     try {
       const newProduct = {
@@ -134,10 +145,9 @@ const Shop = () => {
         profitPerPiece: 0
       };
       await addShopProduct(newProduct);
-      setSuccess("Product added successfully!");
+      showToast("Product added successfully!", 'success');
     } catch (error) {
-      console.error('Error adding product:', error);
-      setError('Failed to add product. Please try again.');
+      showToast('Failed to add product. Please try again.', 'error');
     }
   };
 
@@ -145,10 +155,9 @@ const Shop = () => {
     if (window.confirm("Are you sure you want to delete this product?")) {
       try {
         await deleteShopProduct(id);
-        setSuccess("Product deleted successfully!");
+        showToast("Product deleted successfully!", 'error');
       } catch (error) {
-        console.error('Error deleting product:', error);
-        setError('Failed to delete product. Please try again.');
+        showToast('Failed to delete product. Please try again.', 'error');
       }
     }
   };
@@ -166,11 +175,11 @@ const Shop = () => {
   const handleModalSave = async (updatedProduct) => {
     try {
       await updateShopProduct(updatedProduct.id, updatedProduct);
-      setSuccess('Product updated successfully!');
+      showToast('Product updated successfully!', 'success');
       setModalOpen(false);
       setSelectedProduct(null);
     } catch (error) {
-      setError('Failed to update product. Please try again.');
+      showToast('Failed to update product. Please try again.', 'error');
     }
   };
 
@@ -248,6 +257,65 @@ const Shop = () => {
       row.billNumber?.toLowerCase().includes(searchLower)
     );
   });
+
+  // Category color mapping and icon
+  const categoryTag = (cat) => {
+    let color = 'bg-gray-100 text-gray-800';
+    let icon = <span className="mr-1">📦</span>;
+    switch ((cat || '').toLowerCase()) {
+      case 'groceries': color = 'bg-green-100 text-green-800'; icon = <span className="mr-1">🛒</span>; break;
+      case 'electronics': color = 'bg-blue-100 text-blue-800'; icon = <span className="mr-1">💻</span>; break;
+      case 'accessories': color = 'bg-orange-100 text-orange-800'; icon = <span className="mr-1">🧢</span>; break;
+      case 'clothing': color = 'bg-purple-100 text-purple-800'; icon = <span className="mr-1">👕</span>; break;
+    }
+    return <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${color}`}>{icon}{cat || ''}</span>;
+  };
+
+  // Date formatting helper
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      return format(new Date(dateStr), 'dd MMM yyyy');
+    } catch {
+      return dateStr;
+    }
+  };
+
+  // Date cell rendering
+  const renderDateCell = (row) => {
+    if (editingDateId === row.id) {
+      return (
+        <form onSubmit={async (e) => {
+          e.preventDefault();
+          await handleCellEdit(row.id, 'date', tempDate);
+          setEditingDateId(null);
+        }} className="flex items-center gap-2">
+          <input
+            type="date"
+            value={tempDate}
+            onChange={e => setTempDate(e.target.value)}
+            className="dashboard-input"
+            aria-label="Edit Date"
+            autoFocus
+            onBlur={() => setEditingDateId(null)}
+            style={{ minWidth: 120 }}
+          />
+          <button type="submit" className="text-blue-600 font-bold" aria-label="Save Date">OK</button>
+        </form>
+      );
+    }
+    return (
+      <button
+        className="flex items-center gap-1 text-gray-700 hover:text-blue-600 focus:outline-none"
+        onClick={() => { setEditingDateId(row.id); setTempDate(row.date || ''); }}
+        aria-label="Edit Date"
+        style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+      >
+        <Calendar size={16} />
+        <span>{formatDate(row.date)}</span>
+      </button>
+    );
+  };
 
   if (loading) {
     return (
@@ -327,18 +395,19 @@ const Shop = () => {
         />
         <div className="flex gap-2">
           <button
-            className="dashboard-btn-primary"
+            className="dashboard-btn-primary bg-green-600 hover:bg-green-700 text-white text-base px-6 py-3 flex items-center gap-2"
             onClick={handleAddRow}
             aria-label="Add Product"
+            style={{ fontWeight: 700, fontSize: '1.08rem', boxShadow: '0 2px 8px rgba(16,185,129,0.12)' }}
           >
-            Add Product
+            <Plus size={20} /> Add Product
           </button>
           <button
-            className="dashboard-btn-secondary"
+            className="dashboard-btn-secondary flex items-center gap-2"
             onClick={handleSave}
             aria-label="Save"
           >
-            Save
+            <SaveIcon size={18} /> Save
             {showSaveAnimation && <Check className="dashboard-save-check" />}
           </button>
         </div>
@@ -355,9 +424,16 @@ const Shop = () => {
       
       {success && (
         <div className="dashboard-card">
-          <div className="p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+          <div className={`p-4 border rounded-lg ${lastActionType === 'delete' ? 'bg-red-100 border-red-400 text-red-700' : 'bg-green-100 border-green-400 text-green-700'}`}>
             {success}
           </div>
+        </div>
+      )}
+
+      {/* Toast notification */}
+      {toast.show && (
+        <div className={`fixed top-6 right-6 z-50 px-6 py-3 rounded shadow-lg text-base font-semibold transition-all ${toast.type === 'error' ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}>
+          {toast.message}
         </div>
       )}
 
@@ -369,12 +445,12 @@ const Shop = () => {
               <th>Date</th>
               <th>Product Name</th>
               <th>Category</th>
-              <th>MRP</th>
-              <th>Qty / Units</th>
-              <th>Nett Amount</th>
-              <th>Price per Unit</th>
-              <th>Profit per Unit</th>
-              <th>Total Profit</th>
+              <th className="text-right">MRP</th>
+              <th className="text-right">Qty / Units</th>
+              <th className="text-right">Nett Amount</th>
+              <th className="text-right">Price per Unit</th>
+              <th className="text-right">Profit per Unit</th>
+              <th className="text-right">Total Profit</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -382,36 +458,41 @@ const Shop = () => {
             {filteredData.length === 0 ? (
               <tr>
                 <td colSpan="11" className="text-center py-4 text-gray-500">
-                  No products found. Add your first product!
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-2xl">🛒</span>
+                    <span>No products found. Add your first product!</span>
+                  </div>
                 </td>
               </tr>
             ) : (
               filteredData.map(row => (
-                <tr key={row.id} className="hover:bg-blue-50 cursor-pointer" onClick={e => { if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'svg' && e.target.tagName !== 'path') handleRowClick(row); }}>
+                <tr
+                  key={row.id}
+                  className={`hover:bg-blue-100 transition-colors ${selectedProduct && selectedProduct.id === row.id && modalOpen ? 'bg-blue-50 ring-2 ring-blue-200' : ''}`}
+                >
                   <td>{row.billNumber}</td>
-                  <td>
-                    <input
-                      type="date"
-                      value={row.date || ""}
-                      max={new Date().toISOString().split("T")[0]}
-                      onChange={e => handleCellEdit(row.id, "date", e.target.value)}
-                      className="dashboard-input"
-                      aria-label="Date"
-                      onClick={e => e.stopPropagation()}
-                    />
-                  </td>
+                  <td>{renderDateCell(row)}</td>
                   <td>{renderEditableCell(row, "productName")}</td>
-                  <td>{row.category || ''}</td>
-                  <td>{renderEditableCell(row, "mrp", "number")}</td>
-                  <td>{renderEditableCell(row, "totalQuantity", "number")}</td>
-                  <td>{renderEditableCell(row, "totalAmount", "number")}</td>
-                  <td>{formatCurrency(row.pricePerPiece || 0)}</td>
-                  <td>{formatCurrency(calculateProfitPerPiece(row.mrp || 0, row.pricePerPiece || 0))}</td>
-                  <td>{formatCurrency(calculateProfitPerPiece(row.mrp || 0, row.pricePerPiece || 0) * (row.totalQuantity || 0))}</td>
-                  <td>
+                  <td>{categoryTag(row.category)}</td>
+                  <td className="text-right">{renderEditableCell(row, "mrp", "number")}</td>
+                  <td className="text-right">{renderEditableCell(row, "totalQuantity", "number")}</td>
+                  <td className="text-right">{renderEditableCell(row, "totalAmount", "number")}</td>
+                  <td className="text-right">{formatCurrency(row.pricePerPiece || 0)}</td>
+                  <td className="text-right">{formatCurrency(calculateProfitPerPiece(row.mrp || 0, row.pricePerPiece || 0))}</td>
+                  <td className="text-right">{formatCurrency(calculateProfitPerPiece(row.mrp || 0, row.pricePerPiece || 0) * (row.totalQuantity || 0))}</td>
+                  <td className="flex gap-2 items-center justify-center">
+                    <button
+                      className="dashboard-btn-secondary flex items-center gap-1 px-2 py-1"
+                      aria-label="Edit Product"
+                      title="Edit Product"
+                      onClick={() => { setSelectedProduct(row); setModalOpen(true); }}
+                    >
+                      <Pencil size={16} />
+                    </button>
                     <button
                       className="dashboard-btn-danger"
                       aria-label="Delete Product"
+                      title="Delete Product"
                       onClick={e => { e.stopPropagation(); handleDeleteRow(row.id); }}
                     >
                       <Trash2 />
@@ -423,10 +504,10 @@ const Shop = () => {
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan="6">Total</td>
-              <td>{formatCurrency(calculateTotalAmount())}</td>
+              <td colSpan="6" className="font-bold text-right">Total</td>
+              <td className="text-right">{formatCurrency(calculateTotalAmount())}</td>
               <td colSpan="2"></td>
-              <td>{formatCurrency(calculateTotalProfit())}</td>
+              <td className="text-right">{formatCurrency(calculateTotalProfit())}</td>
               <td></td>
             </tr>
           </tfoot>

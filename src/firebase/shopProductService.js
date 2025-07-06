@@ -8,7 +8,9 @@ import {
   onSnapshot,
   query,
   orderBy,
-  serverTimestamp 
+  serverTimestamp,
+  limit as fbLimit,
+  startAfter
 } from 'firebase/firestore';
 import { db } from './config';
 
@@ -85,4 +87,33 @@ export const subscribeToShopProducts = (callback) => {
     });
     callback(products);
   });
+};
+
+// Paginated fetch
+export const fetchShopProductsPaginated = async (pageLimit = 20, startAfterDoc = null) => {
+  let q = query(
+    collection(db, COLLECTION_NAME),
+    orderBy('createdAt', 'desc'),
+    fbLimit(pageLimit)
+  );
+  if (startAfterDoc) {
+    q = query(
+      collection(db, COLLECTION_NAME),
+      orderBy('createdAt', 'desc'),
+      startAfter(startAfterDoc),
+      fbLimit(pageLimit)
+    );
+  }
+  const querySnapshot = await getDocs(q);
+  const products = [];
+  let lastDoc = null;
+  querySnapshot.forEach((doc) => {
+    products.push({ id: doc.id, ...doc.data() });
+    lastDoc = doc;
+  });
+  return {
+    products,
+    lastDoc,
+    hasMore: querySnapshot.size === pageLimit
+  };
 }; 
