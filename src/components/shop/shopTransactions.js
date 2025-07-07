@@ -42,9 +42,9 @@ const ShopTransactions = () => {
 
   const formatDate = (date) => {
     if (date?.toDate) {
-      return date.toDate().toLocaleString('en-IN')
+      return format(date.toDate(), 'dd MMM yyyy');
     }
-    return new Date(date).toLocaleString('en-IN')
+    return format(new Date(date), 'dd MMM yyyy');
   }
 
   const handleTransaction = async () => {

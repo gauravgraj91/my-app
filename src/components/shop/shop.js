@@ -306,7 +306,7 @@ const Shop = () => {
     }
     return (
       <button
-        className="flex items-center gap-1 text-gray-700 hover:text-blue-600 focus:outline-none"
+        className="flex items-center gap-1 text-gray-700 hover:text-blue-600 focus:outline-none whitespace-nowrap"
         onClick={() => { setEditingDateId(row.id); setTempDate(row.date || ''); }}
         aria-label="Edit Date"
         style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
