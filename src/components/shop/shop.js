@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Moon, Sun, Check, Trash2, Plus, Save as SaveIcon, Pencil, Calendar } from 'lucide-react';
+import { Moon, Sun, Check, Trash2, Plus, Save as SaveIcon, Pencil, Calendar, ChevronDown } from 'lucide-react';
 import './Shop.css';
 import ShopTransactions from './shopTransactions';
 import PriceList from './PriceList';
@@ -34,6 +34,7 @@ const Shop = () => {
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [editingDateId, setEditingDateId] = useState(null);
   const [tempDate, setTempDate] = useState("");
+  const [exportOpen, setExportOpen] = useState(false);
 
   // Subscribe to real-time updates
   useEffect(() => {
@@ -317,6 +318,51 @@ const Shop = () => {
     );
   };
 
+  // CSV export helper
+  const toCsv = (rows) => {
+    if (!rows.length) return '';
+    const headers = [
+      'Bill Number', 'Date', 'Product Name', 'Category', 'MRP', 'Qty / Units', 'Nett Amount', 'Price per Unit', 'Profit per Unit', 'Total Profit'
+    ];
+    const csvRows = [headers.join(',')];
+    rows.forEach(row => {
+      csvRows.push([
+        row.billNumber,
+        formatDate(row.date),
+        row.productName,
+        row.category,
+        row.mrp,
+        row.totalQuantity,
+        row.totalAmount,
+        row.pricePerPiece,
+        row.profitPerPiece,
+        (row.profitPerPiece * row.totalQuantity)
+      ].map(val => `"${val ?? ''}"`).join(','));
+    });
+    return csvRows.join('\n');
+  };
+
+  const downloadCsv = (csv, filename) => {
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleExportAll = () => {
+    const csv = toCsv(data);
+    downloadCsv(csv, 'all_products.csv');
+    setExportOpen(false);
+  };
+  const handleExportVisible = () => {
+    const csv = toCsv(filteredData);
+    downloadCsv(csv, 'visible_products.csv');
+    setExportOpen(false);
+  };
+
   if (loading) {
     return (
       <div className="dashboard-container">
@@ -393,7 +439,36 @@ const Shop = () => {
           placeholder="Search by product name or bill number..."
           className="w-full max-w-xs p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 md:mb-0"
         />
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center relative">
+          {/* Export Dropdown */}
+          <div className="relative">
+            <button
+              className="dashboard-btn-secondary flex items-center gap-1 px-4 py-2"
+              onClick={() => setExportOpen(v => !v)}
+              aria-label="Export"
+              type="button"
+            >
+              Export <ChevronDown size={16} />
+            </button>
+            {exportOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg z-10">
+                <button
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  onClick={handleExportAll}
+                  aria-label="Export All to CSV"
+                >
+                  Export All to CSV
+                </button>
+                <button
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  onClick={handleExportVisible}
+                  aria-label="Export Visible to CSV"
+                >
+                  Export Visible to CSV
+                </button>
+              </div>
+            )}
+          </div>
           <button
             className="dashboard-btn-primary bg-green-600 hover:bg-green-700 text-white text-base px-6 py-3 flex items-center gap-2"
             onClick={handleAddRow}
