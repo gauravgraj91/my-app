@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Moon, Sun, Check, Trash2, Plus, Save as SaveIcon, Pencil, Calendar, ChevronDown } from 'lucide-react';
+import { Search, X, Download, Plus, Save as SaveIcon, ChevronDown, Moon, Sun, Check, Trash2, Pencil, Calendar, Settings as SettingsIcon } from 'lucide-react';
 import './Shop.css';
 import ShopTransactions from './shopTransactions';
 import PriceList from './PriceList';
@@ -35,6 +35,40 @@ const Shop = () => {
   const [editingDateId, setEditingDateId] = useState(null);
   const [tempDate, setTempDate] = useState("");
   const [exportOpen, setExportOpen] = useState(false);
+  // Add sorting and filtering state
+  const [sortColumn, setSortColumn] = useState(null);
+  const [sortDirection, setSortDirection] = useState('asc'); // 'asc' or 'desc'
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterPriceMin, setFilterPriceMin] = useState('');
+  const [filterPriceMax, setFilterPriceMax] = useState('');
+
+  // Table settings state with persistence
+  const defaultTableSettings = {
+    filtering: true,
+    showExport: true,
+    columns: {
+      billNumber: true,
+      date: true,
+      productName: true,
+      category: true,
+      mrp: true,
+      totalQuantity: true,
+      totalAmount: true,
+      pricePerPiece: true,
+      profitPerPiece: true,
+      totalProfit: true,
+      actions: true,
+    }
+  };
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [tableSettings, setTableSettings] = useState(() => {
+    const saved = localStorage.getItem('tableSettings');
+    return saved ? JSON.parse(saved) : defaultTableSettings;
+  });
+  // Persist tableSettings to localStorage
+  useEffect(() => {
+    localStorage.setItem('tableSettings', JSON.stringify(tableSettings));
+  }, [tableSettings]);
 
   // Subscribe to real-time updates
   useEffect(() => {
@@ -250,14 +284,66 @@ const Shop = () => {
     return (mrp - pricePerPiece).toFixed(2);
   };
 
-  // Filtered data based on search
-  const filteredData = data.filter(row => {
-    const searchLower = search.toLowerCase();
-    return (
-      row.productName?.toLowerCase().includes(searchLower) ||
-      row.billNumber?.toLowerCase().includes(searchLower)
-    );
-  });
+  // Combine search, filters, and sorting
+  const processedData = data
+    // Filter by search
+    .filter(row => {
+      const searchLower = search.toLowerCase();
+      return (
+        row.productName?.toLowerCase().includes(searchLower) ||
+        row.billNumber?.toLowerCase().includes(searchLower)
+      );
+    })
+    // Filter by category
+    .filter(row => {
+      if (!filterCategory) return true;
+      return row.category === filterCategory;
+    })
+    // Filter by price range (MRP)
+    .filter(row => {
+      const min = filterPriceMin !== '' ? parseFloat(filterPriceMin) : null;
+      const max = filterPriceMax !== '' ? parseFloat(filterPriceMax) : null;
+      if (min !== null && (row.mrp ?? 0) < min) return false;
+      if (max !== null && (row.mrp ?? 0) > max) return false;
+      return true;
+    });
+
+  // Sort processed data
+  const sortedData = React.useMemo(() => {
+    if (!sortColumn) return processedData;
+    const sorted = [...processedData].sort((a, b) => {
+      let aValue = a[sortColumn];
+      let bValue = b[sortColumn];
+      // For date, convert to Date object
+      if (sortColumn === 'date') {
+        aValue = new Date(aValue);
+        bValue = new Date(bValue);
+      }
+      // For string, compare case-insensitive
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+      }
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return sorted;
+  }, [processedData, sortColumn, sortDirection]);
+
+  // Sorting helpers
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+  const renderSortIcon = (column) => {
+    if (sortColumn !== column) return null;
+    return sortDirection === 'asc' ? '▲' : '▼';
+  };
 
   // Category color mapping and icon
   const categoryTag = (cat) => {
@@ -358,10 +444,20 @@ const Shop = () => {
     setExportOpen(false);
   };
   const handleExportVisible = () => {
-    const csv = toCsv(filteredData);
+    const csv = toCsv(processedData); // Use processedData for export
     downloadCsv(csv, 'visible_products.csv');
     setExportOpen(false);
   };
+
+  // Helper for category dropdown with icons
+  const categoryOptions = [
+    { value: '', label: 'All Categories', icon: '📦' },
+    { value: 'Clothing', label: 'Clothing', icon: '👕' },
+    { value: 'Electronics', label: 'Electronics', icon: '💻' },
+    { value: 'Groceries', label: 'Groceries', icon: '🛒' },
+    { value: 'Accessories', label: 'Accessories', icon: '🧢' },
+    { value: 'Other', label: 'Other', icon: '📦' },
+  ];
 
   if (loading) {
     return (
@@ -430,57 +526,144 @@ const Shop = () => {
           </ResponsiveContainer>
         </div>
       </div>
-      {/* Search and buttons below charts, above table */}
-      <div className="dashboard-card dashboard-controls flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
-        <input
-          type="text"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search by product name or bill number..."
-          className="w-full max-w-xs p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 md:mb-0"
-        />
-        <div className="flex gap-2 items-center relative">
-          {/* Export Dropdown */}
-          <div className="relative">
-            <button
-              className="dashboard-btn-secondary flex items-center gap-1 px-4 py-2"
-              onClick={() => setExportOpen(v => !v)}
-              aria-label="Export"
-              type="button"
-            >
-              Export <ChevronDown size={16} />
-            </button>
-            {exportOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg z-10">
-                <button
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                  onClick={handleExportAll}
-                  aria-label="Export All to CSV"
-                >
-                  Export All to CSV
-                </button>
-                <button
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                  onClick={handleExportVisible}
-                  aria-label="Export Visible to CSV"
-                >
-                  Export Visible to CSV
-                </button>
-              </div>
-            )}
+      {/* Controls Bar - Responsive, visually grouped */}
+      <div className="dashboard-card dashboard-controls flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
+        {/* Left: Search and Filters Grouped */}
+        <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full md:w-auto">
+          {/* Search with icon */}
+          <div className="relative w-full md:w-auto">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+              <Search size={18} />
+            </span>
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search by product name or bill number..."
+              className="w-full md:w-64 pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-label="Search by product name or bill number"
+            />
           </div>
+          {/* Filters Grouped in a box */}
+          {tableSettings.filtering && (
+            <div className="flex gap-2 items-center bg-gray-50 border border-gray-200 rounded-md px-3 py-2 flex-wrap">
+              {/* Category Dropdown with icons */}
+              <select
+                value={filterCategory}
+                onChange={e => setFilterCategory(e.target.value)}
+                className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ minWidth: 140 }}
+                aria-label="Filter by category"
+              >
+                {categoryOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.icon} {opt.label}
+                  </option>
+                ))}
+              </select>
+              {/* Price Range with ₹ icons */}
+              <div className="flex items-center gap-1">
+                <span className="text-gray-400">₹</span>
+                <input
+                  type="number"
+                  value={filterPriceMin}
+                  onChange={e => setFilterPriceMin(e.target.value)}
+                  placeholder="Min"
+                  className="p-2 border border-gray-300 rounded-md w-20 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  min="0"
+                  aria-label="Minimum MRP"
+                />
+                <span>-</span>
+                <span className="text-gray-400">₹</span>
+                <input
+                  type="number"
+                  value={filterPriceMax}
+                  onChange={e => setFilterPriceMax(e.target.value)}
+                  placeholder="Max"
+                  className="p-2 border border-gray-300 rounded-md w-20 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  min="0"
+                  aria-label="Maximum MRP"
+                />
+              </div>
+              {/* Clear Filters with X icon */}
+              <button
+                className="dashboard-btn-secondary px-3 py-2 flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onClick={() => {
+                  setFilterCategory('');
+                  setFilterPriceMin('');
+                  setFilterPriceMax('');
+                }}
+                type="button"
+                aria-label="Clear filters"
+                title="Clear filters"
+              >
+                <X size={16} /> Clear Filters
+              </button>
+            </div>
+          )}
+        </div>
+        {/* Right: Actions Grouped */}
+        <div className="flex gap-2 items-center justify-end w-full md:w-auto mt-2 md:mt-0">
+          {/* Settings Button */}
           <button
-            className="dashboard-btn-primary bg-green-600 hover:bg-green-700 text-white text-base px-6 py-3 flex items-center gap-2"
+            className="dashboard-btn-secondary flex items-center gap-1 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Table Settings"
+            title="Table Settings"
+            type="button"
+          >
+            <SettingsIcon size={18} />
+          </button>
+          {/* Export Dropdown */}
+          {tableSettings.showExport && (
+            <div className="relative">
+              <button
+                className="dashboard-btn-secondary flex items-center gap-1 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onClick={() => setExportOpen(v => !v)}
+                aria-label="Export"
+                title="Export"
+                type="button"
+              >
+                <Download size={16} /> Export <ChevronDown size={16} />
+              </button>
+              {exportOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg z-10">
+                  <button
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                    onClick={handleExportAll}
+                    aria-label="Export All to CSV"
+                    title="Export All to CSV"
+                  >
+                    Export All to CSV
+                  </button>
+                  <button
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                    onClick={handleExportVisible}
+                    aria-label="Export Visible to CSV"
+                    title="Export Visible to CSV"
+                  >
+                    Export Visible to CSV
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+          {/* Add Product */}
+          <button
+            className="dashboard-btn-primary bg-green-600 hover:bg-green-700 text-white text-base px-6 py-3 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-green-500"
             onClick={handleAddRow}
             aria-label="Add Product"
+            title="Add Product"
             style={{ fontWeight: 700, fontSize: '1.08rem', boxShadow: '0 2px 8px rgba(16,185,129,0.12)' }}
           >
             <Plus size={20} /> Add Product
           </button>
+          {/* Save */}
           <button
-            className="dashboard-btn-secondary flex items-center gap-2"
+            className="dashboard-btn-secondary flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             onClick={handleSave}
             aria-label="Save"
+            title="Save"
           >
             <SaveIcon size={18} /> Save
             {showSaveAnimation && <Check className="dashboard-save-check" />}
@@ -516,13 +699,13 @@ const Shop = () => {
         <table className="dashboard-table">
           <thead>
             <tr>
-              <th>Bill Number</th>
-              <th>Date</th>
-              <th>Product Name</th>
-              <th>Category</th>
-              <th className="text-right">MRP</th>
-              <th className="text-right">Qty / Units</th>
-              <th className="text-right">Nett Amount</th>
+              <th onClick={() => handleSort('billNumber')} style={{ cursor: 'pointer' }}>Bill Number {renderSortIcon('billNumber')}</th>
+              <th onClick={() => handleSort('date')} style={{ cursor: 'pointer' }}>Date {renderSortIcon('date')}</th>
+              <th onClick={() => handleSort('productName')} style={{ cursor: 'pointer' }}>Product Name {renderSortIcon('productName')}</th>
+              <th onClick={() => handleSort('category')} style={{ cursor: 'pointer' }}>Category {renderSortIcon('category')}</th>
+              <th className="text-right" onClick={() => handleSort('mrp')} style={{ cursor: 'pointer' }}>MRP {renderSortIcon('mrp')}</th>
+              <th className="text-right" onClick={() => handleSort('totalQuantity')} style={{ cursor: 'pointer' }}>Qty / Units {renderSortIcon('totalQuantity')}</th>
+              <th className="text-right" onClick={() => handleSort('totalAmount')} style={{ cursor: 'pointer' }}>Nett Amount {renderSortIcon('totalAmount')}</th>
               <th className="text-right">Price per Unit</th>
               <th className="text-right">Profit per Unit</th>
               <th className="text-right">Total Profit</th>
@@ -530,7 +713,7 @@ const Shop = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredData.length === 0 ? (
+            {sortedData.length === 0 ? (
               <tr>
                 <td colSpan="11" className="text-center py-4 text-gray-500">
                   <div className="flex flex-col items-center gap-2">
@@ -540,7 +723,7 @@ const Shop = () => {
                 </td>
               </tr>
             ) : (
-              filteredData.map(row => (
+              sortedData.map(row => (
                 <tr
                   key={row.id}
                   className={`hover:bg-blue-100 transition-colors ${selectedProduct && selectedProduct.id === row.id && modalOpen ? 'bg-blue-50 ring-2 ring-blue-200' : ''}`}
@@ -578,13 +761,15 @@ const Shop = () => {
             )}
           </tbody>
           <tfoot>
-            <tr>
-              <td colSpan="6" className="font-bold text-right">Total</td>
-              <td className="text-right">{formatCurrency(calculateTotalAmount())}</td>
-              <td colSpan="2"></td>
-              <td className="text-right">{formatCurrency(calculateTotalProfit())}</td>
-              <td></td>
-            </tr>
+            {tableSettings.showTotals && (
+              <tr>
+                <td colSpan="6" className="font-bold text-right">Total</td>
+                <td className="text-right">{formatCurrency(calculateTotalAmount())}</td>
+                <td colSpan="2"></td>
+                <td className="text-right">{formatCurrency(calculateTotalProfit())}</td>
+                <td></td>
+              </tr>
+            )}
           </tfoot>
         </table>
       </div>
@@ -596,6 +781,49 @@ const Shop = () => {
         onSave={handleModalSave}
         categories={CATEGORIES}
       />
+
+      {/* Settings Modal */}
+      {settingsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
+            <button
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl font-bold"
+              onClick={() => setSettingsOpen(false)}
+              aria-label="Close Settings"
+            >
+              ×
+            </button>
+            <h2 className="text-xl font-bold mb-4">Table Settings</h2>
+            <div className="space-y-4">
+              {/* Feature Toggles */}
+              <div className="flex items-center gap-2">
+                <input type="checkbox" id="toggle-filtering" checked={tableSettings.filtering} onChange={e => setTableSettings(s => ({ ...s, filtering: e.target.checked }))} />
+                <label htmlFor="toggle-filtering" className="font-medium">Enable Filtering</label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input type="checkbox" id="toggle-export" checked={tableSettings.showExport} onChange={e => setTableSettings(s => ({ ...s, showExport: e.target.checked }))} />
+                <label htmlFor="toggle-export" className="font-medium">Enable Export</label>
+              </div>
+              <div className="mt-4">
+                <div className="font-semibold mb-2">Column Visibility</div>
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.keys(tableSettings.columns).map(col => (
+                    <div key={col} className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id={`col-${col}`}
+                        checked={tableSettings.columns[col]}
+                        onChange={e => setTableSettings(s => ({ ...s, columns: { ...s.columns, [col]: e.target.checked } }))}
+                      />
+                      <label htmlFor={`col-${col}`}>{col.charAt(0).toUpperCase() + col.slice(1).replace(/([A-Z])/g, ' $1')}</label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
