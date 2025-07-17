@@ -8,9 +8,20 @@ const defaultCategories = [
   'Other'
 ];
 
-const ProductModal = ({ open, onClose, product, onSave, categories = defaultCategories }) => {
+const defaultVendors = [
+  'ABC Suppliers',
+  'XYZ Distributors',
+  'Local Market',
+  'Online Store',
+  'Direct Import',
+  'Other'
+];
+
+const ProductModal = ({ open, onClose, product, onSave, categories = defaultCategories, vendors = defaultVendors }) => {
   const [form, setForm] = useState({ ...product });
   const [saving, setSaving] = useState(false);
+  const [newVendor, setNewVendor] = useState('');
+  const [showAddVendor, setShowAddVendor] = useState(false);
 
   useEffect(() => {
     setForm({ ...product });
@@ -26,6 +37,15 @@ const ProductModal = ({ open, onClose, product, onSave, categories = defaultCate
   const handleNumberChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value === '' ? '' : Number(value) }));
+  };
+
+  const handleAddVendor = () => {
+    if (newVendor.trim()) {
+      // In a real app, you would update this in your database
+      setForm((prev) => ({ ...prev, vendor: newVendor.trim() }));
+      setNewVendor('');
+      setShowAddVendor(false);
+    }
   };
 
   // Calculate price per piece and profit per piece
@@ -108,6 +128,55 @@ const ProductModal = ({ open, onClose, product, onSave, categories = defaultCate
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Vendor</label>
+              {showAddVendor ? (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newVendor}
+                    onChange={(e) => setNewVendor(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    placeholder="Enter new vendor name"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddVendor}
+                    className="px-2 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
+                  >
+                    Add
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddVendor(false)}
+                    className="px-2 py-1 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <select
+                    name="vendor"
+                    value={form.vendor || ''}
+                    onChange={handleChange}
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                  >
+                    <option value="">Select Vendor</option>
+                    {vendors.map((vendor) => (
+                      <option key={vendor} value={vendor}>{vendor}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddVendor(true)}
+                    className="px-2 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 whitespace-nowrap"
+                  >
+                    New
+                  </button>
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">MRP</label>

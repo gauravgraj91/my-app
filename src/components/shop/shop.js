@@ -13,8 +13,9 @@ import {
 } from '../../firebase/shopProductService';
 import { format } from 'date-fns';
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#82ca9d", "#8dd1e1", "#a4de6c", "#d0ed57"];
 const CATEGORIES = ['Clothing', 'Electronics', 'Groceries', 'Accessories', 'Other'];
+const VENDORS = ['ABC Suppliers', 'XYZ Distributors', 'Local Market', 'Online Store', 'Direct Import', 'Other'];
 
 const Shop = () => {
   const [data, setData] = useState([]);
@@ -173,6 +174,7 @@ const Shop = () => {
         date: new Date().toISOString().split("T")[0],
         productName: "",
         category: CATEGORIES[0],
+        vendor: VENDORS[0],
         mrp: 0,
         totalQuantity: 0,
         totalAmount: 0,
@@ -480,69 +482,333 @@ const Shop = () => {
         </button>
       </div>
 
-      <div className="dashboard-charts">
-        <div className="dashboard-card dashboard-chart">
-          <h2 className="dashboard-chart-title">Product Sales Distribution</h2>
-          <ResponsiveContainer width="100%" height={220}>
-            <PieChart>
-              <Pie
-                data={pieChartData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {pieChartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="dashboard-card dashboard-chart">
-          <h2 className="dashboard-chart-title">Nett Amount vs Total Profit</h2>
-          <ResponsiveContainer width="100%" height={220}>
-            <PieChart>
-              <Pie
-                data={profitPieChartData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {profitPieChartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
+      {/* Simplified Charts Section with CSS-based charts */}
+      <div className="mb-8">
+        <h2 className="text-xl font-bold text-gray-800 mb-4 px-4">Analytics Dashboard</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Row 1: Sales and Profit Charts */}
+          <div className="dashboard-card dashboard-chart shadow-lg border border-gray-100 rounded-xl overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-5 py-3 border-b border-blue-200">
+              <h2 className="dashboard-chart-title flex items-center justify-between">
+                <span className="font-semibold text-blue-800">Product Sales</span>
+                <div className="text-xs font-medium text-blue-700 bg-blue-100 px-3 py-1 rounded-full border border-blue-200">
+                  By Amount
+                </div>
+              </h2>
+            </div>
+            <div className="p-4">
+              {data.length > 0 ? (
+                <div className="h-60">
+                  <div className="flex flex-col h-full">
+                    <div className="flex-1 flex items-center">
+                      {/* Simple CSS-based chart */}
+                      <div className="w-full flex justify-center">
+                        <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-md">
+                          {data.slice(0, 5).map((item, index) => {
+                            const percentage = item.totalAmount / calculateTotalAmount() * 100;
+                            const rotation = index > 0 
+                              ? data.slice(0, index).reduce((acc, curr) => acc + (curr.totalAmount / calculateTotalAmount() * 360), 0) 
+                              : 0;
+                            
+                            return (
+                              <div 
+                                key={index}
+                                className="absolute inset-0"
+                                style={{
+                                  background: COLORS[index % COLORS.length],
+                                  clipPath: `conic-gradient(from ${rotation}deg, currentColor ${percentage * 3.6}deg, transparent 0)`,
+                                }}
+                              />
+                            );
+                          })}
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center text-sm font-medium text-gray-700">
+                              {formatCurrency(calculateTotalAmount())}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Legend */}
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      {data.slice(0, 5).map((item, index) => (
+                        <div key={index} className="flex items-center text-sm">
+                          <div 
+                            className="w-3 h-3 rounded-full mr-2" 
+                            style={{ background: COLORS[index % COLORS.length] }}
+                          />
+                          <span className="truncate">{item.productName || 'Unnamed'}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-60 text-gray-500">
+                  <div className="text-center">
+                    <div className="text-4xl mb-2">📊</div>
+                    <div>No sales data available</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="dashboard-card dashboard-chart shadow-lg border border-gray-100 rounded-xl overflow-hidden">
+            <div className="bg-gradient-to-r from-green-50 to-green-100 px-5 py-3 border-b border-green-200">
+              <h2 className="dashboard-chart-title flex items-center justify-between">
+                <span className="font-semibold text-green-800">Profit Analysis</span>
+                <div className="text-xs font-medium text-green-700 bg-green-100 px-3 py-1 rounded-full border border-green-200">
+                  Nett vs Profit
+                </div>
+              </h2>
+            </div>
+            <div className="p-4">
+              {calculateTotalProfit() > 0 ? (
+                <div className="h-60">
+                  <div className="flex flex-col h-full">
+                    <div className="flex-1 flex items-center">
+                      {/* Simple CSS-based chart */}
+                      <div className="w-full flex justify-center">
+                        <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-md">
+                          {/* Nett Amount (excluding profit) */}
+                          <div 
+                            className="absolute inset-0"
+                            style={{
+                              background: '#3b82f6',
+                              clipPath: `conic-gradient(from 0deg, currentColor ${(calculateTotalAmount() - calculateTotalProfit()) / calculateTotalAmount() * 360}deg, transparent 0)`,
+                            }}
+                          />
+                          {/* Profit */}
+                          <div 
+                            className="absolute inset-0"
+                            style={{
+                              background: '#10b981',
+                              clipPath: `conic-gradient(from ${(calculateTotalAmount() - calculateTotalProfit()) / calculateTotalAmount() * 360}deg, currentColor ${calculateTotalProfit() / calculateTotalAmount() * 360}deg, transparent 0)`,
+                            }}
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center text-sm font-medium text-gray-700">
+                              {formatCurrency(calculateTotalProfit())}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Legend */}
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      <div className="flex items-center text-sm">
+                        <div className="w-3 h-3 rounded-full mr-2 bg-blue-500" />
+                        <span>Nett Amount</span>
+                      </div>
+                      <div className="flex items-center text-sm">
+                        <div className="w-3 h-3 rounded-full mr-2 bg-green-500" />
+                        <span>Total Profit</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-60 text-gray-500">
+                  <div className="text-center">
+                    <div className="text-4xl mb-2">💰</div>
+                    <div>No profit data available</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Row 2: Category and Vendor Charts */}
+          <div className="dashboard-card dashboard-chart shadow-lg border border-gray-100 rounded-xl overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-50 to-purple-100 px-5 py-3 border-b border-purple-200">
+              <h2 className="dashboard-chart-title flex items-center justify-between">
+                <span className="font-semibold text-purple-800">Category Analysis</span>
+                <div className="text-xs font-medium text-purple-700 bg-purple-100 px-3 py-1 rounded-full border border-purple-200">
+                  By Sales
+                </div>
+              </h2>
+            </div>
+            <div className="p-4">
+              {(() => {
+                const categoryData = Object.entries(
+                  data.reduce((acc, item) => {
+                    const category = item.category || 'Uncategorized';
+                    acc[category] = (acc[category] || 0) + (item.totalAmount || 0);
+                    return acc;
+                  }, {})
+                ).map(([name, value]) => ({ name, value }));
+                
+                const totalValue = categoryData.reduce((sum, item) => sum + item.value, 0);
+                
+                return categoryData.length > 0 ? (
+                  <div className="h-60">
+                    <div className="flex flex-col h-full">
+                      <div className="flex-1 flex items-center">
+                        {/* Simple CSS-based chart */}
+                        <div className="w-full flex justify-center">
+                          <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-md">
+                            {categoryData.map((item, index) => {
+                              const percentage = item.value / totalValue * 100;
+                              const rotation = index > 0 
+                                ? categoryData.slice(0, index).reduce((acc, curr) => acc + (curr.value / totalValue * 360), 0) 
+                                : 0;
+                              
+                              return (
+                                <div 
+                                  key={index}
+                                  className="absolute inset-0"
+                                  style={{
+                                    background: COLORS[index % COLORS.length],
+                                    clipPath: `conic-gradient(from ${rotation}deg, currentColor ${percentage * 3.6}deg, transparent 0)`,
+                                  }}
+                                />
+                              );
+                            })}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center text-sm font-medium text-gray-700">
+                                {categoryData.length} Categories
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      {/* Legend */}
+                      <div className="mt-4 grid grid-cols-2 gap-2">
+                        {categoryData.map((item, index) => (
+                          <div key={index} className="flex items-center text-sm">
+                            <div 
+                              className="w-3 h-3 rounded-full mr-2" 
+                              style={{ background: COLORS[index % COLORS.length] }}
+                            />
+                            <span className="truncate">{item.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-60 text-gray-500">
+                    <div className="text-center">
+                      <div className="text-4xl mb-2">📦</div>
+                      <div>No category data available</div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+
+          <div className="dashboard-card dashboard-chart shadow-lg border border-gray-100 rounded-xl overflow-hidden">
+            <div className="bg-gradient-to-r from-amber-50 to-amber-100 px-5 py-3 border-b border-amber-200">
+              <h2 className="dashboard-chart-title flex items-center justify-between">
+                <span className="font-semibold text-amber-800">Vendor Analysis</span>
+                <div className="text-xs font-medium text-amber-700 bg-amber-100 px-3 py-1 rounded-full border border-amber-200">
+                  By Purchase
+                </div>
+              </h2>
+            </div>
+            <div className="p-4">
+              {(() => {
+                const vendorData = Object.entries(
+                  data.reduce((acc, item) => {
+                    const vendor = item.vendor || 'Unknown';
+                    acc[vendor] = (acc[vendor] || 0) + (item.totalAmount || 0);
+                    return acc;
+                  }, {})
+                ).map(([name, value]) => ({ name, value }));
+                
+                const totalValue = vendorData.reduce((sum, item) => sum + item.value, 0);
+                
+                return vendorData.length > 0 ? (
+                  <div className="h-60">
+                    <div className="flex flex-col h-full">
+                      <div className="flex-1 flex items-center">
+                        {/* Simple CSS-based chart */}
+                        <div className="w-full flex justify-center">
+                          <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-md">
+                            {vendorData.map((item, index) => {
+                              const percentage = item.value / totalValue * 100;
+                              const rotation = index > 0 
+                                ? vendorData.slice(0, index).reduce((acc, curr) => acc + (curr.value / totalValue * 360), 0) 
+                                : 0;
+                              
+                              return (
+                                <div 
+                                  key={index}
+                                  className="absolute inset-0"
+                                  style={{
+                                    background: COLORS[index % COLORS.length],
+                                    clipPath: `conic-gradient(from ${rotation}deg, currentColor ${percentage * 3.6}deg, transparent 0)`,
+                                  }}
+                                />
+                              );
+                            })}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center text-sm font-medium text-gray-700">
+                                {vendorData.length} Vendors
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      {/* Legend */}
+                      <div className="mt-4 grid grid-cols-2 gap-2">
+                        {vendorData.map((item, index) => (
+                          <div key={index} className="flex items-center text-sm">
+                            <div 
+                              className="w-3 h-3 rounded-full mr-2" 
+                              style={{ background: COLORS[index % COLORS.length] }}
+                            />
+                            <span className="truncate">{item.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-60 text-gray-500">
+                    <div className="text-center">
+                      <div className="text-4xl mb-2">🏭</div>
+                      <div>No vendor data available</div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
         </div>
       </div>
       {/* Controls Bar - Responsive, visually grouped */}
       <div className="dashboard-card dashboard-controls flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
         {/* Left: Search and Filters Grouped */}
         <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full md:w-auto">
-          {/* Search with icon */}
+          {/* Enhanced Search with icon */}
           <div className="relative w-full md:w-auto">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-              <Search size={18} />
-            </span>
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+              <Search size={20} strokeWidth={2} />
+            </div>
             <input
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search by product name or bill number..."
-              className="w-full md:w-64 pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Search products, bills..."
+              className="w-full md:w-72 pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-700 placeholder-gray-400"
+              style={{ 
+                fontSize: '14px',
+                fontWeight: '500'
+              }}
               aria-label="Search by product name or bill number"
             />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="Clear search"
+              >
+                <X size={18} />
+              </button>
+            )}
           </div>
           {/* Filters Grouped in a box */}
           {tableSettings.filtering && (
@@ -602,34 +868,46 @@ const Shop = () => {
             </div>
           )}
         </div>
-        {/* Right: Actions Grouped */}
-        <div className="flex gap-2 items-center justify-end w-full md:w-auto mt-2 md:mt-0">
+        {/* Right: Actions Grouped - Enhanced UI */}
+        <div className="flex gap-3 items-center justify-end w-full md:w-auto mt-2 md:mt-0">
           {/* Settings Button */}
           <button
-            className="dashboard-btn-secondary flex items-center gap-1 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 transition-all duration-200 rounded-md shadow-sm"
+            style={{ 
+              padding: '10px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              width: '42px',
+              height: '42px'
+            }}
             onClick={() => setSettingsOpen(true)}
             aria-label="Table Settings"
             title="Table Settings"
             type="button"
           >
-            <SettingsIcon size={18} />
+            <SettingsIcon size={20} />
           </button>
+          
           {/* Export Dropdown */}
           {tableSettings.showExport && (
             <div className="relative">
               <button
-                className="dashboard-btn-secondary flex items-center gap-1 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 transition-all duration-200 rounded-md shadow-sm flex items-center gap-2 px-4 py-2"
+                style={{ height: '42px' }}
                 onClick={() => setExportOpen(v => !v)}
                 aria-label="Export"
                 title="Export"
                 type="button"
               >
-                <Download size={16} /> Export <ChevronDown size={16} />
+                <Download size={18} /> 
+                <span className="font-medium">Export</span> 
+                <ChevronDown size={16} />
               </button>
               {exportOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg z-10">
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10 overflow-hidden">
                   <button
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                    className="block w-full text-left px-4 py-3 hover:bg-blue-50 text-gray-700 font-medium border-b border-gray-100 transition-colors"
                     onClick={handleExportAll}
                     aria-label="Export All to CSV"
                     title="Export All to CSV"
@@ -637,7 +915,7 @@ const Shop = () => {
                     Export All to CSV
                   </button>
                   <button
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                    className="block w-full text-left px-4 py-3 hover:bg-blue-50 text-gray-700 font-medium transition-colors"
                     onClick={handleExportVisible}
                     aria-label="Export Visible to CSV"
                     title="Export Visible to CSV"
@@ -648,25 +926,44 @@ const Shop = () => {
               )}
             </div>
           )}
-          {/* Add Product */}
+          
+          {/* Save Button */}
           <button
-            className="dashboard-btn-primary bg-green-600 hover:bg-green-700 text-white text-base px-6 py-3 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-            onClick={handleAddRow}
-            aria-label="Add Product"
-            title="Add Product"
-            style={{ fontWeight: 700, fontSize: '1.08rem', boxShadow: '0 2px 8px rgba(16,185,129,0.12)' }}
-          >
-            <Plus size={20} /> Add Product
-          </button>
-          {/* Save */}
-          <button
-            className="dashboard-btn-secondary flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-all duration-200 rounded-md shadow-sm flex items-center gap-2 px-4 py-2"
+            style={{ height: '42px' }}
             onClick={handleSave}
             aria-label="Save"
             title="Save"
           >
-            <SaveIcon size={18} /> Save
-            {showSaveAnimation && <Check className="dashboard-save-check" />}
+            <SaveIcon size={18} /> 
+            <span className="font-medium">Save</span>
+            {showSaveAnimation && <Check className="text-green-500" size={18} />}
+          </button>
+          
+          {/* Add Product - Enhanced Primary Action */}
+          <button
+            className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-lg shadow-lg flex items-center gap-3 px-6 py-3 transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+            style={{ 
+              height: '48px', 
+              fontWeight: 700, 
+              fontSize: '15px',
+              boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
+              border: 'none'
+            }}
+            onClick={handleAddRow}
+            aria-label="Add Product"
+            title="Add New Product"
+            onMouseEnter={(e) => {
+              e.target.style.boxShadow = '0 6px 25px rgba(16, 185, 129, 0.5)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.4)';
+            }}
+          >
+            <div className="bg-white bg-opacity-20 rounded-full p-1">
+              <Plus size={18} strokeWidth={3} />
+            </div>
+            <span className="tracking-wide">Add Product</span>
           </button>
         </div>
       </div>
@@ -703,6 +1000,7 @@ const Shop = () => {
               <th onClick={() => handleSort('date')} style={{ cursor: 'pointer' }}>Date {renderSortIcon('date')}</th>
               <th onClick={() => handleSort('productName')} style={{ cursor: 'pointer' }}>Product Name {renderSortIcon('productName')}</th>
               <th onClick={() => handleSort('category')} style={{ cursor: 'pointer' }}>Category {renderSortIcon('category')}</th>
+              <th onClick={() => handleSort('vendor')} style={{ cursor: 'pointer' }}>Vendor {renderSortIcon('vendor')}</th>
               <th className="text-right" onClick={() => handleSort('mrp')} style={{ cursor: 'pointer' }}>MRP {renderSortIcon('mrp')}</th>
               <th className="text-right" onClick={() => handleSort('totalQuantity')} style={{ cursor: 'pointer' }}>Qty / Units {renderSortIcon('totalQuantity')}</th>
               <th className="text-right" onClick={() => handleSort('totalAmount')} style={{ cursor: 'pointer' }}>Nett Amount {renderSortIcon('totalAmount')}</th>
@@ -732,6 +1030,15 @@ const Shop = () => {
                   <td>{renderDateCell(row)}</td>
                   <td>{renderEditableCell(row, "productName")}</td>
                   <td>{categoryTag(row.category)}</td>
+                  <td>
+                    {row.vendor ? (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
+                        <span className="mr-1">🏭</span>{row.vendor}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">Not specified</span>
+                    )}
+                  </td>
                   <td className="text-right">{renderEditableCell(row, "mrp", "number")}</td>
                   <td className="text-right">{renderEditableCell(row, "totalQuantity", "number")}</td>
                   <td className="text-right">{renderEditableCell(row, "totalAmount", "number")}</td>
@@ -740,20 +1047,40 @@ const Shop = () => {
                   <td className="text-right">{formatCurrency(calculateProfitPerPiece(row.mrp || 0, row.pricePerPiece || 0) * (row.totalQuantity || 0))}</td>
                   <td className="flex gap-2 items-center justify-center">
                     <button
-                      className="dashboard-btn-secondary flex items-center gap-1 px-2 py-1"
+                      className="bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-600 hover:text-white shadow-sm"
+                      style={{ 
+                        padding: '8px', 
+                        width: '40px', 
+                        height: '40px',
+                        borderRadius: '6px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.2s'
+                      }}
                       aria-label="Edit Product"
                       title="Edit Product"
                       onClick={() => { setSelectedProduct(row); setModalOpen(true); }}
                     >
-                      <Pencil size={16} />
+                      <Pencil size={20} strokeWidth={2} />
                     </button>
                     <button
-                      className="dashboard-btn-danger"
+                      className="bg-red-100 text-red-700 border border-red-300 hover:bg-red-600 hover:text-white shadow-sm"
+                      style={{ 
+                        padding: '8px', 
+                        width: '40px', 
+                        height: '40px',
+                        borderRadius: '6px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.2s'
+                      }}
                       aria-label="Delete Product"
                       title="Delete Product"
                       onClick={e => { e.stopPropagation(); handleDeleteRow(row.id); }}
                     >
-                      <Trash2 />
+                      <Trash2 size={20} strokeWidth={2} />
                     </button>
                   </td>
                 </tr>
