@@ -14,11 +14,49 @@ import {
 import { format } from 'date-fns';
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#82ca9d", "#8dd1e1", "#a4de6c", "#d0ed57"];
-const CATEGORIES = ['Clothing', 'Electronics', 'Groceries', 'Accessories', 'Other'];
-const VENDORS = ['ABC Suppliers', 'XYZ Distributors', 'Local Market', 'Online Store', 'Direct Import', 'Other'];
+// Remove hardcoded CATEGORIES and VENDORS
+// const CATEGORIES = ['Clothing', 'Electronics', 'Groceries', 'Accessories', 'Other'];
+// const VENDORS = ['ABC Suppliers', 'XYZ Distributors', 'Local Market', 'Online Store', 'Direct Import', 'Other'];
+
+// Read from localStorage or use sensible defaults
+const defaultCategories = ['Clothing', 'Electronics', 'Groceries', 'Accessories', 'Other'];
+const defaultVendors = ['ABC Suppliers', 'XYZ Distributors', 'Local Market', 'Online Store', 'Direct Import', 'Other'];
+
+function getShopCategories() {
+  const saved = localStorage.getItem('shopCategories');
+  return saved ? JSON.parse(saved) : defaultCategories;
+}
+function getShopVendors() {
+  const saved = localStorage.getItem('shopVendors');
+  return saved ? JSON.parse(saved) : defaultVendors;
+}
+function getDefaultCategory() {
+  const saved = localStorage.getItem('shopDefaultCategory');
+  return saved ? saved : defaultCategories[0];
+}
+function getDefaultVendor() {
+  const saved = localStorage.getItem('shopDefaultVendor');
+  return saved ? saved : defaultVendors[0];
+}
 
 const Shop = () => {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState([
+    // Test data to ensure charts work
+    {
+      id: 'test1',
+      productName: 'Test Product 1',
+      totalAmount: 1000,
+      category: 'Electronics',
+      vendor: 'Test Vendor'
+    },
+    {
+      id: 'test2', 
+      productName: 'Test Product 2',
+      totalAmount: 500,
+      category: 'Clothing',
+      vendor: 'Test Vendor 2'
+    }
+  ]);
   const [editingCell, setEditingCell] = useState(null);
   const [tempEditValue, setTempEditValue] = useState("");
   const [pieChartData, setPieChartData] = useState([]);
@@ -73,9 +111,29 @@ const Shop = () => {
     localStorage.setItem('tableSettings', JSON.stringify(tableSettings));
   }, [tableSettings]);
 
+  const [categories, setCategories] = useState(getShopCategories());
+  const [vendors, setVendors] = useState(getShopVendors());
+  const [defaultCategory, setDefaultCategory] = useState(getDefaultCategory());
+  const [defaultVendor, setDefaultVendor] = useState(getDefaultVendor());
+
+  // Keep categories/vendors/defaults in sync with localStorage (in case settings page changes them)
+  useEffect(() => {
+    const sync = () => {
+      setCategories(getShopCategories());
+      setVendors(getShopVendors());
+      setDefaultCategory(getDefaultCategory());
+      setDefaultVendor(getDefaultVendor());
+    };
+    window.addEventListener('storage', sync);
+    // Also poll on mount in case of SPA navigation
+    sync();
+    return () => window.removeEventListener('storage', sync);
+  }, []);
+
   // Subscribe to real-time updates
   useEffect(() => {
     const unsubscribe = subscribeToShopProducts((products) => {
+      console.log('Firebase data loaded:', products);
       setData(products);
       setLoading(false);
     });
@@ -175,8 +233,8 @@ const Shop = () => {
         billNumber: `00${data.length + 1}`,
         date: new Date().toISOString().split("T")[0],
         productName: "",
-        category: CATEGORIES[0],
-        vendor: VENDORS[0],
+        category: defaultCategory,
+        vendor: defaultVendor,
         mrp: 0,
         totalQuantity: 0,
         totalAmount: 0,
@@ -476,11 +534,19 @@ const Shop = () => {
   // Helper for category dropdown with icons
   const categoryOptions = [
     { value: '', label: 'All Categories', icon: '📦' },
-    { value: 'Clothing', label: 'Clothing', icon: '👕' },
-    { value: 'Electronics', label: 'Electronics', icon: '💻' },
-    { value: 'Groceries', label: 'Groceries', icon: '🛒' },
-    { value: 'Accessories', label: 'Accessories', icon: '🧢' },
-    { value: 'Other', label: 'Other', icon: '📦' },
+    ...categories.map(cat => ({
+      value: cat,
+      label: cat,
+      icon: (() => {
+        switch (cat.toLowerCase()) {
+          case 'clothing': return '👕';
+          case 'electronics': return '💻';
+          case 'groceries': return '🛒';
+          case 'accessories': return '🧢';
+          default: return '📦';
+        }
+      })()
+    }))
   ];
 
   if (loading) {
@@ -504,6 +570,8 @@ const Shop = () => {
         </button>
       </div>
 
+
+
       {/* Simplified Charts Section with CSS-based charts */}
       <div className="mb-8">
         <h2 className="text-xl font-bold text-gray-800 mb-4 px-4">Analytics Dashboard</h2>
@@ -518,58 +586,60 @@ const Shop = () => {
                 </div>
               </h2>
             </div>
-            <div className="p-4">
+                        <div className="p-4">
               {data.length > 0 ? (
                 <div className="h-60">
-                  <div className="flex flex-col h-full">
-                    <div className="flex-1 flex items-center">
-                      {/* Simple CSS-based chart */}
-                      <div className="w-full flex justify-center">
-                        <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-md">
-                          {data.slice(0, 5).map((item, index) => {
-                            const percentage = item.totalAmount / calculateTotalAmount() * 100;
-                            const rotation = index > 0
-                              ? data.slice(0, index).reduce((acc, curr) => acc + (curr.totalAmount / calculateTotalAmount() * 360), 0)
-                              : 0;
-
-                            return (
-                              <div
-                                key={index}
-                                className="absolute inset-0"
-                                style={{
-                                  background: COLORS[index % COLORS.length],
-                                  clipPath: `conic-gradient(from ${rotation}deg, currentColor ${percentage * 3.6}deg, transparent 0)`,
-                                }}
-                              />
-                            );
-                          })}
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center text-sm font-medium text-gray-700">
-                              {formatCurrency(calculateTotalAmount())}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    {/* Legend */}
-                    <div className="mt-4 grid grid-cols-2 gap-2">
-                      {data.slice(0, 5).map((item, index) => (
-                        <div key={index} className="flex items-center text-sm">
-                          <div
-                            className="w-3 h-3 rounded-full mr-2"
-                            style={{ background: COLORS[index % COLORS.length] }}
-                          />
-                          <span className="truncate">{item.productName || 'Unnamed'}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={data.slice(0, 5).map((item, index) => ({
+                          name: item.productName || 'Unnamed',
+                          value: parseFloat(item.totalAmount) || 0
+                        }))}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={40}
+                        outerRadius={80}
+                        paddingAngle={2}
+                        dataKey="value"
+                      >
+                        {data.slice(0, 5).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value) => [formatCurrency(value), 'Amount']}
+                        labelFormatter={(label) => `Product: ${label}`}
+                      />
+                      <Legend 
+                        verticalAlign="bottom" 
+                        height={36}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-60 text-gray-500">
-                  <div className="text-center">
-                    <div className="text-4xl mb-2">📊</div>
-                    <div>No sales data available</div>
+                <div className="h-60">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'No Data', value: 1, color: '#e5e7eb' }
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={40}
+                        outerRadius={80}
+                        dataKey="value"
+                      >
+                        <Cell fill="#e5e7eb" />
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="text-center text-gray-500 mt-2">
+                    <div className="text-sm">No sales data available</div>
                   </div>
                 </div>
               )}
@@ -588,47 +658,33 @@ const Shop = () => {
             <div className="p-4">
               {calculateTotalProfit() > 0 ? (
                 <div className="h-60">
-                  <div className="flex flex-col h-full">
-                    <div className="flex-1 flex items-center">
-                      {/* Simple CSS-based chart */}
-                      <div className="w-full flex justify-center">
-                        <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-md">
-                          {/* Nett Amount (excluding profit) */}
-                          <div
-                            className="absolute inset-0"
-                            style={{
-                              background: '#3b82f6',
-                              clipPath: `conic-gradient(from 0deg, currentColor ${(calculateTotalAmount() - calculateTotalProfit()) / calculateTotalAmount() * 360}deg, transparent 0)`,
-                            }}
-                          />
-                          {/* Profit */}
-                          <div
-                            className="absolute inset-0"
-                            style={{
-                              background: '#10b981',
-                              clipPath: `conic-gradient(from ${(calculateTotalAmount() - calculateTotalProfit()) / calculateTotalAmount() * 360}deg, currentColor ${calculateTotalProfit() / calculateTotalAmount() * 360}deg, transparent 0)`,
-                            }}
-                          />
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center text-sm font-medium text-gray-700">
-                              {formatCurrency(calculateTotalProfit())}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    {/* Legend */}
-                    <div className="mt-4 grid grid-cols-2 gap-2">
-                      <div className="flex items-center text-sm">
-                        <div className="w-3 h-3 rounded-full mr-2 bg-blue-500" />
-                        <span>Nett Amount</span>
-                      </div>
-                      <div className="flex items-center text-sm">
-                        <div className="w-3 h-3 rounded-full mr-2 bg-green-500" />
-                        <span>Total Profit</span>
-                      </div>
-                    </div>
-                  </div>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Nett Amount', value: calculateTotalAmount() - calculateTotalProfit() },
+                          { name: 'Total Profit', value: calculateTotalProfit() }
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={40}
+                        outerRadius={80}
+                        paddingAngle={2}
+                        dataKey="value"
+                      >
+                        <Cell fill="#3b82f6" />
+                        <Cell fill="#10b981" />
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value) => [formatCurrency(value), 'Amount']}
+                        labelFormatter={(label) => label}
+                      />
+                      <Legend 
+                        verticalAlign="bottom" 
+                        height={36}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-60 text-gray-500">
@@ -665,49 +721,31 @@ const Shop = () => {
 
                 return categoryData.length > 0 ? (
                   <div className="h-60">
-                    <div className="flex flex-col h-full">
-                      <div className="flex-1 flex items-center">
-                        {/* Simple CSS-based chart */}
-                        <div className="w-full flex justify-center">
-                          <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-md">
-                            {categoryData.map((item, index) => {
-                              const percentage = item.value / totalValue * 100;
-                              const rotation = index > 0
-                                ? categoryData.slice(0, index).reduce((acc, curr) => acc + (curr.value / totalValue * 360), 0)
-                                : 0;
-
-                              return (
-                                <div
-                                  key={index}
-                                  className="absolute inset-0"
-                                  style={{
-                                    background: COLORS[index % COLORS.length],
-                                    clipPath: `conic-gradient(from ${rotation}deg, currentColor ${percentage * 3.6}deg, transparent 0)`,
-                                  }}
-                                />
-                              );
-                            })}
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center text-sm font-medium text-gray-700">
-                                {categoryData.length} Categories
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      {/* Legend */}
-                      <div className="mt-4 grid grid-cols-2 gap-2">
-                        {categoryData.map((item, index) => (
-                          <div key={index} className="flex items-center text-sm">
-                            <div
-                              className="w-3 h-3 rounded-full mr-2"
-                              style={{ background: COLORS[index % COLORS.length] }}
-                            />
-                            <span className="truncate">{item.name}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={categoryData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={40}
+                          outerRadius={80}
+                          paddingAngle={2}
+                          dataKey="value"
+                        >
+                          {categoryData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          formatter={(value) => [formatCurrency(value), 'Amount']}
+                          labelFormatter={(label) => `Category: ${label}`}
+                        />
+                        <Legend 
+                          verticalAlign="bottom" 
+                          height={36}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-60 text-gray-500">
@@ -744,49 +782,31 @@ const Shop = () => {
 
                 return vendorData.length > 0 ? (
                   <div className="h-60">
-                    <div className="flex flex-col h-full">
-                      <div className="flex-1 flex items-center">
-                        {/* Simple CSS-based chart */}
-                        <div className="w-full flex justify-center">
-                          <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-md">
-                            {vendorData.map((item, index) => {
-                              const percentage = item.value / totalValue * 100;
-                              const rotation = index > 0
-                                ? vendorData.slice(0, index).reduce((acc, curr) => acc + (curr.value / totalValue * 360), 0)
-                                : 0;
-
-                              return (
-                                <div
-                                  key={index}
-                                  className="absolute inset-0"
-                                  style={{
-                                    background: COLORS[index % COLORS.length],
-                                    clipPath: `conic-gradient(from ${rotation}deg, currentColor ${percentage * 3.6}deg, transparent 0)`,
-                                  }}
-                                />
-                              );
-                            })}
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center text-sm font-medium text-gray-700">
-                                {vendorData.length} Vendors
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      {/* Legend */}
-                      <div className="mt-4 grid grid-cols-2 gap-2">
-                        {vendorData.map((item, index) => (
-                          <div key={index} className="flex items-center text-sm">
-                            <div
-                              className="w-3 h-3 rounded-full mr-2"
-                              style={{ background: COLORS[index % COLORS.length] }}
-                            />
-                            <span className="truncate">{item.name}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={vendorData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={40}
+                          outerRadius={80}
+                          paddingAngle={2}
+                          dataKey="value"
+                        >
+                          {vendorData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          formatter={(value) => [formatCurrency(value), 'Amount']}
+                          labelFormatter={(label) => `Vendor: ${label}`}
+                        />
+                        <Legend 
+                          verticalAlign="bottom" 
+                          height={36}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-60 text-gray-500">
@@ -1163,7 +1183,8 @@ const Shop = () => {
         onClose={handleModalClose}
         product={selectedProduct}
         onSave={handleModalSave}
-        categories={CATEGORIES}
+        categories={categories}
+        vendors={vendors}
       />
 
       {/* Settings Modal */}

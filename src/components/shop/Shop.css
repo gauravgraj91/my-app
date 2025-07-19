@@ -76,6 +76,17 @@
   color: #374151;
 }
 
+/* Chart container styles */
+.dashboard-chart .recharts-wrapper {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.dashboard-chart .recharts-responsive-container {
+  width: 100% !important;
+  height: 100% !important;
+}
+
 .dashboard-controls {
   display: flex;
   gap: 16px;
