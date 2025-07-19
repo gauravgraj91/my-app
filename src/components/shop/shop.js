@@ -5,11 +5,11 @@ import './Shop.css';
 import ShopTransactions from './shopTransactions';
 import PriceList from './PriceList';
 import ProductModal from './ProductModal';
-import { 
-  addShopProduct, 
-  subscribeToShopProducts, 
-  deleteShopProduct, 
-  updateShopProduct 
+import {
+  addShopProduct,
+  subscribeToShopProducts,
+  deleteShopProduct,
+  updateShopProduct
 } from '../../firebase/shopProductService';
 import { format } from 'date-fns';
 
@@ -47,11 +47,13 @@ const Shop = () => {
   const defaultTableSettings = {
     filtering: true,
     showExport: true,
+    showTotals: true,
     columns: {
       billNumber: true,
       date: true,
       productName: true,
       category: true,
+      vendor: true,
       mrp: true,
       totalQuantity: true,
       totalAmount: true,
@@ -227,6 +229,26 @@ const Shop = () => {
     }).format(value);
   };
 
+  // Helper function to get visible columns
+  const getVisibleColumns = () => {
+    const allColumns = [
+      { key: 'billNumber', label: 'Bill Number', sortable: true },
+      { key: 'date', label: 'Date', sortable: true },
+      { key: 'productName', label: 'Product Name', sortable: true },
+      { key: 'category', label: 'Category', sortable: true },
+      { key: 'vendor', label: 'Vendor', sortable: true },
+      { key: 'mrp', label: 'MRP', sortable: true, align: 'right' },
+      { key: 'totalQuantity', label: 'Qty / Units', sortable: true, align: 'right' },
+      { key: 'totalAmount', label: 'Nett Amount', sortable: true, align: 'right' },
+      { key: 'pricePerPiece', label: 'Price per Unit', align: 'right' },
+      { key: 'profitPerPiece', label: 'Profit per Unit', align: 'right' },
+      { key: 'totalProfit', label: 'Total Profit', align: 'right' },
+      { key: 'actions', label: 'Actions' }
+    ];
+
+    return allColumns.filter(col => tableSettings.columns[col.key]);
+  };
+
   const renderEditableCell = (row, field, type = "text") => {
     const isEditing = editingCell === `${row.id}-${field}`;
     const value = row[field] || "";
@@ -267,8 +289,8 @@ const Shop = () => {
           {field === "totalQuantity"
             ? value
             : type === "number"
-            ? formatCurrency(value)
-            : value}
+              ? formatCurrency(value)
+              : value}
         </span>
       );
     }
@@ -470,7 +492,7 @@ const Shop = () => {
   }
 
   return (
-    <div className={`dashboard-container${darkMode ? ' dark' : ''}`}> 
+    <div className={`dashboard-container${darkMode ? ' dark' : ''}`}>
       <div className="dashboard-card dashboard-header">
         <h1 className="dashboard-title">Shop Dashboard</h1>
         <button
@@ -506,12 +528,12 @@ const Shop = () => {
                         <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-md">
                           {data.slice(0, 5).map((item, index) => {
                             const percentage = item.totalAmount / calculateTotalAmount() * 100;
-                            const rotation = index > 0 
-                              ? data.slice(0, index).reduce((acc, curr) => acc + (curr.totalAmount / calculateTotalAmount() * 360), 0) 
+                            const rotation = index > 0
+                              ? data.slice(0, index).reduce((acc, curr) => acc + (curr.totalAmount / calculateTotalAmount() * 360), 0)
                               : 0;
-                            
+
                             return (
-                              <div 
+                              <div
                                 key={index}
                                 className="absolute inset-0"
                                 style={{
@@ -533,8 +555,8 @@ const Shop = () => {
                     <div className="mt-4 grid grid-cols-2 gap-2">
                       {data.slice(0, 5).map((item, index) => (
                         <div key={index} className="flex items-center text-sm">
-                          <div 
-                            className="w-3 h-3 rounded-full mr-2" 
+                          <div
+                            className="w-3 h-3 rounded-full mr-2"
                             style={{ background: COLORS[index % COLORS.length] }}
                           />
                           <span className="truncate">{item.productName || 'Unnamed'}</span>
@@ -572,7 +594,7 @@ const Shop = () => {
                       <div className="w-full flex justify-center">
                         <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-md">
                           {/* Nett Amount (excluding profit) */}
-                          <div 
+                          <div
                             className="absolute inset-0"
                             style={{
                               background: '#3b82f6',
@@ -580,7 +602,7 @@ const Shop = () => {
                             }}
                           />
                           {/* Profit */}
-                          <div 
+                          <div
                             className="absolute inset-0"
                             style={{
                               background: '#10b981',
@@ -638,9 +660,9 @@ const Shop = () => {
                     return acc;
                   }, {})
                 ).map(([name, value]) => ({ name, value }));
-                
+
                 const totalValue = categoryData.reduce((sum, item) => sum + item.value, 0);
-                
+
                 return categoryData.length > 0 ? (
                   <div className="h-60">
                     <div className="flex flex-col h-full">
@@ -650,12 +672,12 @@ const Shop = () => {
                           <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-md">
                             {categoryData.map((item, index) => {
                               const percentage = item.value / totalValue * 100;
-                              const rotation = index > 0 
-                                ? categoryData.slice(0, index).reduce((acc, curr) => acc + (curr.value / totalValue * 360), 0) 
+                              const rotation = index > 0
+                                ? categoryData.slice(0, index).reduce((acc, curr) => acc + (curr.value / totalValue * 360), 0)
                                 : 0;
-                              
+
                               return (
-                                <div 
+                                <div
                                   key={index}
                                   className="absolute inset-0"
                                   style={{
@@ -677,8 +699,8 @@ const Shop = () => {
                       <div className="mt-4 grid grid-cols-2 gap-2">
                         {categoryData.map((item, index) => (
                           <div key={index} className="flex items-center text-sm">
-                            <div 
-                              className="w-3 h-3 rounded-full mr-2" 
+                            <div
+                              className="w-3 h-3 rounded-full mr-2"
                               style={{ background: COLORS[index % COLORS.length] }}
                             />
                             <span className="truncate">{item.name}</span>
@@ -717,9 +739,9 @@ const Shop = () => {
                     return acc;
                   }, {})
                 ).map(([name, value]) => ({ name, value }));
-                
+
                 const totalValue = vendorData.reduce((sum, item) => sum + item.value, 0);
-                
+
                 return vendorData.length > 0 ? (
                   <div className="h-60">
                     <div className="flex flex-col h-full">
@@ -729,12 +751,12 @@ const Shop = () => {
                           <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-md">
                             {vendorData.map((item, index) => {
                               const percentage = item.value / totalValue * 100;
-                              const rotation = index > 0 
-                                ? vendorData.slice(0, index).reduce((acc, curr) => acc + (curr.value / totalValue * 360), 0) 
+                              const rotation = index > 0
+                                ? vendorData.slice(0, index).reduce((acc, curr) => acc + (curr.value / totalValue * 360), 0)
                                 : 0;
-                              
+
                               return (
-                                <div 
+                                <div
                                   key={index}
                                   className="absolute inset-0"
                                   style={{
@@ -756,8 +778,8 @@ const Shop = () => {
                       <div className="mt-4 grid grid-cols-2 gap-2">
                         {vendorData.map((item, index) => (
                           <div key={index} className="flex items-center text-sm">
-                            <div 
-                              className="w-3 h-3 rounded-full mr-2" 
+                            <div
+                              className="w-3 h-3 rounded-full mr-2"
                               style={{ background: COLORS[index % COLORS.length] }}
                             />
                             <span className="truncate">{item.name}</span>
@@ -794,7 +816,7 @@ const Shop = () => {
               onChange={e => setSearch(e.target.value)}
               placeholder="Search products, bills..."
               className="w-full md:w-72 pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-700 placeholder-gray-400"
-              style={{ 
+              style={{
                 fontSize: '14px',
                 fontWeight: '500'
               }}
@@ -873,10 +895,10 @@ const Shop = () => {
           {/* Settings Button */}
           <button
             className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 transition-all duration-200 rounded-md shadow-sm"
-            style={{ 
-              padding: '10px', 
-              display: 'flex', 
-              alignItems: 'center', 
+            style={{
+              padding: '10px',
+              display: 'flex',
+              alignItems: 'center',
               justifyContent: 'center',
               width: '42px',
               height: '42px'
@@ -888,7 +910,7 @@ const Shop = () => {
           >
             <SettingsIcon size={20} />
           </button>
-          
+
           {/* Export Dropdown */}
           {tableSettings.showExport && (
             <div className="relative">
@@ -900,8 +922,8 @@ const Shop = () => {
                 title="Export"
                 type="button"
               >
-                <Download size={18} /> 
-                <span className="font-medium">Export</span> 
+                <Download size={18} />
+                <span className="font-medium">Export</span>
                 <ChevronDown size={16} />
               </button>
               {exportOpen && (
@@ -926,7 +948,7 @@ const Shop = () => {
               )}
             </div>
           )}
-          
+
           {/* Save Button */}
           <button
             className="bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-all duration-200 rounded-md shadow-sm flex items-center gap-2 px-4 py-2"
@@ -935,17 +957,17 @@ const Shop = () => {
             aria-label="Save"
             title="Save"
           >
-            <SaveIcon size={18} /> 
+            <SaveIcon size={18} />
             <span className="font-medium">Save</span>
             {showSaveAnimation && <Check className="text-green-500" size={18} />}
           </button>
-          
+
           {/* Add Product - Enhanced Primary Action */}
           <button
             className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-lg shadow-lg flex items-center gap-3 px-6 py-3 transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
-            style={{ 
-              height: '48px', 
-              fontWeight: 700, 
+            style={{
+              height: '48px',
+              fontWeight: 700,
               fontSize: '15px',
               boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
               border: 'none'
@@ -976,7 +998,7 @@ const Shop = () => {
           </div>
         </div>
       )}
-      
+
       {success && (
         <div className="dashboard-card">
           <div className={`p-4 border rounded-lg ${lastActionType === 'delete' ? 'bg-red-100 border-red-400 text-red-700' : 'bg-green-100 border-green-400 text-green-700'}`}>
@@ -996,24 +1018,22 @@ const Shop = () => {
         <table className="dashboard-table">
           <thead>
             <tr>
-              <th onClick={() => handleSort('billNumber')} style={{ cursor: 'pointer' }}>Bill Number {renderSortIcon('billNumber')}</th>
-              <th onClick={() => handleSort('date')} style={{ cursor: 'pointer' }}>Date {renderSortIcon('date')}</th>
-              <th onClick={() => handleSort('productName')} style={{ cursor: 'pointer' }}>Product Name {renderSortIcon('productName')}</th>
-              <th onClick={() => handleSort('category')} style={{ cursor: 'pointer' }}>Category {renderSortIcon('category')}</th>
-              <th onClick={() => handleSort('vendor')} style={{ cursor: 'pointer' }}>Vendor {renderSortIcon('vendor')}</th>
-              <th className="text-right" onClick={() => handleSort('mrp')} style={{ cursor: 'pointer' }}>MRP {renderSortIcon('mrp')}</th>
-              <th className="text-right" onClick={() => handleSort('totalQuantity')} style={{ cursor: 'pointer' }}>Qty / Units {renderSortIcon('totalQuantity')}</th>
-              <th className="text-right" onClick={() => handleSort('totalAmount')} style={{ cursor: 'pointer' }}>Nett Amount {renderSortIcon('totalAmount')}</th>
-              <th className="text-right">Price per Unit</th>
-              <th className="text-right">Profit per Unit</th>
-              <th className="text-right">Total Profit</th>
-              <th>Actions</th>
+              {getVisibleColumns().map(column => (
+                <th
+                  key={column.key}
+                  className={column.align === 'right' ? 'text-right' : ''}
+                  onClick={column.sortable ? () => handleSort(column.key) : undefined}
+                  style={{ cursor: column.sortable ? 'pointer' : 'default' }}
+                >
+                  {column.label} {column.sortable && renderSortIcon(column.key)}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {sortedData.length === 0 ? (
               <tr>
-                <td colSpan="11" className="text-center py-4 text-gray-500">
+                <td colSpan={getVisibleColumns().length} className="text-center py-4 text-gray-500">
                   <div className="flex flex-col items-center gap-2">
                     <span className="text-2xl">🛒</span>
                     <span>No products found. Add your first product!</span>
@@ -1026,63 +1046,85 @@ const Shop = () => {
                   key={row.id}
                   className={`hover:bg-blue-100 transition-colors ${selectedProduct && selectedProduct.id === row.id && modalOpen ? 'bg-blue-50 ring-2 ring-blue-200' : ''}`}
                 >
-                  <td>{row.billNumber}</td>
-                  <td>{renderDateCell(row)}</td>
-                  <td>{renderEditableCell(row, "productName")}</td>
-                  <td>{categoryTag(row.category)}</td>
-                  <td>
-                    {row.vendor ? (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
-                        <span className="mr-1">🏭</span>{row.vendor}
-                      </span>
-                    ) : (
-                      <span className="text-gray-400">Not specified</span>
-                    )}
-                  </td>
-                  <td className="text-right">{renderEditableCell(row, "mrp", "number")}</td>
-                  <td className="text-right">{renderEditableCell(row, "totalQuantity", "number")}</td>
-                  <td className="text-right">{renderEditableCell(row, "totalAmount", "number")}</td>
-                  <td className="text-right">{formatCurrency(row.pricePerPiece || 0)}</td>
-                  <td className="text-right">{formatCurrency(calculateProfitPerPiece(row.mrp || 0, row.pricePerPiece || 0))}</td>
-                  <td className="text-right">{formatCurrency(calculateProfitPerPiece(row.mrp || 0, row.pricePerPiece || 0) * (row.totalQuantity || 0))}</td>
-                  <td className="flex gap-2 items-center justify-center">
-                    <button
-                      className="bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-600 hover:text-white shadow-sm"
-                      style={{ 
-                        padding: '8px', 
-                        width: '40px', 
-                        height: '40px',
-                        borderRadius: '6px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transition: 'all 0.2s'
-                      }}
-                      aria-label="Edit Product"
-                      title="Edit Product"
-                      onClick={() => { setSelectedProduct(row); setModalOpen(true); }}
-                    >
-                      <Pencil size={20} strokeWidth={2} />
-                    </button>
-                    <button
-                      className="bg-red-100 text-red-700 border border-red-300 hover:bg-red-600 hover:text-white shadow-sm"
-                      style={{ 
-                        padding: '8px', 
-                        width: '40px', 
-                        height: '40px',
-                        borderRadius: '6px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transition: 'all 0.2s'
-                      }}
-                      aria-label="Delete Product"
-                      title="Delete Product"
-                      onClick={e => { e.stopPropagation(); handleDeleteRow(row.id); }}
-                    >
-                      <Trash2 size={20} strokeWidth={2} />
-                    </button>
-                  </td>
+                  {getVisibleColumns().map(column => (
+                    <td key={column.key} className={column.align === 'right' ? 'text-right' : ''}>
+                      {(() => {
+                        switch (column.key) {
+                          case 'billNumber':
+                            return row.billNumber;
+                          case 'date':
+                            return renderDateCell(row);
+                          case 'productName':
+                            return renderEditableCell(row, "productName");
+                          case 'category':
+                            return categoryTag(row.category);
+                          case 'vendor':
+                            return row.vendor ? (
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
+                                <span className="mr-1">🏭</span>{row.vendor}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">Not specified</span>
+                            );
+                          case 'mrp':
+                            return renderEditableCell(row, "mrp", "number");
+                          case 'totalQuantity':
+                            return renderEditableCell(row, "totalQuantity", "number");
+                          case 'totalAmount':
+                            return renderEditableCell(row, "totalAmount", "number");
+                          case 'pricePerPiece':
+                            return formatCurrency(row.pricePerPiece || 0);
+                          case 'profitPerPiece':
+                            return formatCurrency(calculateProfitPerPiece(row.mrp || 0, row.pricePerPiece || 0));
+                          case 'totalProfit':
+                            return formatCurrency(calculateProfitPerPiece(row.mrp || 0, row.pricePerPiece || 0) * (row.totalQuantity || 0));
+                          case 'actions':
+                            return (
+                              <div className="flex gap-2 items-center justify-center">
+                                <button
+                                  className="bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-600 hover:text-white shadow-sm"
+                                  style={{
+                                    padding: '8px',
+                                    width: '40px',
+                                    height: '40px',
+                                    borderRadius: '6px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    transition: 'all 0.2s'
+                                  }}
+                                  aria-label="Edit Product"
+                                  title="Edit Product"
+                                  onClick={() => { setSelectedProduct(row); setModalOpen(true); }}
+                                >
+                                  <Pencil size={20} strokeWidth={2} />
+                                </button>
+                                <button
+                                  className="bg-red-100 text-red-700 border border-red-300 hover:bg-red-600 hover:text-white shadow-sm"
+                                  style={{
+                                    padding: '8px',
+                                    width: '40px',
+                                    height: '40px',
+                                    borderRadius: '6px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    transition: 'all 0.2s'
+                                  }}
+                                  aria-label="Delete Product"
+                                  title="Delete Product"
+                                  onClick={e => { e.stopPropagation(); handleDeleteRow(row.id); }}
+                                >
+                                  <Trash2 size={20} strokeWidth={2} />
+                                </button>
+                              </div>
+                            );
+                          default:
+                            return '';
+                        }
+                      })()}
+                    </td>
+                  ))}
                 </tr>
               ))
             )}
@@ -1090,11 +1132,26 @@ const Shop = () => {
           <tfoot>
             {tableSettings.showTotals && (
               <tr>
-                <td colSpan="6" className="font-bold text-right">Total</td>
-                <td className="text-right">{formatCurrency(calculateTotalAmount())}</td>
-                <td colSpan="2"></td>
-                <td className="text-right">{formatCurrency(calculateTotalProfit())}</td>
-                <td></td>
+                {getVisibleColumns().map((column, index) => (
+                  <td key={column.key} className={column.align === 'right' ? 'text-right' : ''}>
+                    {(() => {
+                      // Show "Total" label in the first visible column
+                      if (index === 0) {
+                        return <span className="font-bold">Total</span>;
+                      }
+                      // Show total amount in the totalAmount column
+                      if (column.key === 'totalAmount') {
+                        return <span className="font-bold">{formatCurrency(calculateTotalAmount())}</span>;
+                      }
+                      // Show total profit in the totalProfit column
+                      if (column.key === 'totalProfit') {
+                        return <span className="font-bold">{formatCurrency(calculateTotalProfit())}</span>;
+                      }
+                      // Empty cells for other columns
+                      return '';
+                    })()}
+                  </td>
+                ))}
               </tr>
             )}
           </tfoot>
@@ -1130,6 +1187,10 @@ const Shop = () => {
               <div className="flex items-center gap-2">
                 <input type="checkbox" id="toggle-export" checked={tableSettings.showExport} onChange={e => setTableSettings(s => ({ ...s, showExport: e.target.checked }))} />
                 <label htmlFor="toggle-export" className="font-medium">Enable Export</label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input type="checkbox" id="toggle-totals" checked={tableSettings.showTotals} onChange={e => setTableSettings(s => ({ ...s, showTotals: e.target.checked }))} />
+                <label htmlFor="toggle-totals" className="font-medium">Show Totals Row</label>
               </div>
               <div className="mt-4">
                 <div className="font-semibold mb-2">Column Visibility</div>
