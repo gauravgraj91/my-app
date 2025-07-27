@@ -277,264 +277,148 @@ const TodoList = () => {
 
       {/* Comprehensive Home Dashboard */}
       {tab === 0 && (
-        <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
-          <div style={{ marginBottom: 32, textAlign: 'center' }}>
-            <h1 style={{ fontSize: 32, fontWeight: 700, margin: '0 0 8px 0', color: '#111827' }}>Dashboard</h1>
-            <p style={{ fontSize: 16, color: '#6b7280', margin: 0 }}>Overview of all your activities</p>
+        <div className="p-6 max-w-screen-xl mx-auto">
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-bold leading-tight text-gray-900">Dashboard</h1>
+            <p className="text-lg text-gray-700">Overview of all your activities</p>
           </div>
 
           {/* Main Stats Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px', marginBottom: '32px' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
 
             {/* Tasks Widget */}
-            <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', padding: 24, border: '1px solid #f3f4f6' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                <h3 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#111827' }}>📝 Tasks</h3>
+            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-gray-900">📝 Tasks</h3>
                 <button
                   onClick={() => setTab(1)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#3b82f6',
-                    fontSize: 12,
-                    cursor: 'pointer',
-                    textDecoration: 'underline'
-                  }}
+                  className="text-blue-600 text-sm underline"
                 >
                   View All
                 </button>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 24, fontWeight: 700, color: '#22c55e' }}>{completedCount}</div>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>Completed</div>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-green-600">{completedCount}</div>
+                  <div className="text-sm text-gray-700">Completed</div>
                 </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 24, fontWeight: 700, color: '#2563eb' }}>{pendingCount}</div>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>Pending</div>
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-blue-600">{pendingCount}</div>
+                  <div className="text-sm text-gray-700">Pending</div>
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 20, fontWeight: 600, color: '#ef4444' }}>{overdueCount}</div>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>Overdue</div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-semibold text-red-600">{overdueCount}</div>
+                  <div className="text-sm text-gray-700">Overdue</div>
                 </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 20, fontWeight: 600, color: '#f59e0b' }}>{todayCount}</div>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>Due Today</div>
+                <div className="text-center">
+                  <div className="text-2xl font-semibold text-yellow-600">{todayCount}</div>
+                  <div className="text-sm text-gray-700">Due Today</div>
                 </div>
               </div>
             </div>
 
             {/* Shop Bills Widget */}
-            <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', padding: 24, border: '1px solid #f3f4f6' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                <h3 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#111827' }}>🛒 Shop Bills</h3>
+            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-gray-900">🛒 Shop Bills</h3>
                 <button
                   onClick={() => setTab(3)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#3b82f6',
-                    fontSize: 12,
-                    cursor: 'pointer',
-                    textDecoration: 'underline'
-                  }}
+                  className="text-blue-600 text-sm underline"
                 >
                   View All
                 </button>
               </div>
-              <div style={{ textAlign: 'center', marginBottom: 16 }}>
-                <div style={{ fontSize: 24, fontWeight: 700, color: '#10b981' }}>₹0</div>
-                <div style={{ fontSize: 12, color: '#6b7280' }}>Total Sales</div>
+              <div className="text-center mb-4">
+                <div className="text-4xl font-bold text-green-600">₹0</div>
+                <div className="text-sm text-gray-700">Total Sales</div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 20, fontWeight: 600, color: '#8b5cf6' }}>0</div>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>Products</div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-semibold text-purple-600">0</div>
+                  <div className="text-sm text-gray-700">Products</div>
                 </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 20, fontWeight: 600, color: '#f59e0b' }}>₹0</div>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>Profit</div>
+                <div className="text-center">
+                  <div className="text-2xl font-semibold text-yellow-600">₹0</div>
+                  <div className="text-sm text-gray-700">Profit</div>
                 </div>
               </div>
             </div>
 
             {/* Transactions Widget */}
-            <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', padding: 24, border: '1px solid #f3f4f6' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                <h3 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#111827' }}>💰 Transactions</h3>
+            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-gray-900">💰 Transactions</h3>
                 <button
                   onClick={() => setTab(4)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#3b82f6',
-                    fontSize: 12,
-                    cursor: 'pointer',
-                    textDecoration: 'underline'
-                  }}
+                  className="text-blue-600 text-sm underline"
                 >
                   View All
                 </button>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 20, fontWeight: 600, color: '#22c55e' }}>₹0</div>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>Cash In</div>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="text-center">
+                  <div className="text-2xl font-semibold text-green-600">₹0</div>
+                  <div className="text-sm text-gray-700">Cash In</div>
                 </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 20, fontWeight: 600, color: '#ef4444' }}>₹0</div>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>Cash Out</div>
+                <div className="text-center">
+                  <div className="text-2xl font-semibold text-red-600">₹0</div>
+                  <div className="text-sm text-gray-700">Cash Out</div>
                 </div>
               </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 24, fontWeight: 700, color: '#2563eb' }}>₹0</div>
-                <div style={{ fontSize: 12, color: '#6b7280' }}>Net Balance</div>
+              <div className="text-center">
+                <div className="text-4xl font-bold text-blue-600">₹0</div>
+                <div className="text-sm text-gray-700">Net Balance</div>
               </div>
             </div>
 
             {/* Price List Widget */}
-            <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', padding: 24, border: '1px solid #f3f4f6' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                <h3 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#111827' }}>📋 Price List</h3>
+            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-gray-900">📋 Price List</h3>
                 <button
                   onClick={() => setTab(5)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#3b82f6',
-                    fontSize: 12,
-                    cursor: 'pointer',
-                    textDecoration: 'underline'
-                  }}
+                  className="text-blue-600 text-sm underline"
                 >
                   View All
                 </button>
               </div>
-              <div style={{ textAlign: 'center', marginBottom: 16 }}>
-                <div style={{ fontSize: 24, fontWeight: 700, color: '#8b5cf6' }}>9</div>
-                <div style={{ fontSize: 12, color: '#6b7280' }}>Total Items</div>
+              <div className="text-center mb-4">
+                <div className="text-4xl font-bold text-purple-600">9</div>
+                <div className="text-sm text-gray-700">Total Items</div>
               </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 14, color: '#6b7280' }}>Manage your product pricing and inventory</div>
+              <div className="text-center">
+                <div className="text-base text-gray-700">Manage your product pricing and inventory</div>
               </div>
             </div>
           </div>
 
           {/* Quick Actions */}
-          <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', padding: 24, marginBottom: 32, border: '1px solid #f3f4f6' }}>
-            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16, color: '#111827' }}>⚡ Quick Actions</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+          <div className="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">⚡ Quick Actions</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <button
                 onClick={() => setShowAddForm(true)}
-                style={{
-                  background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 12,
-                  padding: '16px 20px',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
-                }}
-                onMouseOver={(e) => {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.4)';
-                }}
-                onMouseOut={(e) => {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
-                }}
+                className="bg-blue-600 text-white rounded-lg p-4 text-lg font-semibold flex items-center gap-2 transition-transform duration-200 ease-in-out hover:translate-y-[-2px] hover:shadow-lg"
               >
-                <Plus size={18} /> Add New Task
+                <Plus size={20} /> Add New Task
               </button>
               <button
                 onClick={() => setTab(3)}
-                style={{
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 12,
-                  padding: '16px 20px',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
-                }}
-                onMouseOver={(e) => {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)';
-                }}
-                onMouseOut={(e) => {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
-                }}
+                className="bg-green-600 text-white rounded-lg p-4 text-lg font-semibold flex items-center gap-2 transition-transform duration-200 ease-in-out hover:translate-y-[-2px] hover:shadow-lg"
               >
                 🛒 Add Product
               </button>
               <button
                 onClick={() => setTab(4)}
-                style={{
-                  background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 12,
-                  padding: '16px 20px',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                  boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)'
-                }}
-                onMouseOver={(e) => {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 6px 20px rgba(245, 158, 11, 0.4)';
-                }}
-                onMouseOut={(e) => {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.3)';
-                }}
+                className="bg-yellow-600 text-white rounded-lg p-4 text-lg font-semibold flex items-center gap-2 transition-transform duration-200 ease-in-out hover:translate-y-[-2px] hover:shadow-lg"
               >
                 💰 Add Transaction
               </button>
               <button
                 onClick={() => setTab(6)}
-                style={{
-                  background: 'linear-gradient(135deg, #6b7280, #4b5563)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 12,
-                  padding: '16px 20px',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                  boxShadow: '0 4px 12px rgba(107, 114, 128, 0.3)'
-                }}
-                onMouseOver={(e) => {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 6px 20px rgba(107, 114, 128, 0.4)';
-                }}
-                onMouseOut={(e) => {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(107, 114, 128, 0.3)';
-                }}
+                className="bg-gray-600 text-white rounded-lg p-4 text-lg font-semibold flex items-center gap-2 transition-transform duration-200 ease-in-out hover:translate-y-[-2px] hover:shadow-lg"
               >
                 ⚙️ Settings
               </button>
@@ -542,56 +426,39 @@ const TodoList = () => {
           </div>
 
           {/* Recent Activity */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 24 }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Recent Tasks */}
-            <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', padding: 24, border: '1px solid #f3f4f6' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                <h3 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#111827' }}>📝 Recent Tasks</h3>
+            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-gray-900">📝 Recent Tasks</h3>
                 <button
                   onClick={() => setTab(1)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#3b82f6',
-                    fontSize: 12,
-                    cursor: 'pointer',
-                    textDecoration: 'underline'
-                  }}
+                  className="text-blue-600 text-sm underline"
                 >
                   View All
                 </button>
               </div>
-              <div style={{ maxHeight: 200, overflowY: 'auto' }}>
+              <div className="max-h-64 overflow-y-auto">
                 {todos.slice(0, 3).map(todo => (
-                  <div key={todo.id} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '8px 0',
-                    borderBottom: '1px solid #f3f4f6'
-                  }}>
+                  <div key={todo.id} className="flex items-center py-2 border-b border-gray-200">
                     <input
                       type="checkbox"
                       checked={todo.isCompleted}
                       onChange={() => handleToggleTaskCompletion(todo.id)}
-                      style={{ marginRight: 12 }}
+                      className="mr-2"
                     />
-                    <div style={{ flex: 1 }}>
-                      <div style={{
-                        fontSize: 14,
-                        fontWeight: 500,
-                        textDecoration: todo.isCompleted ? 'line-through' : 'none',
-                        color: todo.isCompleted ? '#9ca3af' : '#111827'
-                      }}>
+                    <div className="flex-1">
+                      <div className="text-base font-medium text-gray-900">
                         {todo.title}
                       </div>
-                      <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
+                      <div className="text-sm text-gray-700 mt-1">
                         {getCategoryInfo(todo.category).icon} {getCategoryInfo(todo.category).name}
                       </div>
                     </div>
                   </div>
                 ))}
                 {todos.length === 0 && (
-                  <div style={{ textAlign: 'center', color: '#6b7280', padding: 24 }}>
+                  <div className="text-center text-gray-700 py-8">
                     No tasks yet. Create your first task!
                   </div>
                 )}
@@ -599,24 +466,24 @@ const TodoList = () => {
             </div>
 
             {/* System Status */}
-            <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', padding: 24, border: '1px solid #f3f4f6' }}>
-              <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16, color: '#111827' }}>📊 System Status</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 14, color: '#6b7280' }}>Data Storage</span>
-                  <span style={{ fontSize: 14, fontWeight: 500, color: '#22c55e' }}>✅ Local</span>
+            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">📊 System Status</h3>
+              <div className="flex flex-col gap-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-700">Data Storage</span>
+                  <span className="text-sm font-medium text-green-600">✅ Local</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 14, color: '#6b7280' }}>Last Backup</span>
-                  <span style={{ fontSize: 14, fontWeight: 500, color: '#6b7280' }}>Auto-saved</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-700">Last Backup</span>
+                  <span className="text-sm font-medium text-gray-700">Auto-saved</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 14, color: '#6b7280' }}>Total Records</span>
-                  <span style={{ fontSize: 14, fontWeight: 500, color: '#2563eb' }}>{todos.length}</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-700">Total Records</span>
+                  <span className="text-sm font-medium text-blue-600">{todos.length}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 14, color: '#6b7280' }}>App Version</span>
-                  <span style={{ fontSize: 14, fontWeight: 500, color: '#6b7280' }}>v1.0.0</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-700">App Version</span>
+                  <span className="text-sm font-medium text-gray-700">v1.0.0</span>
                 </div>
               </div>
             </div>
@@ -626,61 +493,27 @@ const TodoList = () => {
 
       {/* Enhanced Tasks Tab */}
       {tab === 1 && (
-        <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+        <div className="p-6 max-w-screen-xl mx-auto">
           {/* Header with Actions */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-            <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>Tasks</h1>
-            <div style={{ display: 'flex', gap: 12 }}>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold leading-tight text-gray-900">Tasks</h1>
+            <div className="flex gap-2">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                style={{
-                  background: showFilters ? '#3b82f6' : '#f3f4f6',
-                  color: showFilters ? 'white' : '#374151',
-                  border: 'none',
-                  borderRadius: 8,
-                  padding: '8px 16px',
-                  fontSize: 14,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8
-                }}
+                className={`bg-gray-200 text-gray-800 rounded-md p-2 text-sm flex items-center gap-2 transition-colors duration-200 ease-in-out ${showFilters ? 'bg-blue-600 text-white' : ''}`}
               >
                 <Filter size={16} /> Filters
               </button>
               <button
                 onClick={() => setShowAddForm(true)}
-                style={{
-                  background: '#10b981',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 8,
-                  padding: '8px 16px',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8
-                }}
+                className="bg-green-600 text-white rounded-md p-2 text-sm font-semibold flex items-center gap-2"
               >
                 <Plus size={16} /> New Task
               </button>
               {completedCount > 0 && (
                 <button
                   onClick={handleArchiveCompleted}
-                  style={{
-                    background: '#6b7280',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 8,
-                    padding: '8px 16px',
-                    fontSize: 14,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8
-                  }}
+                  className="bg-gray-600 text-white rounded-md p-2 text-sm font-semibold flex items-center gap-2"
                 >
                   <Archive size={16} /> Archive Completed
                 </button>
@@ -689,35 +522,28 @@ const TodoList = () => {
           </div>
 
           {/* Search and Filters */}
-          <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.08)', padding: 20, marginBottom: 24 }}>
+          <div className="bg-white rounded-lg shadow-md p-5 mb-6 border border-gray-200">
             {/* Search Bar */}
-            <div style={{ position: 'relative', marginBottom: showFilters ? 16 : 0 }}>
-              <Search size={20} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+            <div className="relative mb-4">
+              <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
               <input
                 type="text"
                 placeholder="Search tasks..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px 12px 12px 44px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 8,
-                  fontSize: 14,
-                  outline: 'none'
-                }}
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm outline-none"
               />
             </div>
 
             {/* Filters */}
             {showFilters && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, paddingTop: 16, borderTop: '1px solid #f3f4f6' }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-gray-200">
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Category</label>
+                  <label className="block text-xs font-semibold text-gray-800 mb-1">Category</label>
                   <select
                     value={filterCategory}
                     onChange={(e) => setFilterCategory(e.target.value)}
-                    style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14 }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                   >
                     <option value="all">All Categories</option>
                     {categories.map(cat => (
@@ -726,11 +552,11 @@ const TodoList = () => {
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Priority</label>
+                  <label className="block text-xs font-semibold text-gray-800 mb-1">Priority</label>
                   <select
                     value={filterPriority}
                     onChange={(e) => setFilterPriority(e.target.value)}
-                    style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14 }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                   >
                     <option value="all">All Priorities</option>
                     {priorities.map(pri => (
@@ -739,11 +565,11 @@ const TodoList = () => {
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Status</label>
+                  <label className="block text-xs font-semibold text-gray-800 mb-1">Status</label>
                   <select
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
-                    style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14 }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                   >
                     <option value="all">All Tasks</option>
                     <option value="pending">Pending</option>
@@ -752,11 +578,11 @@ const TodoList = () => {
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 }}>Sort By</label>
+                  <label className="block text-xs font-semibold text-gray-800 mb-1">Sort By</label>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14 }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                   >
                     <option value="createdAt">Created Date</option>
                     <option value="dueDate">Due Date</option>
@@ -769,12 +595,12 @@ const TodoList = () => {
           </div>
 
           {/* Task List */}
-          <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
+          <div className="bg-white rounded-lg shadow-md">
             {filteredAndSortedTodos.length === 0 ? (
-              <div style={{ padding: 48, textAlign: 'center', color: '#6b7280' }}>
-                <CheckCircle size={48} style={{ margin: '0 auto 16px', opacity: 0.3 }} />
-                <div style={{ fontSize: 18, fontWeight: 500, marginBottom: 8 }}>No tasks found</div>
-                <div style={{ fontSize: 14 }}>
+              <div className="p-12 text-center text-gray-700">
+                <CheckCircle size={48} className="mx-auto mb-4 opacity-30" />
+                <div className="text-lg font-medium mb-2">No tasks found</div>
+                <div className="text-base">
                   {searchTerm || filterCategory !== 'all' || filterPriority !== 'all' || filterStatus !== 'all'
                     ? 'Try adjusting your filters'
                     : 'Add your first task to get started!'}
@@ -784,123 +610,68 @@ const TodoList = () => {
               filteredAndSortedTodos.map((todo, index) => (
                 <div
                   key={todo.id}
-                  style={{
-                    padding: 20,
-                    borderBottom: index < filteredAndSortedTodos.length - 1 ? '1px solid #f3f4f6' : 'none',
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: 16
-                  }}
+                  className="p-5 border-b border-gray-200 last:border-b-0 flex items-start gap-4"
                 >
                   <input
                     type="checkbox"
                     checked={todo.isCompleted}
                     onChange={() => handleToggleTaskCompletion(todo.id)}
-                    style={{ marginTop: 4 }}
+                    className="mt-1"
                   />
 
-                  <div style={{ flex: 1 }}>
+                  <div className="flex-1">
                     {editableTaskId === todo.id ? (
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <div className="flex gap-2 items-center">
                         <input
                           type="text"
                           value={taskInput}
                           onChange={(e) => setTaskInput(e.target.value)}
-                          style={{
-                            flex: 1,
-                            padding: '8px 12px',
-                            border: '1px solid #d1d5db',
-                            borderRadius: 6,
-                            fontSize: 14
-                          }}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
                           onKeyPress={(e) => e.key === 'Enter' && handleSaveEdit()}
                           autoFocus
                         />
                         <button
                           onClick={handleSaveEdit}
-                          style={{
-                            background: '#10b981',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: 6,
-                            padding: '8px 12px',
-                            fontSize: 12,
-                            cursor: 'pointer'
-                          }}
+                          className="bg-green-600 text-white rounded-md p-2 text-sm"
                         >
                           Save
                         </button>
                         <button
                           onClick={() => setEditableTaskId(null)}
-                          style={{
-                            background: '#6b7280',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: 6,
-                            padding: '8px 12px',
-                            fontSize: 12,
-                            cursor: 'pointer'
-                          }}
+                          className="bg-gray-600 text-white rounded-md p-2 text-sm"
                         >
                           Cancel
                         </button>
                       </div>
                     ) : (
                       <>
-                        <div style={{
-                          fontSize: 16,
-                          fontWeight: 500,
-                          color: todo.isCompleted ? '#9ca3af' : '#111827',
-                          textDecoration: todo.isCompleted ? 'line-through' : 'none',
-                          marginBottom: 8
-                        }}>
+                        <div className="text-lg font-medium text-gray-900">
                           {todo.title}
                         </div>
 
                         {todo.description && (
-                          <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>
+                          <div className="text-base text-gray-700 mb-2">
                             {todo.description}
                           </div>
                         )}
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 12 }}>
-                          <span style={{
-                            background: getCategoryInfo(todo.category).color + '20',
-                            color: getCategoryInfo(todo.category).color,
-                            padding: '4px 8px',
-                            borderRadius: 12,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 4
-                          }}>
+                        <div className="flex items-center gap-4 text-sm">
+                          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full flex items-center gap-2">
                             {getCategoryInfo(todo.category).icon} {getCategoryInfo(todo.category).name}
                           </span>
 
-                          <span style={{
-                            background: getPriorityInfo(todo.priority).color + '20',
-                            color: getPriorityInfo(todo.priority).color,
-                            padding: '4px 8px',
-                            borderRadius: 12,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 4
-                          }}>
+                          <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full flex items-center gap-2">
                             {getPriorityInfo(todo.priority).icon} {getPriorityInfo(todo.priority).name}
                           </span>
 
                           {todo.dueDate && (
-                            <span style={{
-                              color: isOverdue(todo.dueDate) && !todo.isCompleted ? '#ef4444' : '#6b7280',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 4
-                            }}>
+                            <span className="text-gray-700 flex items-center gap-2">
                               <Calendar size={12} /> {formatDate(todo.dueDate)}
                             </span>
                           )}
 
                           {todo.estimatedTime && (
-                            <span style={{ color: '#6b7280', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <span className="text-gray-700 flex items-center gap-2">
                               <Clock size={12} /> {todo.estimatedTime}
                             </span>
                           )}
@@ -909,42 +680,24 @@ const TodoList = () => {
                     )}
                   </div>
 
-                  <div style={{ display: 'flex', gap: 8 }}>
+                  <div className="flex gap-2">
                     <button
                       onClick={() => handleEditTask(todo.id)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#6b7280',
-                        cursor: 'pointer',
-                        padding: 4
-                      }}
+                      className="bg-gray-200 text-gray-800 rounded-md p-2 text-sm"
                       title="Edit task"
                     >
                       <Edit2 size={16} />
                     </button>
                     <button
                       onClick={() => handleDuplicateTask(todo.id)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#6b7280',
-                        cursor: 'pointer',
-                        padding: 4
-                      }}
+                      className="bg-gray-200 text-gray-800 rounded-md p-2 text-sm"
                       title="Duplicate task"
                     >
                       <Copy size={16} />
                     </button>
                     <button
                       onClick={() => handleDeleteTask(todo.id)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#ef4444',
-                        cursor: 'pointer',
-                        padding: 4
-                      }}
+                      className="bg-red-600 text-white rounded-md p-2 text-sm"
                       title="Delete task"
                     >
                       <Trash2 size={16} />
@@ -959,77 +712,38 @@ const TodoList = () => {
 
       {/* Add Task Modal */}
       {showAddForm && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            background: 'white',
-            borderRadius: 12,
-            padding: 24,
-            width: '90%',
-            maxWidth: 500,
-            maxHeight: '90vh',
-            overflowY: 'auto'
-          }}>
-            <h2 style={{ margin: '0 0 20px 0', fontSize: 20, fontWeight: 600 }}>Add New Task</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <h2 className="mb-4 text-xl font-semibold">Add New Task</h2>
 
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Title *</label>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-900 mb-1">Title *</label>
               <input
                 type="text"
                 value={newTask.title}
                 onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 8,
-                  fontSize: 14
-                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                 placeholder="What needs to be done?"
               />
             </div>
 
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Description</label>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-900 mb-1">Description</label>
               <textarea
                 value={newTask.description}
                 onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 8,
-                  fontSize: 14,
-                  minHeight: 80,
-                  resize: 'vertical'
-                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm min-h-20 resize-vertical"
                 placeholder="Add more details..."
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div>
-                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Category</label>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Category</label>
                 <select
                   value={newTask.category}
                   onChange={(e) => setNewTask({ ...newTask, category: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: 8,
-                    fontSize: 14
-                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                 >
                   {categories.map(cat => (
                     <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
@@ -1038,17 +752,11 @@ const TodoList = () => {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Priority</label>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Priority</label>
                 <select
                   value={newTask.priority}
                   onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: 8,
-                    fontSize: 14
-                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                 >
                   {priorities.map(pri => (
                     <option key={pri.id} value={pri.id}>{pri.icon} {pri.name}</option>
@@ -1057,68 +765,39 @@ const TodoList = () => {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div>
-                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Due Date</label>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Due Date</label>
                 <input
                   type="date"
                   value={newTask.dueDate}
                   onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: 8,
-                    fontSize: 14
-                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Estimated Time</label>
+                <label className="block text-sm font-medium text-gray-900 mb-1">Estimated Time</label>
                 <input
                   type="text"
                   value={newTask.estimatedTime}
                   onChange={(e) => setNewTask({ ...newTask, estimatedTime: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: 8,
-                    fontSize: 14
-                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                   placeholder="e.g., 2 hours"
                 />
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+            <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowAddForm(false)}
-                style={{
-                  background: '#f3f4f6',
-                  color: '#374151',
-                  border: 'none',
-                  borderRadius: 8,
-                  padding: '12px 24px',
-                  fontSize: 14,
-                  cursor: 'pointer'
-                }}
+                className="bg-gray-200 text-gray-800 rounded-md p-3 text-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddTask}
-                style={{
-                  background: '#3b82f6',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 8,
-                  padding: '12px 24px',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
+                className="bg-blue-600 text-white rounded-md p-3 text-sm font-semibold"
               >
                 Add Task
               </button>
@@ -1130,7 +809,7 @@ const TodoList = () => {
       {tab === 2 && (
         <div className="todo-container">
           <h1 className="todo-heading">Office Tasks</h1>
-          <p style={{ textAlign: 'center', color: '#6b7280', padding: 24 }}>
+          <p className="text-center text-gray-700 py-8">
             Office-specific tasks coming soon! For now, use the Tasks tab to manage all your tasks.
           </p>
         </div>

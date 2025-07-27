@@ -1,43 +1,30 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
-import TodoList from './components/todo/TodoList';
-import Header from './components/shared/Header';
-import Settings from './components/settings/Settings';
+import Layout from './components/Layout';
+import Dashboard from './pages/Dashboard';
+import Tasks from './pages/Tasks';
+import Office from './pages/Office';
+import ShopBills from './pages/ShopBills';
+import ShopTransactions from './pages/ShopTransactions';
+import PriceList from './pages/PriceList';
+import Settings from './pages/Settings';
 
 function App() {
-  const [showSettings, setShowSettings] = useState(false);
-
-  const handleSettingsClick = () => {
-    setShowSettings(true);
-  };
-
-  const handleCloseSettings = () => {
-    setShowSettings(false);
-  };
-
   return (
-    <div className="App">
-      <Header onSettingsClick={handleSettingsClick} />
-      <main className="app-main">
-        <TodoList />
-      </main>
-      
-      {/* Settings Modal */}
-      {showSettings && (
-        <div className="settings-modal-overlay" onClick={handleCloseSettings}>
-          <div className="settings-modal" onClick={(e) => e.stopPropagation()}>
-            <Settings />
-            <button 
-              className="settings-close-btn"
-              onClick={handleCloseSettings}
-              aria-label="Close settings"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+    <Router>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/office" element={<Office />} />
+          <Route path="/shop/bills" element={<ShopBills />} />
+          <Route path="/shop/transactions" element={<ShopTransactions />} />
+          <Route path="/shop/price-list" element={<PriceList />} />
+          <Route path="/settings" element={<Settings />} />
+        </Routes>
+      </Layout>
+    </Router>
   );
 }
 

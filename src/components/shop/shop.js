@@ -50,7 +50,7 @@ const Shop = () => {
       vendor: 'Test Vendor'
     },
     {
-      id: 'test2', 
+      id: 'test2',
       productName: 'Test Product 2',
       totalAmount: 500,
       category: 'Clothing',
@@ -64,8 +64,6 @@ const Shop = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [showSaveAnimation, setShowSaveAnimation] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
   const [lastActionType, setLastActionType] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -140,16 +138,7 @@ const Shop = () => {
     return () => unsubscribe();
   }, []);
 
-  // Clear notifications after 3 seconds
-  useEffect(() => {
-    if (error || success) {
-      const timer = setTimeout(() => {
-        setError(null);
-        setSuccess(null);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [error, success]);
+
 
   useEffect(() => {
     updatePieChartData();
@@ -181,10 +170,10 @@ const Shop = () => {
   const handleSave = async () => {
     try {
       setShowSaveAnimation(true);
-      setSuccess("Data saved successfully!");
+      showToast("Data saved successfully!", 'success');
       setTimeout(() => setShowSaveAnimation(false), 2000);
     } catch (error) {
-      setError("Failed to save data. Please try again.");
+      showToast("Failed to save data. Please try again.", 'error');
     }
   };
 
@@ -209,7 +198,7 @@ const Shop = () => {
       setEditingCell(null);
     } catch (error) {
       console.error('Error updating product:', error);
-      setError('Failed to update product. Please try again.');
+      showToast('Failed to update product. Please try again.', 'error');
     }
   };
 
@@ -586,7 +575,7 @@ const Shop = () => {
                 </div>
               </h2>
             </div>
-                        <div className="p-4">
+            <div className="p-4">
               {data.length > 0 ? (
                 <div className="h-60">
                   <ResponsiveContainer width="100%" height="100%">
@@ -607,12 +596,12 @@ const Shop = () => {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip 
+                      <Tooltip
                         formatter={(value) => [formatCurrency(value), 'Amount']}
                         labelFormatter={(label) => `Product: ${label}`}
                       />
-                      <Legend 
-                        verticalAlign="bottom" 
+                      <Legend
+                        verticalAlign="bottom"
                         height={36}
                       />
                     </PieChart>
@@ -675,12 +664,12 @@ const Shop = () => {
                         <Cell fill="#3b82f6" />
                         <Cell fill="#10b981" />
                       </Pie>
-                      <Tooltip 
+                      <Tooltip
                         formatter={(value) => [formatCurrency(value), 'Amount']}
                         labelFormatter={(label) => label}
                       />
-                      <Legend 
-                        verticalAlign="bottom" 
+                      <Legend
+                        verticalAlign="bottom"
                         height={36}
                       />
                     </PieChart>
@@ -736,12 +725,12 @@ const Shop = () => {
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                           ))}
                         </Pie>
-                        <Tooltip 
+                        <Tooltip
                           formatter={(value) => [formatCurrency(value), 'Amount']}
                           labelFormatter={(label) => `Category: ${label}`}
                         />
-                        <Legend 
-                          verticalAlign="bottom" 
+                        <Legend
+                          verticalAlign="bottom"
                           height={36}
                         />
                       </PieChart>
@@ -797,12 +786,12 @@ const Shop = () => {
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                           ))}
                         </Pie>
-                        <Tooltip 
+                        <Tooltip
                           formatter={(value) => [formatCurrency(value), 'Amount']}
                           labelFormatter={(label) => `Vendor: ${label}`}
                         />
-                        <Legend 
-                          verticalAlign="bottom" 
+                        <Legend
+                          verticalAlign="bottom"
                           height={36}
                         />
                       </PieChart>
@@ -1010,22 +999,7 @@ const Shop = () => {
         </div>
       </div>
 
-      {/* Notifications */}
-      {error && (
-        <div className="dashboard-card">
-          <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-            {error}
-          </div>
-        </div>
-      )}
 
-      {success && (
-        <div className="dashboard-card">
-          <div className={`p-4 border rounded-lg ${lastActionType === 'delete' ? 'bg-red-100 border-red-400 text-red-700' : 'bg-green-100 border-green-400 text-green-700'}`}>
-            {success}
-          </div>
-        </div>
-      )}
 
       {/* Toast notification */}
       {toast.show && (
