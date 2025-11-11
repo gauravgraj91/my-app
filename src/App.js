@@ -9,22 +9,25 @@ import ShopBills from './pages/ShopBills';
 import ShopTransactions from './pages/ShopTransactions';
 import PriceList from './pages/PriceList';
 import Settings from './pages/Settings';
+import { NotificationProvider } from './components/ui/NotificationSystem';
 
 function App() {
   return (
-    <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/tasks" element={<Tasks />} />
-          <Route path="/office" element={<Office />} />
-          <Route path="/shop/bills" element={<ShopBills />} />
-          <Route path="/shop/transactions" element={<ShopTransactions />} />
-          <Route path="/shop/price-list" element={<PriceList />} />
-          <Route path="/settings" element={<Settings />} />
-        </Routes>
-      </Layout>
-    </Router>
+    <NotificationProvider maxNotifications={5}>
+      <Router>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/tasks" element={<Tasks />} />
+            <Route path="/office" element={<Office />} />
+            <Route path="/shop/bills" element={<ShopBills />} />
+            <Route path="/shop/transactions" element={<ShopTransactions />} />
+            <Route path="/shop/price-list" element={<PriceList />} />
+            <Route path="/settings" element={<Settings />} />
+          </Routes>
+        </Layout>
+      </Router>
+    </NotificationProvider>
   );
 }
 

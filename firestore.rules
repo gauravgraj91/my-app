@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Shop Products collection
+    match /shopProducts/{document} {
+      allow read, write: if true; // Adjust based on your authentication requirements
+    }
+    
+    // Bills collection
+    match /bills/{document} {
+      allow read, write: if true; // Adjust based on your authentication requirements
+    }
+    
+    // Migration logs (optional - for tracking migration operations)
+    match /migrationLogs/{document} {
+      allow read, write: if true; // Adjust based on your authentication requirements
+    }
+  }
+}

@@ -6,8 +6,11 @@ const Input = ({
   icon,
   className = '',
   containerStyle = {},
+  id,
   ...props 
 }) => {
+  const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
+  
   const inputStyle = {
     width: '100%',
     padding: icon ? '12px 12px 12px 44px' : '12px',
@@ -27,13 +30,16 @@ const Input = ({
   return (
     <div style={containerStyles} className={className}>
       {label && (
-        <label style={{ 
-          display: 'block', 
-          fontSize: 14, 
-          fontWeight: 500, 
-          marginBottom: 4,
-          color: error ? '#ef4444' : '#374151'
-        }}>
+        <label 
+          htmlFor={inputId}
+          style={{ 
+            display: 'block', 
+            fontSize: 14, 
+            fontWeight: 500, 
+            marginBottom: 4,
+            color: error ? '#ef4444' : '#374151'
+          }}
+        >
           {label}
         </label>
       )}
@@ -50,6 +56,7 @@ const Input = ({
           </div>
         )}
         <input
+          id={inputId}
           style={inputStyle}
           {...props}
         />

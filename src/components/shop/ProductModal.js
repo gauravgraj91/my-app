@@ -1,252 +1,453 @@
 import React, { useState, useEffect } from 'react';
+import Modal from '../ui/Modal';
+import Button from '../ui/Button';
+import Input from '../ui/Input';
+import Select from '../ui/Select';
+import { Package, DollarSign, Hash, Tag, User, Plus, Edit } from 'lucide-react';
 
-const defaultCategories = [
-  'Clothing',
-  'Electronics',
-  'Groceries',
-  'Accessories',
-  'Other'
-];
+const ProductModal = ({ 
+  isOpen, 
+  onClose, 
+  onSave,
+  product = null, // null for create, object for edit
+  bill = null, // bill context for product creation
+  mode = 'create' // 'create' or 'edit'
+}) => {
+  const [formData, setFormData] = useState({
+    productName: '',
+    category: '',
+    vendor: '',
+    mrp: '',
+    totalQuantity: '',
+    pricePerPiece: '',
+    profitPerPiece: '',
+    totalAmount: '',
+    billId: bill?.id || '',
+    billNumber: bill?.billNumber || ''
+  });
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
-const defaultVendors = [
-  'ABC Suppliers',
-  'XYZ Distributors',
-  'Local Market',
-  'Online Store',
-  'Direct Import',
-  'Other'
-];
-
-const ProductModal = ({ open, onClose, product, onSave, categories = defaultCategories, vendors = defaultVendors }) => {
-  const [form, setForm] = useState({ ...product });
-  const [saving, setSaving] = useState(false);
-  const [newVendor, setNewVendor] = useState('');
-  const [showAddVendor, setShowAddVendor] = useState(false);
-
+  // Initialize form data when product or bill changes
   useEffect(() => {
-    setForm({ ...product });
-  }, [product]);
+    if (product && mode === 'edit') {
+      setFormData({
+        productName: product.productName || '',
+        category: product.category || '',
+        vendor: product.vendor || '',
+        mrp: product.mrp?.toString() || '',
+        totalQuantity: product.totalQuantity?.toString() || '',
+        pricePerPiece: product.pricePerPiece?.toString() || '',
+        profitPerPiece: product.profitPerPiece?.toString() || '',
+        totalAmount: product.totalAmount?.toString() || '',
+        billId: product.billId || '',
+        billNumber: product.billNumber || ''
+      });
+    } else if (bill && mode === 'create') {
+      setFormData(prev => ({
+        ...prev,
+        billId: bill.id,
+        billNumber: bill.billNumber,
+        vendor: bill.vendor // Pre-fill vendor from bill
+      }));
+    }
+  }, [product, bill, mode]);
 
-  if (!open) return null;
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setFormData({
+        productName: '',
+        category: '',
+        vendor: '',
+        mrp: '',
+        totalQuantity: '',
+        pricePerPiece: '',
+        profitPerPiece: '',
+        totalAmount: '',
+        billId: bill?.id || '',
+        billNumber: bill?.billNumber || ''
+      });
+      setErrors({});
+    }
+  }, [isOpen, bill]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
+  // Calculate total amount when quantity or price changes
+  useEffect(() => {
+    const quantity = parseFloat(formData.totalQuantity) || 0;
+    const price = parseFloat(formData.pricePerPiece) || 0;
+    const totalAmount = quantity * price;
+    
+    if (totalAmount !== parseFloat(formData.totalAmount)) {
+      setFormData(prev => ({
+        ...prev,
+        totalAmount: totalAmount.toString()
+      }));
+    }
+  }, [formData.totalQuantity, formData.pricePerPiece]);
 
-  const handleNumberChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value === '' ? '' : Number(value) }));
-  };
-
-  const handleAddVendor = () => {
-    if (newVendor.trim()) {
-      // In a real app, you would update this in your database
-      setForm((prev) => ({ ...prev, vendor: newVendor.trim() }));
-      setNewVendor('');
-      setShowAddVendor(false);
+  // Handle input changes
+  const handleChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: ''
+      }));
     }
   };
 
-  // Calculate price per piece and profit per piece
-  const pricePerPiece =
-    form.totalQuantity && form.totalAmount
-      ? Number(form.totalAmount) / Number(form.totalQuantity)
-      : 0;
-  const profitPerPiece =
-    form.mrp && pricePerPiece
-      ? Number(form.mrp) - pricePerPiece
-      : 0;
+  // Validate form data
+  const validateForm = () => {
+    const newErrors = {};
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-    // Save calculated fields
-    await onSave({
-      ...form,
-      pricePerPiece: Number(pricePerPiece.toFixed(2)),
-      profitPerPiece: Number(profitPerPiece.toFixed(2)),
-    });
-    setSaving(false);
+    // Product name validation
+    if (!formData.productName.trim()) {
+      newErrors.productName = 'Product name is required';
+    } else if (formData.productName.length > 100) {
+      newErrors.productName = 'Product name must be less than 100 characters';
+    }
+
+    // Category validation
+    if (!formData.category.trim()) {
+      newErrors.category = 'Category is required';
+    } else if (formData.category.length > 50) {
+      newErrors.category = 'Category must be less than 50 characters';
+    }
+
+    // Vendor validation
+    if (!formData.vendor.trim()) {
+      newErrors.vendor = 'Vendor is required';
+    } else if (formData.vendor.length > 100) {
+      newErrors.vendor = 'Vendor name must be less than 100 characters';
+    }
+
+    // MRP validation
+    const mrp = parseFloat(formData.mrp);
+    if (!formData.mrp || isNaN(mrp) || mrp <= 0) {
+      newErrors.mrp = 'MRP must be a positive number';
+    }
+
+    // Quantity validation
+    const quantity = parseFloat(formData.totalQuantity);
+    if (!formData.totalQuantity || isNaN(quantity) || quantity <= 0) {
+      newErrors.totalQuantity = 'Quantity must be a positive number';
+    }
+
+    // Price per piece validation
+    const pricePerPiece = parseFloat(formData.pricePerPiece);
+    if (!formData.pricePerPiece || isNaN(pricePerPiece) || pricePerPiece <= 0) {
+      newErrors.pricePerPiece = 'Price per piece must be a positive number';
+    }
+
+    // Profit per piece validation
+    const profitPerPiece = parseFloat(formData.profitPerPiece);
+    if (!formData.profitPerPiece || isNaN(profitPerPiece)) {
+      newErrors.profitPerPiece = 'Profit per piece must be a valid number';
+    }
+
+    // Business logic validation
+    if (!isNaN(mrp) && !isNaN(pricePerPiece) && pricePerPiece > mrp) {
+      newErrors.pricePerPiece = 'Price per piece cannot be greater than MRP';
+    }
+
+    if (!isNaN(pricePerPiece) && !isNaN(profitPerPiece) && profitPerPiece >= pricePerPiece) {
+      newErrors.profitPerPiece = 'Profit per piece must be less than price per piece';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const productData = {
+        productName: formData.productName.trim(),
+        category: formData.category.trim(),
+        vendor: formData.vendor.trim(),
+        mrp: parseFloat(formData.mrp),
+        totalQuantity: parseFloat(formData.totalQuantity),
+        pricePerPiece: parseFloat(formData.pricePerPiece),
+        profitPerPiece: parseFloat(formData.profitPerPiece),
+        totalAmount: parseFloat(formData.totalAmount),
+        billId: formData.billId,
+        billNumber: formData.billNumber,
+        date: new Date()
+      };
+      
+      await onSave(productData);
+      onClose();
+    } catch (error) {
+      console.error('Error saving product:', error);
+      setErrors({ submit: error.message || 'Failed to save product. Please try again.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle modal close
+  const handleClose = () => {
+    if (!loading) {
+      onClose();
+    }
+  };
+
+  // Category options (you can expand this list)
+  const categoryOptions = [
+    { value: '', label: 'Select Category' },
+    { value: 'Electronics', label: 'Electronics' },
+    { value: 'Clothing', label: 'Clothing' },
+    { value: 'Food & Beverages', label: 'Food & Beverages' },
+    { value: 'Home & Garden', label: 'Home & Garden' },
+    { value: 'Sports & Outdoors', label: 'Sports & Outdoors' },
+    { value: 'Books', label: 'Books' },
+    { value: 'Toys & Games', label: 'Toys & Games' },
+    { value: 'Health & Beauty', label: 'Health & Beauty' },
+    { value: 'Automotive', label: 'Automotive' },
+    { value: 'Other', label: 'Other' }
+  ];
+
+  const modalTitle = mode === 'edit' ? 'Edit Product' : 
+    (bill ? `Add Product to ${bill.billNumber}` : 'Add Product');
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative">
-        <button
-          className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl font-bold"
-          onClick={onClose}
-          aria-label="Close"
-        >
-          ×
-        </button>
-        <h2 className="text-xl font-bold mb-4">Edit Product</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Bill Number</label>
-              <input
-                name="billNumber"
-                value={form.billNumber || ''}
-                onChange={handleChange}
-                className="w-full p-2 border border-gray-300 rounded-md"
-                required
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title={modalTitle}
+      maxWidth={600}
+    >
+      <form onSubmit={handleSubmit} role="form">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Bill Context Info */}
+          {bill && (
+            <div style={{
+              padding: '12px',
+              background: '#f0f9ff',
+              border: '1px solid #bae6fd',
+              borderRadius: '8px',
+              fontSize: '14px',
+              color: '#0369a1'
+            }}>
+              <strong>Bill:</strong> {bill.billNumber} | <strong>Vendor:</strong> {bill.vendor} | 
+              <strong>Date:</strong> {new Date(bill.date).toLocaleDateString()}
+            </div>
+          )}
+
+          {/* Product Name */}
+          <div>
+            <Input
+              label={
+                <span>
+                  <Package size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                  Product Name *
+                </span>
+              }
+              type="text"
+              value={formData.productName}
+              onChange={(e) => handleChange('productName', e.target.value)}
+              placeholder="Enter product name"
+              error={errors.productName}
+              disabled={loading}
+            />
+          </div>
+
+          {/* Category and Vendor Row */}
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <div style={{ flex: 1 }}>
+              <Select
+                label={
+                  <span>
+                    <Tag size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                    Category *
+                  </span>
+                }
+                value={formData.category}
+                onChange={(e) => handleChange('category', e.target.value)}
+                options={categoryOptions}
+                error={errors.category}
+                disabled={loading}
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-              <input
-                name="date"
-                type="date"
-                value={form.date || ''}
-                onChange={handleChange}
-                className="w-full p-2 border border-gray-300 rounded-md"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
-              <input
-                name="productName"
-                value={form.productName || ''}
-                onChange={handleChange}
-                className="w-full p-2 border border-gray-300 rounded-md"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-              <select
-                name="category"
-                value={form.category || ''}
-                onChange={handleChange}
-                className="w-full p-2 border border-gray-300 rounded-md"
-                required
-              >
-                <option value="">Select Category</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Vendor</label>
-              {showAddVendor ? (
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newVendor}
-                    onChange={(e) => setNewVendor(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                    placeholder="Enter new vendor name"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddVendor}
-                    className="px-2 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
-                  >
-                    Add
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowAddVendor(false)}
-                    className="px-2 py-1 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <div className="flex gap-2">
-                  <select
-                    name="vendor"
-                    value={form.vendor || ''}
-                    onChange={handleChange}
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                  >
-                    <option value="">Select Vendor</option>
-                    {vendors.map((vendor) => (
-                      <option key={vendor} value={vendor}>{vendor}</option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() => setShowAddVendor(true)}
-                    className="px-2 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 whitespace-nowrap"
-                  >
-                    New
-                  </button>
-                </div>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">MRP</label>
-              <input
-                name="mrp"
-                type="number"
-                value={form.mrp || ''}
-                onChange={handleNumberChange}
-                className="w-full p-2 border border-gray-300 rounded-md"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-              <input
-                name="totalQuantity"
-                type="number"
-                value={form.totalQuantity || ''}
-                onChange={handleNumberChange}
-                className="w-full p-2 border border-gray-300 rounded-md"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Total Amount</label>
-              <input
-                name="totalAmount"
-                type="number"
-                value={form.totalAmount || ''}
-                onChange={handleNumberChange}
-                className="w-full p-2 border border-gray-300 rounded-md"
-                required
+            <div style={{ flex: 1 }}>
+              <Input
+                label={
+                  <span>
+                    <User size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                    Vendor *
+                  </span>
+                }
+                type="text"
+                value={formData.vendor}
+                onChange={(e) => handleChange('vendor', e.target.value)}
+                placeholder="Enter vendor name"
+                error={errors.vendor}
+                disabled={loading}
               />
             </div>
           </div>
-          {/* Calculated fields */}
-          <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Price per Piece</label>
-              <div className="w-full p-2 border border-gray-200 rounded-md bg-gray-50 text-gray-700">
-                {pricePerPiece ? pricePerPiece.toFixed(2) : '0.00'}
-              </div>
+
+          {/* MRP and Quantity Row */}
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <div style={{ flex: 1 }}>
+              <Input
+                label={
+                  <span>
+                    <DollarSign size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                    MRP *
+                  </span>
+                }
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.mrp}
+                onChange={(e) => handleChange('mrp', e.target.value)}
+                placeholder="0.00"
+                error={errors.mrp}
+                disabled={loading}
+              />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Profit per Piece</label>
-              <div className="w-full p-2 border border-gray-200 rounded-md bg-gray-50 text-gray-700">
-                {profitPerPiece ? profitPerPiece.toFixed(2) : '0.00'}
-              </div>
+            <div style={{ flex: 1 }}>
+              <Input
+                label={
+                  <span>
+                    <Hash size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                    Quantity *
+                  </span>
+                }
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.totalQuantity}
+                onChange={(e) => handleChange('totalQuantity', e.target.value)}
+                placeholder="0"
+                error={errors.totalQuantity}
+                disabled={loading}
+              />
             </div>
           </div>
-          <div className="flex justify-end gap-2 mt-4">
-            <button
+
+          {/* Price Per Piece and Profit Per Piece Row */}
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <div style={{ flex: 1 }}>
+              <Input
+                label={
+                  <span>
+                    <DollarSign size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                    Price Per Piece *
+                  </span>
+                }
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.pricePerPiece}
+                onChange={(e) => handleChange('pricePerPiece', e.target.value)}
+                placeholder="0.00"
+                error={errors.pricePerPiece}
+                disabled={loading}
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <Input
+                label={
+                  <span>
+                    <DollarSign size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                    Profit Per Piece *
+                  </span>
+                }
+                type="number"
+                step="0.01"
+                value={formData.profitPerPiece}
+                onChange={(e) => handleChange('profitPerPiece', e.target.value)}
+                placeholder="0.00"
+                error={errors.profitPerPiece}
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          {/* Total Amount (Read-only) */}
+          <div>
+            <Input
+              label={
+                <span>
+                  <DollarSign size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                  Total Amount
+                </span>
+              }
+              type="number"
+              step="0.01"
+              value={formData.totalAmount}
+              placeholder="0.00"
+              disabled={true}
+              style={{ background: '#f9fafb', color: '#6b7280' }}
+            />
+            <div style={{ 
+              marginTop: '4px', 
+              fontSize: '12px', 
+              color: '#6b7280' 
+            }}>
+              Automatically calculated: Quantity × Price Per Piece
+            </div>
+          </div>
+
+          {/* Submit Error */}
+          {errors.submit && (
+            <div style={{ 
+              padding: '12px', 
+              background: '#fef2f2', 
+              border: '1px solid #fecaca',
+              borderRadius: '8px',
+              color: '#dc2626',
+              fontSize: '14px'
+            }}>
+              {errors.submit}
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div style={{ 
+            display: 'flex', 
+            gap: '12px', 
+            justifyContent: 'flex-end',
+            paddingTop: '20px',
+            borderTop: '1px solid #e5e7eb'
+          }}>
+            <Button
               type="button"
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+              variant="secondary"
+              onClick={handleClose}
+              disabled={loading}
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={saving}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              variant="primary"
+              loading={loading}
+              icon={mode === 'edit' ? <Edit size={16} /> : <Plus size={16} />}
             >
-              {saving ? 'Saving...' : 'Save'}
-            </button>
+              {loading ? (mode === 'edit' ? 'Updating...' : 'Adding...') : 
+                        (mode === 'edit' ? 'Update Product' : 'Add Product')}
+            </Button>
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
+      </form>
+    </Modal>
   );
 };
 
-export default ProductModal; 
+export default ProductModal;

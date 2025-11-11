@@ -8,21 +8,30 @@ const StatCard = ({
   onViewAll,
   children,
   className = '',
+  style = {},
   ...props 
 }) => {
+  const isGradient = style.background && style.background.includes('gradient');
+  const titleColor = isGradient ? 'white' : '#111827';
+  
   return (
-    <Card className={className} {...props}>
+    <Card className={className} style={style} {...props}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h3 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#111827' }}>
+        <h3 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: titleColor }}>
           {icon && <span style={{ marginRight: 8 }}>{icon}</span>}
           {title}
         </h3>
         {onViewAll && (
           <Button 
-            variant="outline" 
+            variant={isGradient ? "secondary" : "outline"}
             size="small" 
             onClick={onViewAll}
-            style={{ textDecoration: 'underline' }}
+            style={{ 
+              textDecoration: 'underline',
+              background: isGradient ? 'rgba(255,255,255,0.2)' : undefined,
+              color: isGradient ? 'white' : undefined,
+              border: isGradient ? '1px solid rgba(255,255,255,0.3)' : undefined
+            }}
           >
             View All
           </Button>

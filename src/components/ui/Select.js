@@ -6,8 +6,11 @@ const Select = ({
   options = [],
   className = '',
   containerStyle = {},
+  id,
   ...props 
 }) => {
+  const selectId = id || `select-${Math.random().toString(36).substr(2, 9)}`;
+  
   const selectStyle = {
     width: '100%',
     padding: '12px',
@@ -28,17 +31,21 @@ const Select = ({
   return (
     <div style={containerStyles} className={className}>
       {label && (
-        <label style={{ 
-          display: 'block', 
-          fontSize: 14, 
-          fontWeight: 500, 
-          marginBottom: 4,
-          color: error ? '#ef4444' : '#374151'
-        }}>
+        <label 
+          htmlFor={selectId}
+          style={{ 
+            display: 'block', 
+            fontSize: 14, 
+            fontWeight: 500, 
+            marginBottom: 4,
+            color: error ? '#ef4444' : '#374151'
+          }}
+        >
           {label}
         </label>
       )}
       <select
+        id={selectId}
         style={selectStyle}
         {...props}
       >

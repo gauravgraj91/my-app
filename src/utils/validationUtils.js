@@ -293,4 +293,127 @@ export const TransactionValidationSchema = {
       message: 'Type must be either income or expense'
     }
   ]
+};/
+/ Bill validation function
+export const validateBill = (bill) => {
+  const errors = {};
+  
+  // Bill number validation
+  if (!bill.billNumber || bill.billNumber.trim() === '') {
+    errors.billNumber = 'Bill number is required';
+  } else if (bill.billNumber.length > 20) {
+    errors.billNumber = 'Bill number must be less than 20 characters';
+  }
+  
+  // Date validation
+  if (!bill.date) {
+    errors.date = 'Bill date is required';
+  } else {
+    const date = new Date(bill.date);
+    if (isNaN(date.getTime())) {
+      errors.date = 'Invalid date format';
+    }
+  }
+  
+  // Vendor validation
+  if (!bill.vendor || bill.vendor.trim() === '') {
+    errors.vendor = 'Vendor is required';
+  } else if (bill.vendor.length > 100) {
+    errors.vendor = 'Vendor name must be less than 100 characters';
+  }
+  
+  // Notes validation (optional)
+  if (bill.notes && bill.notes.length > 500) {
+    errors.notes = 'Notes must be less than 500 characters';
+  }
+  
+  // Status validation
+  const validStatuses = ['active', 'archived', 'returned'];
+  if (bill.status && !validStatuses.includes(bill.status)) {
+    errors.status = 'Invalid status. Must be active, archived, or returned';
+  }
+  
+  // Numeric field validations
+  if (bill.totalAmount !== undefined && (isNaN(bill.totalAmount) || bill.totalAmount < 0)) {
+    errors.totalAmount = 'Total amount must be a valid positive number';
+  }
+  
+  if (bill.totalQuantity !== undefined && (isNaN(bill.totalQuantity) || bill.totalQuantity < 0)) {
+    errors.totalQuantity = 'Total quantity must be a valid positive number';
+  }
+  
+  if (bill.totalProfit !== undefined && isNaN(bill.totalProfit)) {
+    errors.totalProfit = 'Total profit must be a valid number';
+  }
+  
+  if (bill.productCount !== undefined && (isNaN(bill.productCount) || bill.productCount < 0)) {
+    errors.productCount = 'Product count must be a valid positive number';
+  }
+  
+  return Object.keys(errors).length > 0 ? errors : null;
+};
+
+// Bill validation schema for form validation
+export const BillValidationSchema = {
+  billNumber: [
+    { type: ValidationRules.REQUIRED, message: 'Bill number is required' },
+    { type: ValidationRules.MAX_LENGTH, value: 20, message: 'Bill number must be less than 20 characters' }
+  ],
+  date: [
+    { type: ValidationRules.REQUIRED, message: 'Bill date is required' },
+    { 
+      type: ValidationRules.CUSTOM, 
+      validator: (value) => {
+        if (!value) return false;
+        const date = new Date(value);
+        return !isNaN(date.getTime());
+      },
+      message: 'Invalid date format'
+    }
+  ],
+  vendor: [
+    { type: ValidationRules.REQUIRED, message: 'Vendor is required' },
+    { type: ValidationRules.MAX_LENGTH, value: 100, message: 'Vendor name must be less than 100 characters' }
+  ],
+  notes: [
+    { type: ValidationRules.MAX_LENGTH, value: 500, message: 'Notes must be less than 500 characters' }
+  ],
+  status: [
+    { 
+      type: ValidationRules.CUSTOM, 
+      validator: (value) => {
+        const validStatuses = ['active', 'archived', 'returned'];
+        return !value || validStatuses.includes(value);
+      },
+      message: 'Invalid status. Must be active, archived, or returned'
+    }
+  ],
+  totalAmount: [
+    { 
+      type: ValidationRules.CUSTOM, 
+      validator: (value) => value === undefined || (!isNaN(value) && parseFloat(value) >= 0),
+      message: 'Total amount must be a valid positive number'
+    }
+  ],
+  totalQuantity: [
+    { 
+      type: ValidationRules.CUSTOM, 
+      validator: (value) => value === undefined || (!isNaN(value) && parseFloat(value) >= 0),
+      message: 'Total quantity must be a valid positive number'
+    }
+  ],
+  totalProfit: [
+    { 
+      type: ValidationRules.CUSTOM, 
+      validator: (value) => value === undefined || !isNaN(value),
+      message: 'Total profit must be a valid number'
+    }
+  ],
+  productCount: [
+    { 
+      type: ValidationRules.CUSTOM, 
+      validator: (value) => value === undefined || (!isNaN(value) && parseInt(value) >= 0),
+      message: 'Product count must be a valid positive number'
+    }
+  ]
 };

@@ -26,22 +26,25 @@ const Modal = ({
 
   const modalStyle = {
     background: 'white',
-    borderRadius: 12,
-    padding: 24,
+    borderRadius: 16,
+    padding: 0,
     width: '90%',
     maxWidth: maxWidth,
     maxHeight: '90vh',
     overflowY: 'auto',
-    position: 'relative'
+    position: 'relative',
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+    border: '1px solid #e5e7eb'
   };
 
   const headerStyle = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
-    paddingBottom: 16,
-    borderBottom: '1px solid #f3f4f6'
+    padding: '20px 24px',
+    borderBottom: '1px solid #e5e7eb',
+    background: '#f9fafb',
+    borderRadius: '16px 16px 0 0'
   };
 
   const closeButtonStyle = {
@@ -61,7 +64,7 @@ const Modal = ({
       >
         {title && (
           <div style={headerStyle}>
-            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600 }}>
+            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#1f2937' }}>
               {title}
             </h2>
             <button 
@@ -73,7 +76,9 @@ const Modal = ({
             </button>
           </div>
         )}
-        {children}
+        <div style={{ padding: 24 }}>
+          {children}
+        </div>
       </div>
     </div>
   );

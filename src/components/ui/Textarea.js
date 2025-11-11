@@ -6,8 +6,11 @@ const Textarea = ({
   className = '',
   containerStyle = {},
   rows = 4,
+  id,
   ...props 
 }) => {
+  const textareaId = id || `textarea-${Math.random().toString(36).substr(2, 9)}`;
+  
   const textareaStyle = {
     width: '100%',
     padding: '12px',
@@ -29,17 +32,21 @@ const Textarea = ({
   return (
     <div style={containerStyles} className={className}>
       {label && (
-        <label style={{ 
-          display: 'block', 
-          fontSize: 14, 
-          fontWeight: 500, 
-          marginBottom: 4,
-          color: error ? '#ef4444' : '#374151'
-        }}>
+        <label 
+          htmlFor={textareaId}
+          style={{ 
+            display: 'block', 
+            fontSize: 14, 
+            fontWeight: 500, 
+            marginBottom: 4,
+            color: error ? '#ef4444' : '#374151'
+          }}
+        >
           {label}
         </label>
       )}
       <textarea
+        id={textareaId}
         rows={rows}
         style={textareaStyle}
         {...props}

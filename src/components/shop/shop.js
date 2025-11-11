@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Search, X, Download, Plus, Save as SaveIcon, ChevronDown, Moon, Sun, Check, Trash2, Pencil, Calendar, Settings as SettingsIcon } from 'lucide-react';
+import { Search, X, Download, Plus, Save as SaveIcon, ChevronDown, Moon, Sun, Check, Trash2, Pencil, Calendar, Settings as SettingsIcon, Grid, List } from 'lucide-react';
 import './Shop.css';
 import ShopTransactions from './shopTransactions';
 import PriceList from './PriceList';
 import ProductModal from './ProductModal';
+import BillsView from './BillsView';
 import {
   addShopProduct,
   subscribeToShopProducts,
@@ -40,6 +41,12 @@ function getDefaultVendor() {
 }
 
 const Shop = () => {
+  // View mode state - 'bills' or 'products'
+  const [viewMode, setViewMode] = useState(() => {
+    const saved = localStorage.getItem('shopViewMode');
+    return saved || 'bills';
+  });
+
   const [data, setData] = useState([
     // Test data to ensure charts work
     {
@@ -128,14 +135,23 @@ const Shop = () => {
     return () => window.removeEventListener('storage', sync);
   }, []);
 
+  // Persist view mode to localStorage
+  useEffect(() => {
+    localStorage.setItem('shopViewMode', viewMode);
+  }, [viewMode]);
+
   // Subscribe to real-time updates
   useEffect(() => {
-    const unsubscribe = subscribeToShopProducts((products) => {
-      console.log('Firebase data loaded:', products);
-      setData(products);
+    const unsubscribe = subscribeToShopProducts((products, metadata) => {
+      console.log('Firebase data loaded:', products, metadata);
+      setData(products || []);
       setLoading(false);
     });
-    return () => unsubscribe();
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
   }, []);
 
 
@@ -550,20 +566,58 @@ const Shop = () => {
     <div className={`dashboard-container${darkMode ? ' dark' : ''}`}>
       <div className="dashboard-card dashboard-header">
         <h1 className="dashboard-title">Shop Dashboard</h1>
-        <button
-          aria-label="Toggle dark mode"
-          className="dashboard-dark-toggle"
-          onClick={() => setDarkMode(!darkMode)}
-        >
-          {darkMode ? <Sun /> : <Moon />}
-        </button>
+        <div className="flex items-center gap-4">
+          {/* View Mode Toggle */}
+          <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            <button
+              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                viewMode === 'bills' 
+                  ? 'bg-white text-blue-600 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+              onClick={() => setViewMode('bills')}
+              aria-label="Bills View"
+            >
+              <List size={16} />
+              Bills
+            </button>
+            <button
+              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                viewMode === 'products' 
+                  ? 'bg-white text-blue-600 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+              onClick={() => setViewMode('products')}
+              aria-label="Products View"
+            >
+              <Grid size={16} />
+              Products
+            </button>
+          </div>
+          <button
+            aria-label="Toggle dark mode"
+            className="dashboard-dark-toggle"
+            onClick={() => setDarkMode(!darkMode)}
+          >
+            {darkMode ? <Sun /> : <Moon />}
+          </button>
+        </div>
       </div>
 
 
 
-      {/* Simplified Charts Section with CSS-based charts */}
-      <div className="mb-8">
-        <h2 className="text-xl font-bold text-gray-800 mb-4 px-4">Analytics Dashboard</h2>
+      {/* Conditionally render based on view mode */}
+      {viewMode === 'bills' ? (
+        <BillsView 
+          searchTerm={search}
+          onSearchChange={setSearch}
+          darkMode={darkMode}
+        />
+      ) : (
+        <>
+          {/* Simplified Charts Section with CSS-based charts */}
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 px-4">Analytics Dashboard</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Row 1: Sales and Profit Charts */}
           <div className="dashboard-card dashboard-chart shadow-lg border border-gray-100 rounded-xl overflow-hidden">
@@ -1161,51 +1215,53 @@ const Shop = () => {
         vendors={vendors}
       />
 
-      {/* Settings Modal */}
-      {settingsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
-            <button
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl font-bold"
-              onClick={() => setSettingsOpen(false)}
-              aria-label="Close Settings"
-            >
-              ×
-            </button>
-            <h2 className="text-xl font-bold mb-4">Table Settings</h2>
-            <div className="space-y-4">
-              {/* Feature Toggles */}
-              <div className="flex items-center gap-2">
-                <input type="checkbox" id="toggle-filtering" checked={tableSettings.filtering} onChange={e => setTableSettings(s => ({ ...s, filtering: e.target.checked }))} />
-                <label htmlFor="toggle-filtering" className="font-medium">Enable Filtering</label>
-              </div>
-              <div className="flex items-center gap-2">
-                <input type="checkbox" id="toggle-export" checked={tableSettings.showExport} onChange={e => setTableSettings(s => ({ ...s, showExport: e.target.checked }))} />
-                <label htmlFor="toggle-export" className="font-medium">Enable Export</label>
-              </div>
-              <div className="flex items-center gap-2">
-                <input type="checkbox" id="toggle-totals" checked={tableSettings.showTotals} onChange={e => setTableSettings(s => ({ ...s, showTotals: e.target.checked }))} />
-                <label htmlFor="toggle-totals" className="font-medium">Show Totals Row</label>
-              </div>
-              <div className="mt-4">
-                <div className="font-semibold mb-2">Column Visibility</div>
-                <div className="grid grid-cols-2 gap-2">
-                  {Object.keys(tableSettings.columns).map(col => (
-                    <div key={col} className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id={`col-${col}`}
-                        checked={tableSettings.columns[col]}
-                        onChange={e => setTableSettings(s => ({ ...s, columns: { ...s.columns, [col]: e.target.checked } }))}
-                      />
-                      <label htmlFor={`col-${col}`}>{col.charAt(0).toUpperCase() + col.slice(1).replace(/([A-Z])/g, ' $1')}</label>
+          {/* Settings Modal */}
+          {settingsOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+              <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
+                <button
+                  className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl font-bold"
+                  onClick={() => setSettingsOpen(false)}
+                  aria-label="Close Settings"
+                >
+                  ×
+                </button>
+                <h2 className="text-xl font-bold mb-4">Table Settings</h2>
+                <div className="space-y-4">
+                  {/* Feature Toggles */}
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" id="toggle-filtering" checked={tableSettings.filtering} onChange={e => setTableSettings(s => ({ ...s, filtering: e.target.checked }))} />
+                    <label htmlFor="toggle-filtering" className="font-medium">Enable Filtering</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" id="toggle-export" checked={tableSettings.showExport} onChange={e => setTableSettings(s => ({ ...s, showExport: e.target.checked }))} />
+                    <label htmlFor="toggle-export" className="font-medium">Enable Export</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" id="toggle-totals" checked={tableSettings.showTotals} onChange={e => setTableSettings(s => ({ ...s, showTotals: e.target.checked }))} />
+                    <label htmlFor="toggle-totals" className="font-medium">Show Totals Row</label>
+                  </div>
+                  <div className="mt-4">
+                    <div className="font-semibold mb-2">Column Visibility</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {Object.keys(tableSettings.columns).map(col => (
+                        <div key={col} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id={`col-${col}`}
+                            checked={tableSettings.columns[col]}
+                            onChange={e => setTableSettings(s => ({ ...s, columns: { ...s.columns, [col]: e.target.checked } }))}
+                          />
+                          <label htmlFor={`col-${col}`}>{col.charAt(0).toUpperCase() + col.slice(1).replace(/([A-Z])/g, ' $1')}</label>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          )}
+        </>
       )}
     </div>
   );
