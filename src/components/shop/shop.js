@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Search, X, Download, Plus, Save as SaveIcon, ChevronDown, Check, Trash2, Pencil, Calendar, Settings as SettingsIcon, Grid, List } from 'lucide-react';
+import { Search, X, Download, Plus, Save as SaveIcon, ChevronDown, Check, Trash2, Pencil, Calendar, Settings as SettingsIcon, Grid, List, Tag } from 'lucide-react';
 import './Shop.css';
 import ShopTransactions from './shopTransactions';
 import PriceList from './PriceList';
@@ -591,6 +591,17 @@ const Shop = () => {
               <Grid size={16} />
               Products
             </button>
+            <button
+              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${viewMode === 'pricelist'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-800'
+                }`}
+              onClick={() => setViewMode('pricelist')}
+              aria-label="Price List View"
+            >
+              <Tag size={16} />
+              Price List
+            </button>
           </div>
         </div>
       </div>
@@ -604,6 +615,8 @@ const Shop = () => {
             searchTerm={search}
             onSearchChange={setSearch}
           />
+        ) : viewMode === 'pricelist' ? (
+          <PriceList />
         ) : (
           <>
             {/* Simplified Charts Section with CSS-based charts */}

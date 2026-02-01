@@ -20,7 +20,8 @@ import {
   Copy,
   Archive,
   MoreHorizontal,
-  AlertTriangle
+  AlertTriangle,
+  IndianRupee
 } from 'lucide-react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
@@ -91,6 +92,8 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
   const [billProducts, setBillProducts] = useState({});
   const [loading, setLoading] = useState(true);
   const isFirstLoad = useRef(true);
+  const recentlyCreatedBills = useRef(new Set()); // Track bills we just created to avoid duplicate notifications
+  const recentlyEditedBills = useRef(new Set()); // Track bills we just edited to avoid duplicate notifications
   const [analytics, setAnalytics] = useState(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [virtualScrollEnabled, setVirtualScrollEnabled] = useState(false);
@@ -182,6 +185,7 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
         setIsRetrying(false);
 
         const unsubscribe = subscribeToBills((billsData, metadata) => {
+          // Use Firestore data directly - real-time updates ensure we always have latest data
           setBills(billsData);
           setLoading(false);
 
@@ -192,9 +196,22 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
             if (!isFirstLoad.current) {
               metadata.changes.forEach(change => {
                 if (change.type === 'added' && !change.optimistic) {
-                  showSuccess(`New bill ${change.bill.billNumber} added!`);
+                  // Skip notification if this is a bill we just created (to avoid duplicate notifications)
+                  if (!recentlyCreatedBills.current.has(change.bill.id)) {
+                    showSuccess(`New bill ${change.bill.billNumber} added!`);
+                  } else {
+                    // Remove from tracking set after a short delay
+                    setTimeout(() => {
+                      recentlyCreatedBills.current.delete(change.bill.id);
+                    }, 2000);
+                  }
                 } else if (change.type === 'modified' && !change.optimistic) {
-                  showInfo(`Bill ${change.bill.billNumber} updated!`);
+                  // Skip notification if this bill was recently created or edited by this client
+                  // This prevents duplicate notifications from recalculateBillTotals updates
+                  if (!recentlyCreatedBills.current.has(change.bill.id) &&
+                    !recentlyEditedBills.current.has(change.bill.id)) {
+                    showInfo(`Bill ${change.bill.billNumber} updated!`);
+                  }
                 }
                 // Removed notification handled by local action to avoid duplicates
                 // else if (change.type === 'removed' && !change.optimistic) {
@@ -566,83 +583,43 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
 
   const handleCreateBill = async (billData) => {
     try {
-      // Apply optimistic update
-      const tempId = `temp_${Date.now()}`;
-      const optimisticBill = {
-        id: tempId,
-        ...billData,
-        date: new Date(billData.date),
-        totalAmount: 0,
-        totalQuantity: 0,
-        totalProfit: 0,
-        productCount: 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        _metadata: { optimistic: true }
-      };
-
-      // Extract product data
-      const productData = {
-        productName: billData.productName,
-        mrp: parseFloat(billData.mrp) || 0,
-        quantity: parseFloat(billData.quantity) || 0,
-        totalAmount: parseFloat(billData.totalAmount) || 0,
-        vendor: billData.vendor,
-        billId: tempId, // Temporary ID for optimistic update
-        category: 'Uncategorized', // Default category
-        status: 'in_stock'
-      };
-
-      // Calculate derived values for product
-      if (productData.quantity > 0) {
-        productData.costPerUnit = productData.totalAmount / productData.quantity;
-        productData.profitPerPiece = productData.mrp - productData.costPerUnit;
-        productData.totalProfit = productData.profitPerPiece * productData.quantity;
-      }
-
-      setBills(prev => [optimisticBill, ...prev]);
-
       const retryHandler = createRetryHandler(2, 1000);
 
-      try {
-        const newBill = await retryHandler(async () => {
-          // 1. Create the bill
-          const bill = await addBill(billData);
+      const newBill = await retryHandler(async () => {
+        // 1. Create the bill
+        const bill = await addBill(billData);
 
-          // 2. Create the product if product details are present
-          if (billData.productName && billData.quantity) {
-            const newProductData = {
-              productName: billData.productName,
-              mrp: parseFloat(billData.mrp) || 0,
-              quantity: parseFloat(billData.quantity) || 0,
-              totalAmount: parseFloat(billData.totalAmount) || 0,
-              vendor: billData.vendor,
-              category: 'Uncategorized',
-              status: 'in_stock',
-              // Calculated values will be handled by addShopProduct or we can pass them
-              costPerUnit: billData.costPerUnit,
-              profitPerPiece: billData.profitPerPiece,
-              totalProfit: billData.totalProfit
-            };
+        // 2. Create the product if product details are present
+        if (billData.productName && billData.quantity) {
+          const newProductData = {
+            productName: billData.productName,
+            mrp: parseFloat(billData.mrp) || 0,
+            quantity: parseFloat(billData.quantity) || 0,
+            totalAmount: parseFloat(billData.totalAmount) || 0,
+            vendor: billData.vendor,
+            category: 'Uncategorized',
+            status: 'in_stock',
+            costPerUnit: billData.costPerUnit,
+            profitPerPiece: billData.profitPerPiece,
+            totalProfit: billData.totalProfit
+          };
 
-            await addShopProduct(newProductData, bill.id);
-          }
+          await addShopProduct(newProductData, bill.id);
+        }
 
-          return bill;
-        }, { context: 'create_bill', billNumber: billData.billNumber });
+        return bill;
+      }, { context: 'create_bill', billNumber: billData.billNumber });
 
-        // Replace optimistic bill with real bill
-        setBills(prev => prev.map(bill =>
-          bill.id === tempId ? { ...newBill, _metadata: { optimistic: false } } : bill
-        ));
+      // Track this bill as recently created to prevent duplicate notification from subscription
+      recentlyCreatedBills.current.add(newBill.id);
 
-        showSuccess(`Bill ${newBill.billNumber} created successfully!`);
-        setShowCreateModal(false);
-      } catch (error) {
-        // Remove optimistic bill on error
-        setBills(prev => prev.filter(bill => bill.id !== tempId));
-        throw error;
-      }
+      showSuccess(`Bill ${newBill.billNumber} created successfully!`);
+      setShowCreateModal(false);
+
+      // Clean up tracking after a delay
+      setTimeout(() => {
+        recentlyCreatedBills.current.delete(newBill.id);
+      }, 5000);
     } catch (error) {
       const billError = classifyError(error);
       reportError(billError, { context: 'create_bill', billData });
@@ -655,6 +632,9 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
 
   const handleEditBill = async (billId, updatedData) => {
     const retryHandler = createRetryHandler(2, 1000);
+
+    // Track this bill as being edited to prevent duplicate notifications from subscription
+    recentlyEditedBills.current.add(billId);
 
     try {
       // Apply optimistic update
@@ -685,12 +665,21 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
         ));
 
         showSuccess(`Bill ${billToUpdate?.billNumber || billId} updated successfully!`);
+
+        // Clean up tracking after a delay to allow for recalculateBillTotals updates
+        setTimeout(() => {
+          recentlyEditedBills.current.delete(billId);
+        }, 5000);
       } catch (error) {
         // Revert optimistic update on error
         setBills(originalBills);
+        // Clean up tracking on error
+        recentlyEditedBills.current.delete(billId);
         throw error;
       }
     } catch (error) {
+      // Clean up tracking on error
+      recentlyEditedBills.current.delete(billId);
       const billError = classifyError(error);
       reportError(billError, { context: 'update_bill', billId, updatedData });
 
@@ -1307,6 +1296,7 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
                 style={{ minWidth: '120px' }}
                 title="Performance Mode"
               />
+
             )}
 
             <Button
@@ -1314,7 +1304,7 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
               icon={<Plus size={16} />}
               onClick={() => setShowCreateModal(true)}
             >
-              Create Bill
+              Add new bill
             </Button>
           </div>
         </div>
@@ -1356,7 +1346,7 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
                     padding: '12px',
                     color: 'white'
                   }}>
-                    <DollarSign size={20} />
+                    <IndianRupee size={20} />
                   </div>
                   <div>
                     <div style={{ fontSize: '24px', fontWeight: '700', color: '#1f2937' }}>
@@ -1652,59 +1642,56 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
           </div>
 
           {/* Bulk Actions */}
-          {showBulkActions && (
-            <div style={{
-              display: 'flex',
-              gap: '8px',
-              alignItems: 'center',
-              background: '#f3f4f6',
-              padding: '8px 12px',
-              borderRadius: '8px',
-              border: '1px solid #e5e7eb'
-            }}>
-              <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>
-                {selectedBills.size} selected
-              </span>
-              <div style={{ width: '1px', height: '20px', background: '#d1d5db' }} />
-              <Button
-                variant="outline"
-                size="small"
-                icon={<Copy size={14} />}
-                onClick={handleBulkDuplicate}
-                disabled={bulkActionLoading}
-              >
-                Duplicate
-              </Button>
-              <Button
-                variant="outline"
-                size="small"
-                icon={<Archive size={14} />}
-                onClick={handleBulkArchive}
-                disabled={bulkActionLoading}
-              >
-                Archive
-              </Button>
-              <Button
-                variant="outline"
-                size="small"
-                icon={<Download size={14} />}
-                onClick={handleBulkExport}
-                disabled={bulkActionLoading}
-              >
-                Export
-              </Button>
-              <Button
-                variant="outline"
-                size="small"
-                icon={<Trash2 size={14} />}
-                onClick={handleBulkDelete}
-                disabled={bulkActionLoading}
-                style={{ color: '#ef4444', borderColor: '#ef4444' }}
-              >
-                Delete
-              </Button>
-            </div>
-          )}
+          <div style={{
+            display: 'flex',
+            gap: '8px',
+            alignItems: 'center',
+            background: '#f3f4f6',
+            padding: '8px 12px',
+            borderRadius: '8px',
+            border: '1px solid #e5e7eb'
+          }}>
+            <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>
+              {selectedBills.size} {selectedBills.size === 1 ? 'bill' : 'bills'} selected
+            </span>
+            <div style={{ width: '1px', height: '20px', background: '#d1d5db' }} />
+            <Button
+              variant="outline"
+              size="small"
+              icon={<Copy size={14} />}
+              onClick={handleBulkDuplicate}
+              disabled={bulkActionLoading || selectedBills.size === 0}
+            >
+              Duplicate
+            </Button>
+            <Button
+              variant="outline"
+              size="small"
+              icon={<Archive size={14} />}
+              onClick={handleBulkArchive}
+              disabled={bulkActionLoading || selectedBills.size === 0}
+            >
+              Archive
+            </Button>
+            <Button
+              variant="outline"
+              size="small"
+              icon={<Download size={14} />}
+              onClick={handleBulkExport}
+              disabled={bulkActionLoading || selectedBills.size === 0}
+            >
+              Export
+            </Button>
+            <Button
+              variant="danger"
+              size="small"
+              icon={<Trash2 size={14} />}
+              onClick={handleBulkDelete}
+              disabled={bulkActionLoading || selectedBills.size === 0}
+            >
+              Delete
+            </Button>
+          </div>
         </div>
 
         {/* Bills List */}

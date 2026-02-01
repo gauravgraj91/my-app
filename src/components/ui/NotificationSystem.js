@@ -198,7 +198,7 @@ const NotificationItem = ({ notification, onRemove }) => {
 };
 
 // Notification container component
-const NotificationContainer = ({ notifications, onRemove }) => {
+export const NotificationContainer = ({ notifications, onRemove }) => {
   if (notifications.length === 0) return null;
 
   return (

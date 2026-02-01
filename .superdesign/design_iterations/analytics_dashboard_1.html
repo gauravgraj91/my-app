@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics Dashboard</title>
+  <link rel="stylesheet" href="analytics_theme_1.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .card { transition: box-shadow 0.2s, transform 0.2s; }
+    .card:hover { box-shadow: 0 8px 32px rgba(37,99,235,0.12) !important; transform: scale(1.02) !important; }
+    .fade-in-up { opacity: 0; transform: translateY(24px); animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { to { opacity: 1; transform: none; } }
+    .quick-actions button { transition: background 0.15s, box-shadow 0.15s, transform 0.1s; }
+    .quick-actions button:hover { background: var(--primary); color: var(--primary-foreground); box-shadow: 0 2px 8px rgba(37,99,235,0.12); }
+    .quick-actions button:active { transform: scale(0.97); }
+    .header-btn { transition: background 0.12s, color 0.12s; }
+    .header-btn:hover { background: var(--muted); color: var(--primary); }
+    @media (max-width: 900px) { .analytics-grid { grid-template-columns: 1fr 1fr !important; } }
+    @media (max-width: 600px) { .analytics-grid { grid-template-columns: 1fr !important; } }
+  </style>
+</head>
+<body>
+  <header style="height: var(--header-height); display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; background: var(--card); box-shadow: var(--card-shadow);">
+    <h1 style="font-size: 2rem; font-weight: 700;">Personal Dashboard</h1>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+      <button class="header-btn" aria-label="Toggle theme" style="padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-size: 1.2rem;">🌙</button>
+      <button class="header-btn" aria-label="Settings" style="padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-size: 1.2rem;">⚙️</button>
+    </div>
+  </header>
+  <main style="max-width: 1200px; margin: 2rem auto; padding: 0 1rem;">
+    <h2 style="text-align: center; font-size: 1.5rem; font-weight: 600; margin-bottom: 2rem;">Analytics Dashboard</h2>
+    <div class="analytics-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--card-gap); margin-bottom: 2.5rem;">
+      <div class="card fade-in-up">
+        <div style="font-weight: 600; color: var(--primary); margin-bottom: 0.5rem;">Product Sales <span style="font-size: 0.85em; background: var(--muted); color: var(--primary); padding: 0.1em 0.7em; border-radius: 1em; margin-left: 0.5em;">By Amount</span></div>
+        <div style="height: 120px; display: flex; align-items: center; justify-content: center; color: var(--muted-foreground);">[Chart]</div>
+      </div>
+      <div class="card fade-in-up" style="animation-delay: 0.1s;">
+        <div style="font-weight: 600; color: #22c55e; margin-bottom: 0.5rem;">Profit Analysis <span style="font-size: 0.85em; background: #bbf7d0; color: #166534; padding: 0.1em 0.7em; border-radius: 1em; margin-left: 0.5em;">Nett vs Profit</span></div>
+        <div style="height: 120px; display: flex; align-items: center; justify-content: center; color: var(--muted-foreground);">[Chart]</div>
+      </div>
+      <div class="card fade-in-up" style="animation-delay: 0.2s;">
+        <div style="font-weight: 600; color: #a21caf; margin-bottom: 0.5rem;">Category Analysis <span style="font-size: 0.85em; background: #f3e8ff; color: #a21caf; padding: 0.1em 0.7em; border-radius: 1em; margin-left: 0.5em;">By Sales</span></div>
+        <div style="height: 120px; display: flex; align-items: center; justify-content: center; color: var(--muted-foreground);">[Chart]</div>
+      </div>
+      <div class="card fade-in-up" style="animation-delay: 0.3s;">
+        <div style="font-weight: 600; color: #d97706; margin-bottom: 0.5rem;">Vendor Analysis <span style="font-size: 0.85em; background: #fef3c7; color: #b45309; padding: 0.1em 0.7em; border-radius: 1em; margin-left: 0.5em;">By Purchase</span></div>
+        <div style="height: 120px; display: flex; align-items: center; justify-content: center; color: var(--muted-foreground);">[Chart]</div>
+      </div>
+    </div>
+    <div class="quick-actions">
+      <button style="background: var(--primary); color: var(--primary-foreground); padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600;">+ Add Product</button>
+      <button style="background: var(--accent); color: var(--accent-foreground); padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600;">+ Add Vendor</button>
+      <button style="background: var(--muted); color: var(--foreground); padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600;">Export CSV</button>
+    </div>
+  </main>
+</body>
+</html>

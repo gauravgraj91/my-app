@@ -1,0 +1,74 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Bills collection rules
+    match /bills/{billId} {
+      // Allow read and write for authenticated users
+      allow read, write: if request.auth != null;
+      
+      // Validate bill data structure on create/update
+      allow create: if request.auth != null 
+        && validateBillData(request.resource.data);
+      
+      allow update: if request.auth != null 
+        && validateBillData(request.resource.data)
+        && resource.data.createdAt == request.resource.data.createdAt; // Prevent createdAt modification
+    }
+    
+    // Shop products collection rules (enhanced for bill integration)
+    match /shopProducts/{productId} {
+      // Allow read and write for authenticated users
+      allow read, write: if request.auth != null;
+      
+      // Validate product data structure on create/update
+      allow create: if request.auth != null 
+        && validateProductData(request.resource.data);
+      
+      allow update: if request.auth != null 
+        && validateProductData(request.resource.data)
+        && resource.data.createdAt == request.resource.data.createdAt; // Prevent createdAt modification
+        
+      // Additional validation for bill-product relationship
+      allow update: if request.auth != null 
+        && (request.resource.data.billId == null 
+            || exists(/databases/$(database)/documents/bills/$(request.resource.data.billId)));
+    }
+    
+    // Validation functions
+    function validateBillData(data) {
+      return data.keys().hasAll(['billNumber', 'date', 'vendor', 'totalAmount', 'totalQuantity', 'totalProfit', 'productCount', 'status'])
+        && data.billNumber is string
+        && data.billNumber.size() > 0
+        && data.billNumber.size() <= 20
+        && data.date is timestamp
+        && data.vendor is string
+        && data.vendor.size() > 0
+        && data.vendor.size() <= 100
+        && data.totalAmount is number
+        && data.totalAmount >= 0
+        && data.totalQuantity is number
+        && data.totalQuantity >= 0
+        && data.totalProfit is number
+        && data.productCount is number
+        && data.productCount >= 0
+        && data.status in ['active', 'archived', 'returned']
+        && (data.notes == null || (data.notes is string && data.notes.size() <= 500));
+    }
+    
+    function validateProductData(data) {
+      return data.keys().hasAll(['productName', 'totalAmount', 'totalQuantity'])
+        && data.productName is string
+        && data.productName.size() > 0
+        && data.productName.size() <= 100
+        && data.totalAmount is number
+        && data.totalAmount >= 0
+        && data.totalQuantity is number
+        && data.totalQuantity >= 0
+        && (data.billId == null || data.billId is string)
+        && (data.billNumber == null || data.billNumber is string)
+        && (data.category == null || (data.category is string && data.category.size() <= 50))
+        && (data.vendor == null || (data.vendor is string && data.vendor.size() <= 100));
+    }
+  }
+}

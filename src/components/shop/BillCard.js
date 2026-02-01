@@ -64,6 +64,7 @@ const BillCard = ({
   const getStatusVariant = (status) => {
     switch (status) {
       case 'active': return 'success';
+      case 'paid': return 'info';
       case 'archived': return 'default';
       case 'returned': return 'danger';
       default: return 'default';
@@ -111,7 +112,14 @@ const BillCard = ({
 
   return (
     <>
-      <Card className={`bill-card ${className}`} padding={0} style={style}>
+      <Card
+        className={`bill-card ${className}`}
+        padding={0}
+        style={{
+          border: '1px solid #d1d5db', // Darker border by default
+          ...style
+        }}
+      >
         {/* Bill Header */}
         <div className="bill-header" style={{
           padding: '20px 24px',

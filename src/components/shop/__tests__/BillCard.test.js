@@ -153,29 +153,29 @@ describe('BillCard', () => {
   });
 
   describe('Expandable Product List', () => {
-    test('shows collapsed state by default', () => {
+    test('shows expanded state by default', () => {
       render(<BillCard {...defaultProps} />);
+
+      expect(screen.getByText('Hide Products')).toBeInTheDocument();
+      expect(screen.getByText('Product 1')).toBeInTheDocument();
+    });
+
+    test('collapses to hide product list when clicked', () => {
+      render(<BillCard {...defaultProps} />);
+
+      const collapseButton = screen.getByText('Hide Products');
+      fireEvent.click(collapseButton);
 
       expect(screen.getByText('Show Products (2)')).toBeInTheDocument();
       expect(screen.queryByText('Product 1')).not.toBeInTheDocument();
     });
 
-    test('expands to show product list when clicked', () => {
-      render(<BillCard {...defaultProps} />);
-
-      const expandButton = screen.getByText('Show Products (2)');
-      fireEvent.click(expandButton);
-
-      expect(screen.getByText('Hide Products')).toBeInTheDocument();
-      expect(screen.getByText('Product 1')).toBeInTheDocument();
-      expect(screen.getByText('Product 2')).toBeInTheDocument();
-    });
-
     test('displays product details correctly', () => {
       render(<BillCard {...defaultProps} />);
 
-      const expandButton = screen.getByText('Show Products (2)');
-      fireEvent.click(expandButton);
+      // Already expanded
+      // const expandButton = screen.getByText('Show Products (2)');
+      // fireEvent.click(expandButton);
 
       // Check first product details
       expect(screen.getByText('Product 1')).toBeInTheDocument();
@@ -189,8 +189,9 @@ describe('BillCard', () => {
     test('handles product click when onProductClick is provided', () => {
       render(<BillCard {...defaultProps} />);
 
-      const expandButton = screen.getByText('Show Products (2)');
-      fireEvent.click(expandButton);
+      // Already expanded
+      // const expandButton = screen.getByText('Show Products (2)');
+      // fireEvent.click(expandButton);
 
       const productItem = screen.getByText('Product 1').closest('.product-item');
       fireEvent.click(productItem);
@@ -201,25 +202,25 @@ describe('BillCard', () => {
     test('shows empty state when no products', () => {
       render(<BillCard {...defaultProps} products={[]} />);
 
-      const expandButton = screen.getByText('Show Products (0)');
-      fireEvent.click(expandButton);
+      // Already expanded
+      // const expandButton = screen.getByText('Show Products (0)');
+      // fireEvent.click(expandButton);
 
       expect(screen.getByText('No products in this bill')).toBeInTheDocument();
     });
 
-    test('collapses product list when hide button is clicked', () => {
+    test('expands product list when show button is clicked', () => {
       render(<BillCard {...defaultProps} />);
 
-      // Expand first
-      const expandButton = screen.getByText('Show Products (2)');
-      fireEvent.click(expandButton);
-      expect(screen.getByText('Product 1')).toBeInTheDocument();
-
-      // Then collapse
+      // Collapse first
       const collapseButton = screen.getByText('Hide Products');
       fireEvent.click(collapseButton);
       expect(screen.queryByText('Product 1')).not.toBeInTheDocument();
-      expect(screen.getByText('Show Products (2)')).toBeInTheDocument();
+
+      // Then expand
+      const expandButton = screen.getByText('Show Products (2)');
+      fireEvent.click(expandButton);
+      expect(screen.getByText('Product 1')).toBeInTheDocument();
     });
   });
 

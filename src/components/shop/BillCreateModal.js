@@ -4,7 +4,7 @@ import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 import Textarea from '../ui/Textarea';
-import { Calendar, User, FileText, Tag, Plus, DollarSign } from 'lucide-react';
+import { Calendar, User, FileText, Tag, Plus, IndianRupee } from 'lucide-react';
 import { BillModel } from '../../firebase/billService';
 
 const BillCreateModal = ({
@@ -154,6 +154,7 @@ const BillCreateModal = ({
   // Status options
   const statusOptions = [
     { value: 'active', label: 'Active' },
+    { value: 'paid', label: 'Paid' },
     { value: 'archived', label: 'Archived' },
     { value: 'returned', label: 'Returned' }
   ];
@@ -167,64 +168,67 @@ const BillCreateModal = ({
     >
       <form onSubmit={handleSubmit} role="form">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Bill Number */}
-          <div>
-            <Input
-              label={
-                <span>
-                  <Tag size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                  Bill Number *
-                </span>
-              }
-              type="text"
-              value={formData.billNumber}
-              onChange={(e) => handleChange('billNumber', e.target.value)}
-              placeholder="Enter bill number"
-              error={errors.billNumber}
-              disabled={loading}
-            />
-            <div style={{
-              marginTop: '4px',
-              fontSize: '12px',
-              color: '#6b7280'
-            }}>
-              Auto-generated bill number. You can modify if needed.
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            {/* Bill Number */}
+            <div>
+              <Input
+                label="Bill Number *"
+                icon={<Tag size={16} />}
+                type="text"
+                value={formData.billNumber}
+                onChange={(e) => handleChange('billNumber', e.target.value)}
+                placeholder="Enter bill number"
+                error={errors.billNumber}
+                disabled={loading}
+              />
+              <div style={{
+                marginTop: '4px',
+                fontSize: '12px',
+                color: '#6b7280'
+              }}>
+                Auto-generated
+              </div>
+            </div>
+
+            {/* Date */}
+            <div>
+              <Input
+                label="Date *"
+                icon={<Calendar size={16} />}
+                type="date"
+                value={formData.date}
+                onChange={(e) => handleChange('date', e.target.value)}
+                error={errors.date}
+                disabled={loading}
+              />
             </div>
           </div>
 
-          {/* Date */}
-          <div>
-            <Input
-              label={
-                <span>
-                  <Calendar size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                  Date *
-                </span>
-              }
-              type="date"
-              value={formData.date}
-              onChange={(e) => handleChange('date', e.target.value)}
-              error={errors.date}
-              disabled={loading}
-            />
-          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            {/* Vendor */}
+            <div>
+              <Input
+                label="Vendor *"
+                icon={<User size={16} />}
+                type="text"
+                value={formData.vendor}
+                onChange={(e) => handleChange('vendor', e.target.value)}
+                placeholder="Enter vendor name"
+                error={errors.vendor}
+                disabled={loading}
+              />
+            </div>
 
-          {/* Vendor */}
-          <div>
-            <Input
-              label={
-                <span>
-                  <User size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                  Vendor *
-                </span>
-              }
-              type="text"
-              value={formData.vendor}
-              onChange={(e) => handleChange('vendor', e.target.value)}
-              placeholder="Enter vendor name"
-              error={errors.vendor}
-              disabled={loading}
-            />
+            {/* Status */}
+            <div>
+              <Select
+                label="Status"
+                value={formData.status}
+                onChange={(e) => handleChange('status', e.target.value)}
+                options={statusOptions}
+                disabled={loading}
+              />
+            </div>
           </div>
 
           {/* Product Details Section */}
@@ -249,12 +253,8 @@ const BillCreateModal = ({
             {/* Product Name */}
             <div>
               <Input
-                label={
-                  <span>
-                    <Tag size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                    Product Name
-                  </span>
-                }
+                label="Product Name"
+                icon={<Tag size={16} />}
                 type="text"
                 value={formData.productName}
                 onChange={(e) => handleChange('productName', e.target.value)}
@@ -295,12 +295,8 @@ const BillCreateModal = ({
             {/* Total Amount Paid */}
             <div>
               <Input
-                label={
-                  <span>
-                    <DollarSign size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                    Total Amount Paid (Cost)
-                  </span>
-                }
+                label="Total Amount Paid (Cost)"
+                icon={<IndianRupee size={16} />}
                 type="number"
                 value={formData.totalAmount}
                 onChange={(e) => handleChange('totalAmount', e.target.value)}
@@ -349,16 +345,7 @@ const BillCreateModal = ({
             </div>
           </div>
 
-          {/* Status */}
-          <div>
-            <Select
-              label="Status"
-              value={formData.status}
-              onChange={(e) => handleChange('status', e.target.value)}
-              options={statusOptions}
-              disabled={loading}
-            />
-          </div>
+
 
           {/* Notes */}
           <div>
