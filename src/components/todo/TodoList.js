@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
-import TextField from "@mui/material/TextField";
-import Stack from "@mui/material/Stack";
 import { v4 as uuidv4 } from "uuid";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
@@ -11,7 +8,9 @@ import ShopTransactions from '../shop/shopTransactions';
 import PriceList from '../shop/PriceList';
 import Settings from '../settings/Settings';
 import './Todolist.css';
-import { CheckCircle, Clock, AlertCircle, Plus, Filter, Calendar, Tag, Flag, Search, MoreVertical, Edit2, Trash2, Copy, Archive } from 'lucide-react';
+import { CheckCircle, Clock, Plus, Filter, Calendar, Search, Edit2, Trash2, Copy, Archive } from 'lucide-react';
+import { TASK_CATEGORIES, TASK_PRIORITIES, getCategoryInfo, getPriorityInfo } from '../../constants';
+import { formatDate, isOverdue } from '../../utils';
 
 const TodoList = () => {
   // Load todos from localStorage
@@ -42,22 +41,9 @@ const TodoList = () => {
     estimatedTime: ''
   });
 
-  // Categories and priorities
-  const categories = [
-    { id: 'personal', name: 'Personal', color: '#3b82f6', icon: '👤' },
-    { id: 'work', name: 'Work', color: '#8b5cf6', icon: '💼' },
-    { id: 'shopping', name: 'Shopping', color: '#10b981', icon: '🛒' },
-    { id: 'health', name: 'Health', color: '#f59e0b', icon: '🏥' },
-    { id: 'finance', name: 'Finance', color: '#ef4444', icon: '💰' },
-    { id: 'learning', name: 'Learning', color: '#06b6d4', icon: '📚' }
-  ];
-
-  const priorities = [
-    { id: 'low', name: 'Low', color: '#6b7280', icon: '⬇️' },
-    { id: 'medium', name: 'Medium', color: '#f59e0b', icon: '➡️' },
-    { id: 'high', name: 'High', color: '#ef4444', icon: '⬆️' },
-    { id: 'urgent', name: 'Urgent', color: '#dc2626', icon: '🚨' }
-  ];
+  // Use shared constants for categories and priorities
+  const categories = TASK_CATEGORIES;
+  const priorities = TASK_PRIORITIES;
 
   // Save todos to localStorage whenever todos change
   useEffect(() => {
@@ -238,26 +224,7 @@ const TodoList = () => {
   });
   const todayCount = todayTasks.length;
 
-  const getCategoryInfo = (categoryId) => categories.find(c => c.id === categoryId) || categories[0];
-  const getPriorityInfo = (priorityId) => priorities.find(p => p.id === priorityId) || priorities[1];
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
-    });
-  };
-
-  const isOverdue = (dueDate) => {
-    if (!dueDate) return false;
-    const due = new Date(dueDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return due < today;
-  };
+  // getCategoryInfo, getPriorityInfo, formatDate, isOverdue are imported from shared modules
 
   return (
     <Box>

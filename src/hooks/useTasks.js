@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
 export const useTasks = () => {
   const [todos, setTodos] = useState(() => {
@@ -17,7 +18,7 @@ export const useTasks = () => {
     }
     
     const task = {
-      id: Date.now().toString(),
+      id: uuidv4(),
       title: taskData.title.trim(),
       description: taskData.description?.trim() || '',
       category: taskData.category || 'personal',
@@ -66,7 +67,7 @@ export const useTasks = () => {
     if (taskToDuplicate) {
       const duplicatedTask = {
         ...taskToDuplicate,
-        id: Date.now().toString(),
+        id: uuidv4(),
         title: `${taskToDuplicate.title} (Copy)`,
         isCompleted: false,
         createdAt: new Date().toISOString(),

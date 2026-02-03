@@ -26,10 +26,9 @@ export const isOverdue = (dueDate) => {
   return due < today;
 };
 
-// Generate unique ID
-export const generateId = () => {
-  return Date.now().toString() + Math.random().toString(36).substr(2, 9);
-};
+// Generate unique ID - uses uuid for consistency across the app
+// Note: For new code, prefer importing { v4 as uuidv4 } from 'uuid' directly
+export { v4 as generateId } from 'uuid';
 
 // Local storage helpers
 export const getFromStorage = (key, defaultValue = null) => {

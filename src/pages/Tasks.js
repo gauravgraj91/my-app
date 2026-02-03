@@ -19,12 +19,13 @@ const Tasks = () => {
     filteredAndSortedTodos,
     hasActiveFilters
   } = useTaskFilters(todos);
-  
+
   const [editableTaskId, setEditableTaskId] = useState(null);
   const [taskInput, setTaskInput] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  
+  const [error, setError] = useState(null);
+
   // New task form state
   const [newTask, setNewTask] = useState({
     title: '',
@@ -36,8 +37,17 @@ const Tasks = () => {
     estimatedTime: ''
   });
 
+  // Clear error after 5 seconds
+  React.useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   const handleAddTask = () => {
     try {
+      setError(null);
       addTask(newTask);
       setNewTask({
         title: '',
@@ -49,8 +59,8 @@ const Tasks = () => {
         estimatedTime: ''
       });
       setShowAddForm(false);
-    } catch (error) {
-      alert(error.message);
+    } catch (err) {
+      setError(err.message);
     }
   };
 
@@ -70,13 +80,14 @@ const Tasks = () => {
 
   const handleSaveEdit = () => {
     if (!taskInput.trim()) {
-      alert("Task title cannot be empty");
+      setError("Task title cannot be empty");
       return;
     }
-    
+
     updateTask(editableTaskId, { title: taskInput.trim() });
     setEditableTaskId(null);
     setTaskInput('');
+    setError(null);
   };
 
   const handleDuplicateTask = (taskId) => {
@@ -98,6 +109,30 @@ const Tasks = () => {
 
   return (
     <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+      {/* Error Notification */}
+      {error && (
+        <div style={{
+          background: '#fef2f2',
+          border: '1px solid #fecaca',
+          borderRadius: 8,
+          padding: '12px 16px',
+          marginBottom: 16,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          color: '#dc2626'
+        }}>
+          <span>{error}</span>
+          <button
+            onClick={() => setError(null)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: 18 }}
+            aria-label="Dismiss error"
+          >
+            &times;
+          </button>
+        </div>
+      )}
+
       {/* Header with Actions */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>Tasks</h1>
