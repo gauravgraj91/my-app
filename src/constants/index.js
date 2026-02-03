@@ -48,20 +48,5 @@ export const getCategoryInfo = (categoryId) =>
 export const getPriorityInfo = (priorityId) => 
   TASK_PRIORITIES.find(p => p.id === priorityId) || TASK_PRIORITIES[1];
 
-export const formatDate = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric',
-    year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
-  });
-};
-
-export const isOverdue = (dueDate) => {
-  if (!dueDate) return false;
-  const due = new Date(dueDate);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return due < today;
-};
+// Note: formatDate and isOverdue functions are available in src/utils/index.js
+// Import from there: import { formatDate, isOverdue } from '../utils';
