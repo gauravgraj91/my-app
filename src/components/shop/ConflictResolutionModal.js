@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Check, X, Clock, RefreshCw } from 'lucide-react';
+import { AlertTriangle, Check, Clock, RefreshCw } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 
-const ConflictResolutionModal = ({ 
-  conflicts = [], 
-  onAcknowledge, 
-  onClearAll, 
-  isOpen, 
-  onClose 
+const ConflictResolutionModal = ({
+  conflicts = [],
+  onAcknowledge,
+  onClearAll,
+  isOpen,
+  onClose
 }) => {
   const [selectedConflicts, setSelectedConflicts] = useState(new Set());
 
@@ -128,7 +128,7 @@ const ConflictResolutionModal = ({
         {/* Conflicts List */}
         <div className="max-h-96 overflow-y-auto space-y-3">
           {conflicts.map((conflict, index) => (
-            <Card 
+            <Card
               key={index}
               className={`p-4 border-l-4 ${getResolutionColor(conflict.resolution.resolution)}`}
             >
@@ -140,24 +140,24 @@ const ConflictResolutionModal = ({
                     onChange={() => handleSelectConflict(index)}
                     className="mt-1"
                   />
-                  
+
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       {getResolutionIcon(conflict.resolution.resolution)}
                       <span className="font-semibold text-gray-800">
                         {conflict.resolution.resolution === 'local-wins' ? 'Local Changes Kept' :
-                         conflict.resolution.resolution === 'server-wins' ? 'Server Changes Applied' :
-                         'Server Changes Applied (Error Recovery)'}
+                          conflict.resolution.resolution === 'server-wins' ? 'Server Changes Applied' :
+                            'Server Changes Applied (Error Recovery)'}
                       </span>
                       <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
                         {formatTimestamp(conflict.timestamp)}
                       </span>
                     </div>
-                    
+
                     <p className="text-sm text-gray-700 mb-3">
                       {conflict.resolution.message}
                     </p>
-                    
+
                     {/* Conflict Details */}
                     <div className="bg-gray-50 rounded-lg p-3">
                       <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
@@ -167,9 +167,9 @@ const ConflictResolutionModal = ({
                         <div>
                           <span className="font-medium text-gray-700">Entity:</span>
                           <span className="ml-2 text-gray-600">
-                            {conflict.resolution.resolved.billNumber || 
-                             conflict.resolution.resolved.productName || 
-                             conflict.resolution.resolved.id}
+                            {conflict.resolution.resolved.billNumber ||
+                              conflict.resolution.resolved.productName ||
+                              conflict.resolution.resolved.id}
                           </span>
                         </div>
                         <div>
@@ -182,7 +182,7 @@ const ConflictResolutionModal = ({
                     </div>
                   </div>
                 </div>
-                
+
                 <Button
                   variant="outline"
                   size="small"
@@ -204,7 +204,7 @@ const ConflictResolutionModal = ({
             <br />
             Review the resolutions and acknowledge to dismiss these notifications.
           </div>
-          
+
           <div className="flex gap-2">
             <Button
               variant="outline"

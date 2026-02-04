@@ -28,7 +28,7 @@ class LRUCache {
       const firstKey = this.cache.keys().next().value;
       this.cache.delete(firstKey);
     }
-    
+
     this.cache.set(key, value);
   }
 
@@ -67,7 +67,7 @@ class TimedCache {
   get(key) {
     if (this.cache.has(key)) {
       const { value, timestamp } = this.cache.get(key);
-      
+
       if (Date.now() - timestamp < this.ttl) {
         return value;
       } else {
@@ -95,7 +95,7 @@ class TimedCache {
     const timer = setTimeout(() => {
       this.delete(key);
     }, this.ttl);
-    
+
     this.timers.set(key, timer);
   }
 
@@ -144,7 +144,7 @@ const queryCache = new TimedCache(30 * 1000); // 30 seconds for queries
 
 // Cache key generators
 export const generateCacheKey = (prefix, ...args) => {
-  return `${prefix}:${args.map(arg => 
+  return `${prefix}:${args.map(arg =>
     typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
   ).join(':')}`;
 };
@@ -155,13 +155,13 @@ export const billCacheUtils = {
   set: (billId, bill) => billCache.set(`bill:${billId}`, bill),
   delete: (billId) => billCache.delete(`bill:${billId}`),
   clear: () => billCache.clear(),
-  
+
   // Cache bill with products
   getBillWithProducts: (billId) => billCache.get(`bill-products:${billId}`),
-  setBillWithProducts: (billId, billWithProducts) => 
+  setBillWithProducts: (billId, billWithProducts) =>
     billCache.set(`bill-products:${billId}`, billWithProducts),
   deleteBillWithProducts: (billId) => billCache.delete(`bill-products:${billId}`),
-  
+
   // Bulk operations
   getBulk: (billIds) => {
     const results = {};
@@ -173,7 +173,7 @@ export const billCacheUtils = {
     }
     return results;
   },
-  
+
   setBulk: (bills) => {
     for (const bill of bills) {
       billCache.set(`bill:${bill.id}`, bill);
@@ -187,12 +187,12 @@ export const productCacheUtils = {
   set: (productId, product) => productCache.set(`product:${productId}`, product),
   delete: (productId) => productCache.delete(`product:${productId}`),
   clear: () => productCache.clear(),
-  
+
   // Cache products by bill
   getByBill: (billId) => productCache.get(`products-by-bill:${billId}`),
   setByBill: (billId, products) => productCache.set(`products-by-bill:${billId}`, products),
   deleteByBill: (billId) => productCache.delete(`products-by-bill:${billId}`),
-  
+
   // Bulk operations
   getBulk: (productIds) => {
     const results = {};
@@ -204,7 +204,7 @@ export const productCacheUtils = {
     }
     return results;
   },
-  
+
   setBulk: (products) => {
     for (const product of products) {
       productCache.set(`product:${product.id}`, product);
@@ -218,14 +218,14 @@ export const analyticsCacheUtils = {
   set: (key, data) => analyticsCache.set(key, data),
   delete: (key) => analyticsCache.delete(key),
   clear: () => analyticsCache.clear(),
-  
+
   // Specific analytics caches
   getBillAnalytics: () => analyticsCache.get('bill-analytics'),
   setBillAnalytics: (data) => analyticsCache.set('bill-analytics', data),
-  
+
   getVendorAnalytics: () => analyticsCache.get('vendor-analytics'),
   setVendorAnalytics: (data) => analyticsCache.set('vendor-analytics', data),
-  
+
   getCategoryAnalytics: () => analyticsCache.get('category-analytics'),
   setCategoryAnalytics: (data) => analyticsCache.set('category-analytics', data)
 };
@@ -236,16 +236,16 @@ export const queryCacheUtils = {
   set: (queryKey, results) => queryCache.set(queryKey, results),
   delete: (queryKey) => queryCache.delete(queryKey),
   clear: () => queryCache.clear(),
-  
+
   // Generate query keys for common operations
   generateBillsQueryKey: (filters, sort, pagination) => {
     return generateCacheKey('bills-query', filters, sort, pagination);
   },
-  
+
   generateProductsQueryKey: (filters, sort, pagination) => {
     return generateCacheKey('products-query', filters, sort, pagination);
   },
-  
+
   generateSearchKey: (searchTerm, type, filters) => {
     return generateCacheKey('search', searchTerm, type, filters);
   }
@@ -258,31 +258,31 @@ export const cacheInvalidationUtils = {
     billCacheUtils.delete(billId);
     billCacheUtils.deleteBillWithProducts(billId);
     productCacheUtils.deleteByBill(billId);
-    
+
     // Clear analytics cache as bill data changed
     analyticsCacheUtils.clear();
-    
+
     // Clear query cache as results may have changed
     queryCacheUtils.clear();
   },
-  
+
   // Invalidate all caches related to a product
   invalidateProduct: (productId, billId) => {
     productCacheUtils.delete(productId);
-    
+
     if (billId) {
       productCacheUtils.deleteByBill(billId);
       billCacheUtils.deleteBillWithProducts(billId);
-      
+
       // Recalculate bill totals cache
       billCacheUtils.delete(billId);
     }
-    
+
     // Clear analytics and query caches
     analyticsCacheUtils.clear();
     queryCacheUtils.clear();
   },
-  
+
   // Invalidate all caches (nuclear option)
   invalidateAll: () => {
     billCacheUtils.clear();
@@ -290,7 +290,7 @@ export const cacheInvalidationUtils = {
     analyticsCacheUtils.clear();
     queryCacheUtils.clear();
   },
-  
+
   // Selective invalidation based on operation type
   invalidateByOperation: (operation, entityType, entityId, relatedIds = []) => {
     switch (operation) {
@@ -308,7 +308,7 @@ export const cacheInvalidationUtils = {
           queryCacheUtils.clear();
         }
         break;
-        
+
       case 'update':
         if (entityType === 'bill') {
           billCacheUtils.delete(entityId);
@@ -331,7 +331,7 @@ export const cacheInvalidationUtils = {
           queryCacheUtils.clear();
         }
         break;
-        
+
       case 'delete':
         if (entityType === 'bill') {
           billCacheUtils.delete(entityId);
@@ -350,6 +350,10 @@ export const cacheInvalidationUtils = {
           queryCacheUtils.clear();
         }
         break;
+
+      default:
+        // Unknown operation - no cache invalidation needed
+        break;
     }
   }
 };
@@ -359,13 +363,13 @@ export const cacheWarmingUtils = {
   // Pre-load frequently accessed bills
   warmBillCache: async (billIds, getBillFunction) => {
     const uncachedIds = billIds.filter(id => !billCacheUtils.get(id));
-    
+
     if (uncachedIds.length > 0) {
       try {
         const bills = await Promise.all(
           uncachedIds.map(id => getBillFunction(id))
         );
-        
+
         bills.forEach((bill, index) => {
           if (bill) {
             billCacheUtils.set(uncachedIds[index], bill);
@@ -376,17 +380,17 @@ export const cacheWarmingUtils = {
       }
     }
   },
-  
+
   // Pre-load frequently accessed products
   warmProductCache: async (productIds, getProductFunction) => {
     const uncachedIds = productIds.filter(id => !productCacheUtils.get(id));
-    
+
     if (uncachedIds.length > 0) {
       try {
         const products = await Promise.all(
           uncachedIds.map(id => getProductFunction(id))
         );
-        
+
         products.forEach((product, index) => {
           if (product) {
             productCacheUtils.set(uncachedIds[index], product);
@@ -407,26 +411,26 @@ export const cacheStatsUtils = {
     hitRate: billCache.hitCount / (billCache.hitCount + billCache.missCount) || 0,
     keys: billCache.keys()
   }),
-  
+
   getProductCacheStats: () => ({
     size: productCache.size(),
     maxSize: productCache.maxSize,
     hitRate: productCache.hitCount / (productCache.hitCount + productCache.missCount) || 0,
     keys: productCache.keys()
   }),
-  
+
   getAnalyticsCacheStats: () => ({
     size: analyticsCache.size(),
     ttl: analyticsCache.ttl,
     keys: Array.from(analyticsCache.cache.keys())
   }),
-  
+
   getQueryCacheStats: () => ({
     size: queryCache.size(),
     ttl: queryCache.ttl,
     keys: Array.from(queryCache.cache.keys())
   }),
-  
+
   getAllStats: () => ({
     bill: cacheStatsUtils.getBillCacheStats(),
     product: cacheStatsUtils.getProductCacheStats(),
@@ -442,7 +446,7 @@ export const cacheCleanupUtils = {
     analyticsCache.cleanup();
     queryCache.cleanup();
   },
-  
+
   // Schedule periodic cleanup
   scheduleCleanup: (intervalMs = 5 * 60 * 1000) => { // 5 minutes
     return setInterval(() => {

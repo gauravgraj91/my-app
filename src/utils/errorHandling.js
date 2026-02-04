@@ -15,28 +15,28 @@ export const ERROR_CODES = {
   NETWORK_ERROR: 'NETWORK_ERROR',
   TIMEOUT: 'TIMEOUT',
   OFFLINE: 'OFFLINE',
-  
+
   // Validation errors
   INVALID_BILL_DATA: 'INVALID_BILL_DATA',
   DUPLICATE_BILL_NUMBER: 'DUPLICATE_BILL_NUMBER',
   INVALID_DATE: 'INVALID_DATE',
   MISSING_REQUIRED_FIELD: 'MISSING_REQUIRED_FIELD',
-  
+
   // Permission errors
   UNAUTHORIZED: 'UNAUTHORIZED',
   FORBIDDEN: 'FORBIDDEN',
-  
+
   // Resource errors
   BILL_NOT_FOUND: 'BILL_NOT_FOUND',
   PRODUCT_NOT_FOUND: 'PRODUCT_NOT_FOUND',
-  
+
   // Conflict errors
   CONCURRENT_MODIFICATION: 'CONCURRENT_MODIFICATION',
   BILL_ALREADY_EXISTS: 'BILL_ALREADY_EXISTS',
-  
+
   // Rate limiting
   TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
-  
+
   // Unknown
   UNKNOWN_ERROR: 'UNKNOWN_ERROR'
 };
@@ -88,7 +88,7 @@ export const classifyError = (error) => {
           ERROR_TYPES.NETWORK,
           { originalError: error }
         );
-      
+
       case 'permission-denied':
         return new BillError(
           'You do not have permission to perform this action.',
@@ -96,7 +96,7 @@ export const classifyError = (error) => {
           ERROR_TYPES.PERMISSION,
           { originalError: error }
         );
-      
+
       case 'unauthenticated':
         return new BillError(
           'Please sign in to continue.',
@@ -104,7 +104,7 @@ export const classifyError = (error) => {
           ERROR_TYPES.PERMISSION,
           { originalError: error }
         );
-      
+
       case 'not-found':
         return new BillError(
           'The requested resource was not found.',
@@ -112,7 +112,7 @@ export const classifyError = (error) => {
           ERROR_TYPES.NOT_FOUND,
           { originalError: error }
         );
-      
+
       case 'already-exists':
         return new BillError(
           'A bill with this number already exists.',
@@ -120,7 +120,7 @@ export const classifyError = (error) => {
           ERROR_TYPES.CONFLICT,
           { originalError: error }
         );
-      
+
       case 'resource-exhausted':
         return new BillError(
           'Too many requests. Please wait a moment and try again.',
@@ -128,6 +128,10 @@ export const classifyError = (error) => {
           ERROR_TYPES.RATE_LIMIT,
           { originalError: error }
         );
+
+      default:
+        // Unknown Firebase/Firestore error code - continue to other checks
+        break;
     }
   }
 
@@ -173,7 +177,7 @@ export const classifyError = (error) => {
 // User-friendly error messages
 export const getErrorMessage = (error) => {
   const billError = error instanceof BillError ? error : classifyError(error);
-  
+
   const messages = {
     [ERROR_CODES.NETWORK_ERROR]: {
       title: 'Connection Problem',
@@ -237,7 +241,7 @@ export const getErrorMessage = (error) => {
 // Recovery suggestions
 export const getRecoveryOptions = (error) => {
   const billError = error instanceof BillError ? error : classifyError(error);
-  
+
   const options = {
     [ERROR_CODES.NETWORK_ERROR]: [
       { label: 'Retry', action: 'retry', primary: true },
@@ -277,7 +281,7 @@ export const getRecoveryOptions = (error) => {
 // Error reporting
 export const reportError = (error, context = {}) => {
   const billError = error instanceof BillError ? error : classifyError(error);
-  
+
   const errorReport = {
     ...billError.toJSON(),
     context: {
@@ -299,7 +303,7 @@ export const reportError = (error, context = {}) => {
 
   // In production, you would send this to your error reporting service
   // Example: Sentry, LogRocket, etc.
-  
+
   return errorReport;
 };
 
@@ -307,26 +311,26 @@ export const reportError = (error, context = {}) => {
 export const createRetryHandler = (maxRetries = 3, baseDelay = 1000) => {
   return async (operation, context = {}) => {
     let lastError;
-    
+
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         return await operation();
       } catch (error) {
         // Only classify if it's not already a BillError
         lastError = error instanceof BillError ? error : classifyError(error);
-        
+
         // Don't retry if error is not retryable
         if (!lastError.retryable || attempt === maxRetries) {
           reportError(lastError, { ...context, attempt, maxRetries });
           throw lastError;
         }
-        
+
         // Calculate delay with exponential backoff
         const delay = baseDelay * Math.pow(2, attempt);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
-    
+
     throw lastError;
   };
 };
@@ -334,15 +338,15 @@ export const createRetryHandler = (maxRetries = 3, baseDelay = 1000) => {
 // Validation helpers
 export const validateBillData = (billData) => {
   const errors = {};
-  
+
   if (!billData.billNumber?.trim()) {
     errors.billNumber = 'Bill number is required';
   }
-  
+
   if (!billData.vendor?.trim()) {
     errors.vendor = 'Vendor is required';
   }
-  
+
   if (!billData.date) {
     errors.date = 'Date is required';
   } else {
@@ -351,7 +355,7 @@ export const validateBillData = (billData) => {
       errors.date = 'Invalid date format';
     }
   }
-  
+
   if (Object.keys(errors).length > 0) {
     throw new BillError(
       'Please correct the following errors',
@@ -360,11 +364,11 @@ export const validateBillData = (billData) => {
       { validationErrors: errors }
     );
   }
-  
+
   return true;
 };
 
-export default {
+const errorHandlingUtils = {
   BillError,
   ERROR_TYPES,
   ERROR_CODES,
@@ -375,3 +379,5 @@ export default {
   createRetryHandler,
   validateBillData
 };
+
+export default errorHandlingUtils;

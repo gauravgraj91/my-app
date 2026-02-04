@@ -4,18 +4,18 @@ import LoadingSpinner from './LoadingSpinner';
 import Card from './Card';
 
 // Generic loading overlay
-export const LoadingOverlay = ({ 
-  isLoading, 
-  message = 'Loading...', 
+export const LoadingOverlay = ({
+  isLoading,
+  message = 'Loading...',
   children,
-  blur = true 
+  blur = true
 }) => {
   if (!isLoading) return children;
 
   return (
     <div style={{ position: 'relative' }}>
       {children && (
-        <div style={{ 
+        <div style={{
           filter: blur ? 'blur(2px)' : 'none',
           opacity: 0.5,
           pointerEvents: 'none'
@@ -23,7 +23,7 @@ export const LoadingOverlay = ({
           {children}
         </div>
       )}
-      
+
       <div style={{
         position: 'absolute',
         top: 0,
@@ -97,7 +97,7 @@ export const BillsListLoading = ({ count = 3 }) => (
               animation: 'pulse 2s infinite'
             }} />
           </div>
-          
+
           {/* Action buttons skeleton */}
           <div style={{ display: 'flex', gap: '8px' }}>
             {Array.from({ length: 4 }).map((_, btnIndex) => (
@@ -114,7 +114,7 @@ export const BillsListLoading = ({ count = 3 }) => (
             ))}
           </div>
         </div>
-        
+
         {/* Summary skeleton */}
         <div style={{
           display: 'grid',
@@ -144,7 +144,7 @@ export const BillsListLoading = ({ count = 3 }) => (
         </div>
       </Card>
     ))}
-    
+
     <style jsx>{`
       @keyframes pulse {
         0%, 100% { opacity: 1; }
@@ -208,10 +208,10 @@ export const AnalyticsLoading = () => (
 );
 
 // Operation-specific loading states
-export const BillOperationLoading = ({ 
-  operation = 'Processing', 
+export const BillOperationLoading = ({
+  operation = 'Processing',
   billNumber,
-  progress 
+  progress
 }) => (
   <div style={{
     display: 'flex',
@@ -222,13 +222,13 @@ export const BillOperationLoading = ({
     textAlign: 'center'
   }}>
     <div style={{ position: 'relative' }}>
-      <Loader2 
-        size={40} 
+      <Loader2
+        size={40}
         color="#3b82f6"
         style={{ animation: 'spin 1s linear infinite' }}
       />
     </div>
-    
+
     <div>
       <div style={{
         fontSize: '16px',
@@ -239,7 +239,7 @@ export const BillOperationLoading = ({
         {operation}
         {billNumber && ` Bill ${billNumber}`}
       </div>
-      
+
       <div style={{
         fontSize: '14px',
         color: '#6b7280'
@@ -247,7 +247,7 @@ export const BillOperationLoading = ({
         Please wait while we process your request...
       </div>
     </div>
-    
+
     {progress !== undefined && (
       <div style={{ width: '200px' }}>
         <div style={{
@@ -278,11 +278,11 @@ export const BillOperationLoading = ({
 );
 
 // Bulk operation loading
-export const BulkOperationLoading = ({ 
-  operation = 'Processing', 
+export const BulkOperationLoading = ({
+  operation = 'Processing',
   total,
   completed = 0,
-  current 
+  current
 }) => (
   <div style={{
     display: 'flex',
@@ -293,13 +293,13 @@ export const BulkOperationLoading = ({
     textAlign: 'center'
   }}>
     <div style={{ position: 'relative' }}>
-      <Loader2 
-        size={48} 
+      <Loader2
+        size={48}
         color="#3b82f6"
         style={{ animation: 'spin 1s linear infinite' }}
       />
     </div>
-    
+
     <div>
       <div style={{
         fontSize: '18px',
@@ -309,7 +309,7 @@ export const BulkOperationLoading = ({
       }}>
         {operation} {total} Bills
       </div>
-      
+
       {current && (
         <div style={{
           fontSize: '14px',
@@ -319,7 +319,7 @@ export const BulkOperationLoading = ({
           Currently processing: {current}
         </div>
       )}
-      
+
       <div style={{
         fontSize: '14px',
         color: '#6b7280'
@@ -327,7 +327,7 @@ export const BulkOperationLoading = ({
         {completed} of {total} completed
       </div>
     </div>
-    
+
     <div style={{ width: '300px' }}>
       <div style={{
         width: '100%',
@@ -355,7 +355,7 @@ export const BulkOperationLoading = ({
   </div>
 );
 
-export default {
+const LoadingStates = {
   LoadingOverlay,
   BillLoadingCard,
   BillsListLoading,
@@ -363,3 +363,5 @@ export default {
   BillOperationLoading,
   BulkOperationLoading
 };
+
+export default LoadingStates;

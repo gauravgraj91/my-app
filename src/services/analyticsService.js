@@ -1,4 +1,4 @@
-import { getBillAnalytics, getBills } from '../firebase/billService';
+import { getBills } from '../firebase/billService';
 import { subscribeToShopProducts } from '../firebase/shopProductService';
 
 /**
@@ -10,7 +10,7 @@ import { subscribeToShopProducts } from '../firebase/shopProductService';
 export const calculateBillAnalytics = async () => {
   try {
     const bills = await getBills();
-    
+
     if (bills.length === 0) {
       return {
         totalBills: 0,
@@ -64,7 +64,7 @@ export const calculateBillAnalytics = async () => {
       const date = bill.date instanceof Date ? bill.date : new Date(bill.date);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       const monthName = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
-      
+
       if (!monthlyMap[monthKey]) {
         monthlyMap[monthKey] = {
           month: monthName,
@@ -219,7 +219,7 @@ export const calculateProductAnalytics = async () => {
     unsubscribe = subscribeToShopProducts((products) => {
       try {
         if (unsubscribe) unsubscribe(); // Unsubscribe immediately after getting data
-        
+
         if (products.length === 0) {
           resolve({
             totalProducts: 0,
@@ -234,7 +234,7 @@ export const calculateProductAnalytics = async () => {
         }
 
         const totalAmount = products.reduce((sum, product) => sum + (product.totalAmount || 0), 0);
-        const totalProfit = products.reduce((sum, product) => 
+        const totalProfit = products.reduce((sum, product) =>
           sum + ((product.profitPerPiece || 0) * (product.totalQuantity || 0)), 0);
         const averageProductValue = totalAmount / products.length;
         const profitMargin = totalAmount > 0 ? (totalProfit / totalAmount) * 100 : 0;
@@ -297,13 +297,15 @@ export const calculateProductAnalytics = async () => {
 
 // Real-time analytics subscription
 export const subscribeToAnalytics = (callback) => {
+  // eslint-disable-next-line no-unused-vars
   let billsData = [];
+  // eslint-disable-next-line no-unused-vars
   let productsData = [];
   let isInitialized = false;
 
   const updateAnalytics = async () => {
     if (!isInitialized) return;
-    
+
     try {
       const analytics = await calculateCombinedAnalytics();
       callback(analytics);

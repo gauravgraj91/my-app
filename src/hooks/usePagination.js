@@ -10,7 +10,7 @@ import { useState, useMemo } from 'react';
 export const usePagination = (data = [], itemsPerPage = 20, options = {}) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(itemsPerPage);
-  
+
   const {
     enableVirtualization = false,
     bufferSize = 5, // Number of pages to keep in memory for virtual scrolling
@@ -24,13 +24,14 @@ export const usePagination = (data = [], itemsPerPage = 20, options = {}) => {
     if (resetOnDataChange && currentPage > 1) {
       setCurrentPage(1);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataLength, resetOnDataChange]);
 
   // Calculate pagination values
   const totalPages = Math.ceil(data.length / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + pageSize, data.length);
-  
+
   // Get current page data
   const currentPageData = useMemo(() => {
     return data.slice(startIndex, endIndex);
@@ -39,13 +40,14 @@ export const usePagination = (data = [], itemsPerPage = 20, options = {}) => {
   // Virtual scrolling support - keep buffer pages in memory
   const virtualizedData = useMemo(() => {
     if (!enableVirtualization) return currentPageData;
-    
+
     const bufferStart = Math.max(1, currentPage - bufferSize);
     const bufferEnd = Math.min(totalPages, currentPage + bufferSize);
     const bufferStartIndex = (bufferStart - 1) * pageSize;
     const bufferEndIndex = Math.min(bufferEnd * pageSize, data.length);
-    
+
     return data.slice(bufferStartIndex, bufferEndIndex);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, currentPage, pageSize, bufferSize, totalPages, enableVirtualization]);
 
   // Navigation functions
@@ -76,10 +78,10 @@ export const usePagination = (data = [], itemsPerPage = 20, options = {}) => {
   const changePageSize = (newSize) => {
     const newTotalPages = Math.ceil(data.length / newSize);
     const newCurrentPage = Math.min(currentPage, newTotalPages);
-    
+
     setPageSize(newSize);
     setCurrentPage(newCurrentPage);
-    
+
     if (onPageChange) {
       onPageChange(newCurrentPage);
     }
@@ -100,7 +102,7 @@ export const usePagination = (data = [], itemsPerPage = 20, options = {}) => {
     }
 
     const pages = [];
-    
+
     // Add first page and ellipsis if needed
     if (start > 1) {
       pages.push(1);
@@ -143,10 +145,10 @@ export const usePagination = (data = [], itemsPerPage = 20, options = {}) => {
     // Data
     currentPageData,
     virtualizedData,
-    
+
     // Pagination info
     ...paginationInfo,
-    
+
     // Navigation
     goToPage,
     nextPage,
@@ -154,10 +156,10 @@ export const usePagination = (data = [], itemsPerPage = 20, options = {}) => {
     goToFirstPage,
     goToLastPage,
     changePageSize,
-    
+
     // UI helpers
     getPageNumbers,
-    
+
     // State setters (for external control)
     setCurrentPage,
     setPageSize

@@ -48,5 +48,5 @@ export const getCategoryInfo = (categoryId) =>
 export const getPriorityInfo = (priorityId) => 
   TASK_PRIORITIES.find(p => p.id === priorityId) || TASK_PRIORITIES[1];
 
-// Note: formatDate and isOverdue functions are available in src/utils/index.js
-// Import from there: import { formatDate, isOverdue } from '../utils';
+// Re-export date utilities from utils for backward compatibility
+export { formatDate, isOverdue } from '../utils';

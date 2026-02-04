@@ -5,9 +5,9 @@ import Input from '../ui/Input';
 import Select from '../ui/Select';
 import { Package, DollarSign, Hash, Tag, User, Plus, Edit } from 'lucide-react';
 
-const ProductModal = ({ 
-  isOpen, 
-  onClose, 
+const ProductModal = ({
+  isOpen,
+  onClose,
   onSave,
   product = null, // null for create, object for edit
   bill = null, // bill context for product creation
@@ -77,13 +77,14 @@ const ProductModal = ({
     const quantity = parseFloat(formData.totalQuantity) || 0;
     const price = parseFloat(formData.pricePerPiece) || 0;
     const totalAmount = quantity * price;
-    
+
     if (totalAmount !== parseFloat(formData.totalAmount)) {
       setFormData(prev => ({
         ...prev,
         totalAmount: totalAmount.toString()
       }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.totalQuantity, formData.pricePerPiece]);
 
   // Handle input changes
@@ -92,7 +93,7 @@ const ProductModal = ({
       ...prev,
       [field]: value
     }));
-    
+
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({
@@ -167,7 +168,7 @@ const ProductModal = ({
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -187,7 +188,7 @@ const ProductModal = ({
         billNumber: formData.billNumber,
         date: new Date()
       };
-      
+
       await onSave(productData);
       onClose();
     } catch (error) {
@@ -220,7 +221,7 @@ const ProductModal = ({
     { value: 'Other', label: 'Other' }
   ];
 
-  const modalTitle = mode === 'edit' ? 'Edit Product' : 
+  const modalTitle = mode === 'edit' ? 'Edit Product' :
     (bill ? `Add Product to ${bill.billNumber}` : 'Add Product');
 
   return (
@@ -230,7 +231,7 @@ const ProductModal = ({
       title={modalTitle}
       maxWidth={600}
     >
-      <form onSubmit={handleSubmit} role="form">
+      <form onSubmit={handleSubmit}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Bill Context Info */}
           {bill && (
@@ -242,7 +243,7 @@ const ProductModal = ({
               fontSize: '14px',
               color: '#0369a1'
             }}>
-              <strong>Bill:</strong> {bill.billNumber} | <strong>Vendor:</strong> {bill.vendor} | 
+              <strong>Bill:</strong> {bill.billNumber} | <strong>Vendor:</strong> {bill.vendor} |
               <strong>Date:</strong> {new Date(bill.date).toLocaleDateString()}
             </div>
           )}
@@ -395,10 +396,10 @@ const ProductModal = ({
               disabled={true}
               style={{ background: '#f9fafb', color: '#6b7280' }}
             />
-            <div style={{ 
-              marginTop: '4px', 
-              fontSize: '12px', 
-              color: '#6b7280' 
+            <div style={{
+              marginTop: '4px',
+              fontSize: '12px',
+              color: '#6b7280'
             }}>
               Automatically calculated: Quantity × Price Per Piece
             </div>
@@ -406,9 +407,9 @@ const ProductModal = ({
 
           {/* Submit Error */}
           {errors.submit && (
-            <div style={{ 
-              padding: '12px', 
-              background: '#fef2f2', 
+            <div style={{
+              padding: '12px',
+              background: '#fef2f2',
               border: '1px solid #fecaca',
               borderRadius: '8px',
               color: '#dc2626',
@@ -419,9 +420,9 @@ const ProductModal = ({
           )}
 
           {/* Action Buttons */}
-          <div style={{ 
-            display: 'flex', 
-            gap: '12px', 
+          <div style={{
+            display: 'flex',
+            gap: '12px',
             justifyContent: 'flex-end',
             paddingTop: '20px',
             borderTop: '1px solid #e5e7eb'
@@ -440,8 +441,8 @@ const ProductModal = ({
               loading={loading}
               icon={mode === 'edit' ? <Edit size={16} /> : <Plus size={16} />}
             >
-              {loading ? (mode === 'edit' ? 'Updating...' : 'Adding...') : 
-                        (mode === 'edit' ? 'Update Product' : 'Add Product')}
+              {loading ? (mode === 'edit' ? 'Updating...' : 'Adding...') :
+                (mode === 'edit' ? 'Update Product' : 'Add Product')}
             </Button>
           </div>
         </div>

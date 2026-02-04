@@ -5,9 +5,10 @@
 }
 
 .app-main {
-  padding: 5px;
+  padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
+  text-align: left;
 }
 
 /* Settings Modal Styles */
@@ -79,15 +80,18 @@
 }
 
 /* Responsive adjustments */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .app-main {
     padding: 16px;
+    padding-bottom: 100px; /* Space for bottom navigation */
   }
-  
+}
+
+@media (max-width: 600px) {
   .settings-modal-overlay {
     padding: 10px;
   }
-  
+
   .settings-modal {
     max-width: 95vw;
     max-height: 95vh;

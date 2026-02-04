@@ -4,7 +4,7 @@ import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 import Textarea from '../ui/Textarea';
-import { Calendar, User, FileText, Tag, DollarSign, Package, TrendingUp, IndianRupee } from 'lucide-react';
+import { Calendar, User, FileText, Tag, Package, TrendingUp, IndianRupee } from 'lucide-react';
 
 const BillEditModal = ({
   isOpen,
@@ -142,7 +142,7 @@ const BillEditModal = ({
       title="Edit Bill"
       maxWidth={500}
     >
-      <form onSubmit={handleSubmit} role="form">
+      <form onSubmit={handleSubmit}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
             {/* Bill Number */}

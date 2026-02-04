@@ -9,7 +9,6 @@ import {
   Calendar,
   User,
   Package,
-  DollarSign,
   IndianRupee,
   TrendingUp
 } from 'lucide-react';

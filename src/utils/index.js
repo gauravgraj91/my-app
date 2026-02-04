@@ -10,8 +10,8 @@ export const formatCurrency = (value) => {
 export const formatDate = (dateString) => {
   if (!dateString) return '';
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { 
-    month: 'short', 
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
     day: 'numeric',
     year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
   });
@@ -88,7 +88,7 @@ export const sortBy = (array, key, direction = 'asc') => {
   return [...array].sort((a, b) => {
     const aVal = a[key];
     const bVal = b[key];
-    
+
     if (aVal < bVal) return direction === 'asc' ? -1 : 1;
     if (aVal > bVal) return direction === 'asc' ? 1 : -1;
     return 0;
@@ -104,44 +104,44 @@ export const showToast = (message, type = 'success', duration = 3000) => {
 // Date utilities
 export const getRelativeTime = (date) => {
   if (!date) return '';
-  
+
   const now = new Date();
   const targetDate = new Date(date);
   const diffInSeconds = Math.floor((now - targetDate) / 1000);
-  
+
   if (diffInSeconds < 60) return 'just now';
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
   if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
-  
+
   return formatDate(date);
 };
 
 export const getDaysUntilDue = (dueDate) => {
   if (!dueDate) return null;
-  
+
   const due = new Date(dueDate);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   due.setHours(0, 0, 0, 0);
-  
+
   const diffTime = due - today;
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
+
   return diffDays;
 };
 
 export const formatDueDate = (dueDate) => {
   if (!dueDate) return '';
-  
+
   const daysUntil = getDaysUntilDue(dueDate);
-  
+
   if (daysUntil === null) return '';
   if (daysUntil < 0) return `${Math.abs(daysUntil)} days overdue`;
   if (daysUntil === 0) return 'Due today';
   if (daysUntil === 1) return 'Due tomorrow';
   if (daysUntil <= 7) return `Due in ${daysUntil} days`;
-  
+
   return formatDate(dueDate);
 };
 
@@ -168,7 +168,7 @@ export const isThisWeek = (date) => {
   startOfWeek.setDate(today.getDate() - today.getDay());
   const endOfWeek = new Date(startOfWeek);
   endOfWeek.setDate(startOfWeek.getDate() + 6);
-  
+
   return targetDate >= startOfWeek && targetDate <= endOfWeek;
 };
 
@@ -189,8 +189,8 @@ export const slugify = (text) => {
     .toLowerCase()
     .trim()
     .replace(/\s+/g, '-')
-    .replace(/[^\w\-]+/g, '')
-    .replace(/\-\-+/g, '-')
+    .replace(/[^\w-]+/g, '')
+    .replace(/--+/g, '-')
     .replace(/^-+/, '')
     .replace(/-+$/, '');
 };
@@ -305,7 +305,7 @@ export const getQueryParams = () => {
 // Performance utilities
 export const throttle = (func, limit) => {
   let inThrottle;
-  return function() {
+  return function () {
     const args = arguments;
     const context = this;
     if (!inThrottle) {

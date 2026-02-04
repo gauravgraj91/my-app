@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Moon, Sun, Settings } from 'lucide-react';
+import { Moon, Sun, LayoutDashboard } from 'lucide-react';
 import './Header.css';
 
-const Header = ({ onSettingsClick }) => {
+const Header = () => {
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
@@ -22,23 +22,20 @@ const Header = ({ onSettingsClick }) => {
   return (
     <header className="app-header">
       <div className="header-content">
-        <h1 className="app-title">Personal Dashboard</h1>
+        <div className="header-brand">
+          <div className="brand-logo">
+            <LayoutDashboard size={24} />
+          </div>
+          <h1 className="app-title">Personal Dashboard</h1>
+        </div>
         <div className="header-controls">
           <button
             className="header-btn dark-mode-toggle"
             onClick={toggleDarkMode}
-            aria-label="Toggle dark mode"
-            title="Toggle dark mode"
+            aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={darkMode ? 'Light mode' : 'Dark mode'}
           >
             {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
-          <button
-            className="header-btn settings-btn"
-            onClick={onSettingsClick}
-            aria-label="Open settings"
-            title="Settings"
-          >
-            <Settings size={20} />
           </button>
         </div>
       </div>

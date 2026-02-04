@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Search, X, Download, Plus, Save as SaveIcon, ChevronDown, Check, Trash2, Pencil, Calendar, Settings as SettingsIcon, Grid, List, Tag } from 'lucide-react';
 import './Shop.css';
-import ShopTransactions from './shopTransactions';
+// ShopTransactions component is reserved for future use
 import PriceList from './PriceList';
 import ProductModal from './ProductModal';
 import BillsView from './BillsView';
@@ -68,10 +68,13 @@ const Shop = () => {
   ]);
   const [editingCell, setEditingCell] = useState(null);
   const [tempEditValue, setTempEditValue] = useState("");
+  // eslint-disable-next-line no-unused-vars
   const [pieChartData, setPieChartData] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [profitPieChartData, setProfitPieChartData] = useState([]);
   const [showSaveAnimation, setShowSaveAnimation] = useState(false);
   const [loading, setLoading] = useState(true);
+  // eslint-disable-next-line no-unused-vars
   const [lastActionType, setLastActionType] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -161,6 +164,7 @@ const Shop = () => {
   useEffect(() => {
     updatePieChartData();
     updateProfitPieChartData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
 
@@ -264,6 +268,7 @@ const Shop = () => {
     }
   };
 
+  // eslint-disable-next-line no-unused-vars
   const handleRowClick = (row) => {
     setSelectedProduct(row);
     setModalOpen(true);
@@ -441,6 +446,7 @@ const Shop = () => {
       case 'electronics': color = 'bg-blue-100 text-blue-800'; icon = <span className="mr-1">💻</span>; break;
       case 'accessories': color = 'bg-orange-100 text-orange-800'; icon = <span className="mr-1">🧢</span>; break;
       case 'clothing': color = 'bg-purple-100 text-purple-800'; icon = <span className="mr-1">👕</span>; break;
+      default: break;
     }
     return <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${color}`}>{icon}{cat || ''}</span>;
   };
@@ -764,8 +770,6 @@ const Shop = () => {
                         }, {})
                       ).map(([name, value]) => ({ name, value }));
 
-                      const totalValue = categoryData.reduce((sum, item) => sum + item.value, 0);
-
                       return categoryData.length > 0 ? (
                         <div className="h-60">
                           <ResponsiveContainer width="100%" height="100%">
@@ -824,8 +828,6 @@ const Shop = () => {
                           return acc;
                         }, {})
                       ).map(([name, value]) => ({ name, value }));
-
-                      const totalValue = vendorData.reduce((sum, item) => sum + item.value, 0);
 
                       return vendorData.length > 0 ? (
                         <div className="h-60">

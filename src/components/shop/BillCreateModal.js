@@ -166,7 +166,7 @@ const BillCreateModal = ({
       title="Create New Bill"
       maxWidth={500}
     >
-      <form onSubmit={handleSubmit} role="form">
+      <form onSubmit={handleSubmit}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
             {/* Bill Number */}

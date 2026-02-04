@@ -40,6 +40,7 @@ const NotificationItem = ({ notification, onRemove }) => {
       }, notification.duration);
       return () => clearTimeout(timer);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [notification.duration]);
 
   const handleRemove = () => {
@@ -76,10 +77,10 @@ const NotificationItem = ({ notification, onRemove }) => {
       minWidth: '320px',
       maxWidth: '500px',
       position: 'relative',
-      transform: isRemoving 
-        ? 'translateX(100%)' 
-        : isVisible 
-          ? 'translateX(0)' 
+      transform: isRemoving
+        ? 'translateX(100%)'
+        : isVisible
+          ? 'translateX(0)'
           : 'translateX(100%)',
       opacity: isRemoving ? 0 : isVisible ? 1 : 0,
       transition: 'all 0.3s ease-in-out',
@@ -109,7 +110,7 @@ const NotificationItem = ({ notification, onRemove }) => {
   };
 
   return (
-    <div 
+    <div
       style={getStyles()}
       onClick={handleRemove}
       role="alert"
@@ -118,25 +119,25 @@ const NotificationItem = ({ notification, onRemove }) => {
       <div style={{ flexShrink: 0 }}>
         {getIcon()}
       </div>
-      
+
       <div style={{ flex: 1, minWidth: 0 }}>
         {notification.title && (
-          <div style={{ 
-            fontWeight: '600', 
+          <div style={{
+            fontWeight: '600',
             fontSize: '14px',
             marginBottom: '4px'
           }}>
             {notification.title}
           </div>
         )}
-        <div style={{ 
+        <div style={{
           fontSize: '14px',
           lineHeight: '1.4',
           wordBreak: 'break-word'
         }}>
           {notification.message}
         </div>
-        
+
         {notification.action && (
           <button
             onClick={(e) => {
@@ -167,7 +168,7 @@ const NotificationItem = ({ notification, onRemove }) => {
           </button>
         )}
       </div>
-      
+
       <button
         onClick={(e) => {
           e.stopPropagation();
@@ -305,7 +306,7 @@ export const NotificationProvider = ({ children, maxNotifications = 5 }) => {
   return (
     <NotificationContext.Provider value={contextValue}>
       {children}
-      <NotificationContainer 
+      <NotificationContainer
         notifications={notifications}
         onRemove={removeNotification}
       />

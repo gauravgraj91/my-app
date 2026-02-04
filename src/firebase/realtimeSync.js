@@ -1,19 +1,14 @@
-import { 
-  subscribeToBills, 
+import {
+  subscribeToBills,
   subscribeToBillWithProducts,
   optimisticUpdateBill,
-  optimisticAddBill,
-  optimisticDeleteBill,
   resolveConflicts
 } from './billService';
 
-import { 
+import {
   subscribeToShopProducts,
   subscribeToProductsByBill,
-  optimisticUpdateProduct,
-  optimisticAddProduct,
-  optimisticDeleteProduct,
-  optimisticMoveProduct
+  optimisticUpdateProduct
 } from './shopProductService';
 
 /**
@@ -34,14 +29,14 @@ class RealtimeSyncManager {
    */
   subscribeToBillsSync(callback, options = {}) {
     const subscriptionId = `bills_${Date.now()}`;
-    
+
     const unsubscribe = subscribeToBills((bills, metadata) => {
       // Handle optimistic updates and conflicts
       const processedBills = this.processBillsUpdate(bills, metadata);
-      
+
       // Store callback for conflict resolution
       this.syncCallbacks.set(subscriptionId, callback);
-      
+
       callback(processedBills, metadata);
     }, {
       onError: options.onError
@@ -56,14 +51,14 @@ class RealtimeSyncManager {
    */
   subscribeToProductsSync(callback, options = {}) {
     const subscriptionId = `products_${Date.now()}`;
-    
+
     const unsubscribe = subscribeToShopProducts((products, metadata) => {
       // Handle optimistic updates and conflicts
       const processedProducts = this.processProductsUpdate(products, metadata);
-      
+
       // Store callback for conflict resolution
       this.syncCallbacks.set(subscriptionId, callback);
-      
+
       callback(processedProducts, metadata);
     }, {
       onError: options.onError
@@ -78,11 +73,11 @@ class RealtimeSyncManager {
    */
   subscribeToBillWithProductsSync(billId, callback, options = {}) {
     const subscriptionId = `bill_products_${billId}_${Date.now()}`;
-    
+
     const unsubscribe = subscribeToBillWithProducts(billId, (billWithProducts, metadata) => {
       // Process the combined bill-products data
       const processedData = this.processBillWithProductsUpdate(billWithProducts, metadata);
-      
+
       this.syncCallbacks.set(subscriptionId, callback);
       callback(processedData, metadata);
     }, {
@@ -98,13 +93,13 @@ class RealtimeSyncManager {
    */
   subscribeToProductsByBillSync(billId, callback, options = {}) {
     const subscriptionId = `bill_products_${billId}_${Date.now()}`;
-    
+
     const unsubscribe = subscribeToProductsByBill(billId, (products, metadata) => {
       // Calculate real-time totals
       const totals = this.calculateRealtimeTotals(products);
-      
+
       const processedProducts = this.processProductsUpdate(products, metadata);
-      
+
       this.syncCallbacks.set(subscriptionId, callback);
       callback(processedProducts, { ...metadata, totals });
     }, {
@@ -127,21 +122,21 @@ class RealtimeSyncManager {
     const processedBills = bills.map(serverBill => {
       const optimisticKey = `bill_${serverBill.id}`;
       const optimisticUpdate = this.optimisticUpdates.get(optimisticKey);
-      
+
       if (optimisticUpdate && !serverBill._metadata?.optimistic) {
         // Potential conflict - resolve it
         const resolution = resolveConflicts(optimisticUpdate, serverBill);
-        
+
         if (resolution.conflict) {
           this.handleConflict(resolution);
         }
-        
+
         // Clean up optimistic update
         this.optimisticUpdates.delete(optimisticKey);
-        
+
         return resolution.resolved;
       }
-      
+
       return serverBill;
     });
 
@@ -160,21 +155,21 @@ class RealtimeSyncManager {
     const processedProducts = products.map(serverProduct => {
       const optimisticKey = `product_${serverProduct.id}`;
       const optimisticUpdate = this.optimisticUpdates.get(optimisticKey);
-      
+
       if (optimisticUpdate && !serverProduct._metadata?.optimistic) {
         // Potential conflict - resolve it
         const resolution = this.resolveProductConflict(optimisticUpdate, serverProduct);
-        
+
         if (resolution.conflict) {
           this.handleConflict(resolution);
         }
-        
+
         // Clean up optimistic update
         this.optimisticUpdates.delete(optimisticKey);
-        
+
         return resolution.resolved;
       }
-      
+
       return serverProduct;
     });
 
@@ -189,10 +184,10 @@ class RealtimeSyncManager {
 
     // Process bill data
     const processedBill = this.processBillsUpdate([billWithProducts], metadata)[0];
-    
+
     // Process products data
     const processedProducts = this.processProductsUpdate(billWithProducts.products || [], metadata);
-    
+
     return {
       ...processedBill,
       products: processedProducts
@@ -207,7 +202,7 @@ class RealtimeSyncManager {
       const quantity = parseFloat(product.totalQuantity) || 0;
       const amount = parseFloat(product.totalAmount) || 0;
       const profit = parseFloat(product.profitPerPiece) || 0;
-      
+
       return {
         totalQuantity: totals.totalQuantity + quantity,
         totalAmount: totals.totalAmount + amount,
@@ -227,11 +222,11 @@ class RealtimeSyncManager {
    */
   resolveProductConflict(localProduct, serverProduct) {
     try {
-      const localTimestamp = localProduct.updatedAt instanceof Date ? 
+      const localTimestamp = localProduct.updatedAt instanceof Date ?
         localProduct.updatedAt : new Date(localProduct.updatedAt);
-      const serverTimestamp = serverProduct.updatedAt instanceof Date ? 
+      const serverTimestamp = serverProduct.updatedAt instanceof Date ?
         serverProduct.updatedAt : new Date(serverProduct.updatedAt);
-      
+
       if (localTimestamp > serverTimestamp) {
         return {
           resolved: localProduct,
@@ -263,7 +258,7 @@ class RealtimeSyncManager {
    */
   handleConflict(resolution) {
     console.warn('Conflict resolved:', resolution);
-    
+
     // Add to conflict queue for user notification
     this.conflictQueue.push({
       timestamp: new Date(),
@@ -284,7 +279,7 @@ class RealtimeSyncManager {
    */
   applyOptimisticBillUpdate(billId, updateData, currentBills, callback) {
     const optimisticKey = `bill_${billId}`;
-    
+
     // Store optimistic update for conflict resolution
     this.optimisticUpdates.set(optimisticKey, {
       id: billId,
@@ -301,7 +296,7 @@ class RealtimeSyncManager {
    */
   applyOptimisticProductUpdate(productId, updateData, currentProducts, callback) {
     const optimisticKey = `product_${productId}`;
-    
+
     // Store optimistic update for conflict resolution
     this.optimisticUpdates.set(optimisticKey, {
       id: productId,

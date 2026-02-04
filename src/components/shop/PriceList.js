@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { DataGrid, GridActionsCellItem, GridToolbarContainer, GridToolbarFilterButton } from '@mui/x-data-grid';
+import { DataGrid, GridActionsCellItem, GridToolbarContainer } from '@mui/x-data-grid';
 import {
     addPriceListItem,
     subscribeToPriceList,

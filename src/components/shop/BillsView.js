@@ -5,8 +5,6 @@ import {
   Filter,
   Download,
   Calendar,
-  User,
-  DollarSign,
   Package,
   TrendingUp,
   ChevronLeft,
@@ -19,7 +17,6 @@ import {
   Trash2,
   Copy,
   Archive,
-  MoreHorizontal,
   AlertTriangle,
   IndianRupee
 } from 'lucide-react';
@@ -27,19 +24,15 @@ import Card from '../ui/Card';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
-import Modal from '../ui/Modal';
 import ErrorBoundary from '../ui/ErrorBoundary';
 import { useNotifications } from '../ui/NotificationSystem';
 import {
-  LoadingOverlay,
   BillsListLoading,
   AnalyticsLoading,
-  BillOperationLoading,
   BulkOperationLoading
 } from '../ui/LoadingStates';
 import BillCard from './BillCard';
 import BillCreateModal from './BillCreateModal';
-import BillEditModal from './BillEditModal';
 import ConflictResolutionModal from './ConflictResolutionModal';
 import {
   subscribeToBills,
@@ -48,18 +41,11 @@ import {
   deleteBillWithProducts,
   duplicateBill,
   getBillAnalytics,
-  searchBills,
-  filterBills,
-  BillModel,
   exportBillToCSV,
-  exportMultipleBillsToCSV,
   bulkDeleteBills,
   bulkDuplicateBills,
   bulkUpdateBillStatus,
-  bulkExportBillsToCSV,
-
-  fetchBillsPaginated,
-  fetchBillsInfinite
+  bulkExportBillsToCSV
 } from '../../firebase/billService';
 import { addShopProduct } from '../../firebase/shopProductService';
 import {
@@ -70,18 +56,13 @@ import {
   reportError
 } from '../../utils/errorHandling';
 import { usePagination } from '../../hooks/usePagination';
-import { useVirtualScrolling } from '../../hooks/useVirtualScrolling';
 import {
   billCacheUtils,
-  productCacheUtils,
-  queryCacheUtils,
-  analyticsCacheUtils,
-  cacheInvalidationUtils
+  analyticsCacheUtils
 } from '../../utils/cacheUtils';
 import { performanceMonitor } from '../../utils/performanceUtils';
 import { getProductsByBill } from '../../firebase/shopProductService';
 import realtimeSyncManager from '../../firebase/realtimeSync';
-import { format } from 'date-fns';
 
 const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
   // Notification system
@@ -107,7 +88,8 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
 
   // Bulk operations
   const [selectedBills, setSelectedBills] = useState(new Set());
-  const [showBulkActions, setShowBulkActions] = useState(false);
+  // eslint-disable-next-line no-unused-vars
+  const [_showBulkActions, setShowBulkActions] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const [bulkOperationStatus, setBulkOperationStatus] = useState(null);
 
@@ -318,6 +300,7 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
         unsubscribe();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [retryCount]);
 
   // Load analytics with caching and error handling
@@ -405,8 +388,8 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
         if (billMatches) return true;
 
         // Search in products within this bill
-        const billProducts = billProducts[bill.id] || [];
-        const productMatches = billProducts.some(product =>
+        const productsForBill = billProducts[bill.id] || [];
+        const productMatches = productsForBill.some(product =>
           (product.productName && product.productName.toLowerCase().includes(searchLower)) ||
           (product.category && product.category.toLowerCase().includes(searchLower)) ||
           (product.vendor && product.vendor.toLowerCase().includes(searchLower))
@@ -488,6 +471,7 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
     });
 
     return result;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bills, billProducts, searchTerm, filters, sortField, sortDirection]);
 
   // Enhanced pagination with virtual scrolling support
@@ -517,16 +501,6 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
       style: 'currency',
       currency: 'INR'
     }).format(value || 0);
-  };
-
-  const formatDate = (date) => {
-    if (!date) return 'No date';
-    try {
-      const dateObj = date instanceof Date ? date : new Date(date);
-      return format(dateObj, 'dd MMM yyyy');
-    } catch {
-      return 'Invalid date';
-    }
   };
 
 
@@ -853,9 +827,6 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
 
     try {
       const billIds = Array.from(selectedBills);
-      const selectedBillNumbers = bills
-        .filter(b => billIds.includes(b.id))
-        .map(b => b.billNumber);
 
       const results = await retryHandler(async () => {
         return await bulkDeleteBills(billIds, {

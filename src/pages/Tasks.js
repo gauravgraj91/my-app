@@ -3,11 +3,12 @@ import { CheckCircle, Plus, Filter, Search, Edit2, Trash2, Copy, Archive, Calend
 import { useTasks } from '../hooks/useTasks';
 import { useTaskFilters } from '../hooks/useTaskFilters';
 import { TASK_CATEGORIES, TASK_PRIORITIES, getCategoryInfo, getPriorityInfo, formatDate, isOverdue } from '../constants';
-import TaskItem from '../components/TaskItem';
+import TaskItem from '../components/TaskItem'; // eslint-disable-line no-unused-vars
 import { Card, Button, Modal, Input, Select, Textarea, Badge } from '../components/ui';
 
 const Tasks = () => {
   // Use custom hooks for task management and filtering
+  // eslint-disable-next-line no-unused-vars
   const { todos, stats, addTask, deleteTask, updateTask, toggleTaskCompletion, duplicateTask, archiveCompleted } = useTasks();
   const completedCount = todos.filter(todo => todo.isCompleted).length;
   const {
@@ -17,6 +18,7 @@ const Tasks = () => {
     filterStatus, setFilterStatus,
     sortBy, setSortBy,
     filteredAndSortedTodos,
+    // eslint-disable-next-line no-unused-vars
     hasActiveFilters
   } = useTaskFilters(todos);
 
@@ -234,8 +236,8 @@ const Tasks = () => {
             <CheckCircle size={48} style={{ margin: '0 auto 16px', opacity: 0.3 }} />
             <div style={{ fontSize: 18, fontWeight: 500, marginBottom: 8 }}>No tasks found</div>
             <div style={{ fontSize: 14 }}>
-              {searchTerm || filterCategory !== 'all' || filterPriority !== 'all' || filterStatus !== 'all' 
-                ? 'Try adjusting your filters' 
+              {searchTerm || filterCategory !== 'all' || filterPriority !== 'all' || filterStatus !== 'all'
+                ? 'Try adjusting your filters'
                 : 'Add your first task to get started!'}
             </div>
           </div>
@@ -257,7 +259,7 @@ const Tasks = () => {
                 onChange={() => handleToggleTaskCompletion(todo.id)}
                 style={{ marginTop: 4 }}
               />
-              
+
               <div style={{ flex: 1 }}>
                 {editableTaskId === todo.id ? (
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -301,13 +303,13 @@ const Tasks = () => {
                     }}>
                       {todo.title}
                     </div>
-                    
+
                     {todo.description && (
                       <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>
                         {todo.description}
                       </div>
                     )}
-                    
+
                     <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 12 }}>
                       <Badge
                         variant="primary"
@@ -319,7 +321,7 @@ const Tasks = () => {
                       >
                         {getCategoryInfo(todo.category).name}
                       </Badge>
-                      
+
                       <Badge
                         variant="primary"
                         icon={getPriorityInfo(todo.priority).icon}
@@ -330,7 +332,7 @@ const Tasks = () => {
                       >
                         {getPriorityInfo(todo.priority).name}
                       </Badge>
-                      
+
                       {todo.dueDate && (
                         <span style={{
                           color: isOverdue(todo.dueDate) && !todo.isCompleted ? '#ef4444' : '#6b7280',
@@ -341,7 +343,7 @@ const Tasks = () => {
                           <Calendar size={12} /> {formatDate(todo.dueDate)}
                         </span>
                       )}
-                      
+
                       {todo.estimatedTime && (
                         <span style={{ color: '#6b7280', display: 'flex', alignItems: 'center', gap: 4 }}>
                           <Clock size={12} /> {todo.estimatedTime}
@@ -351,7 +353,7 @@ const Tasks = () => {
                   </>
                 )}
               </div>
-              
+
               <div style={{ display: 'flex', gap: 8 }}>
                 <button
                   onClick={() => handleEditTask(todo.id)}
@@ -407,50 +409,50 @@ const Tasks = () => {
         <Input
           label="Title *"
           value={newTask.title}
-          onChange={(e) => setNewTask({...newTask, title: e.target.value})}
+          onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
           placeholder="What needs to be done?"
         />
-        
+
         <Textarea
           label="Description"
           value={newTask.description}
-          onChange={(e) => setNewTask({...newTask, description: e.target.value})}
+          onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
           placeholder="Add more details..."
           rows={3}
         />
-        
+
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           <Select
             label="Category"
             value={newTask.category}
-            onChange={(e) => setNewTask({...newTask, category: e.target.value})}
+            onChange={(e) => setNewTask({ ...newTask, category: e.target.value })}
             options={TASK_CATEGORIES.map(cat => ({ value: cat.id, label: `${cat.icon} ${cat.name}` }))}
           />
-          
+
           <Select
             label="Priority"
             value={newTask.priority}
-            onChange={(e) => setNewTask({...newTask, priority: e.target.value})}
+            onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
             options={TASK_PRIORITIES.map(pri => ({ value: pri.id, label: `${pri.icon} ${pri.name}` }))}
           />
         </div>
-        
+
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           <Input
             label="Due Date"
             type="date"
             value={newTask.dueDate}
-            onChange={(e) => setNewTask({...newTask, dueDate: e.target.value})}
+            onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
           />
-          
+
           <Input
             label="Estimated Time"
             value={newTask.estimatedTime}
-            onChange={(e) => setNewTask({...newTask, estimatedTime: e.target.value})}
+            onChange={(e) => setNewTask({ ...newTask, estimatedTime: e.target.value })}
             placeholder="e.g., 2 hours"
           />
         </div>
-        
+
         <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 24 }}>
           <Button
             variant="secondary"
