@@ -28,7 +28,10 @@ const BillEditModal = ({
   // Initialize form data when bill changes
   useEffect(() => {
     if (bill) {
-      const billDate = bill.date instanceof Date ? bill.date : new Date(bill.date);
+      // Handle Firestore Timestamp, Date object, or string
+      const billDate = bill.date?.toDate ? bill.date.toDate() :
+                       bill.date instanceof Date ? bill.date :
+                       new Date(bill.date);
       setFormData({
         billNumber: bill.billNumber || '',
         date: billDate.toISOString().split('T')[0],

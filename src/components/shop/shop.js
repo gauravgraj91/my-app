@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Search, X, Download, Plus, Save as SaveIcon, ChevronDown, Check, Trash2, Pencil, Calendar, Settings as SettingsIcon, Grid, List, Tag } from 'lucide-react';
+import { Search, X, Download, Plus, Save as SaveIcon, ChevronDown, Check, Trash2, Pencil, Calendar, Settings as SettingsIcon, Grid, List, Tag, Link2, Unlink, CheckSquare, Square } from 'lucide-react';
 import './Shop.css';
 // ShopTransactions component is reserved for future use
 import PriceList from './PriceList';
 import ProductModal from './ProductModal';
 import BillsView from './BillsView';
+import AssignBillModal from './AssignBillModal';
 import {
   addShopProduct,
   subscribeToShopProducts,
   deleteShopProduct,
-  updateShopProduct
+  updateShopProduct,
+  moveProductToBill,
+  removeProductFromBill
 } from '../../firebase/shopProductService';
 import { format } from 'date-fns';
 
@@ -91,6 +94,15 @@ const Shop = () => {
   const [filterPriceMax, setFilterPriceMax] = useState('');
   const [filterBillStatus, setFilterBillStatus] = useState(''); // 'all', 'linked', 'standalone'
 
+  // Assign to Bill modal state
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [productsToAssign, setProductsToAssign] = useState([]);
+  const [assignMode, setAssignMode] = useState('single'); // 'single' or 'bulk'
+
+  // Bulk selection state
+  const [selectedProducts, setSelectedProducts] = useState(new Set());
+  const [showBulkActions, setShowBulkActions] = useState(false);
+
   // Table settings state with persistence
   const defaultTableSettings = {
     filtering: true,
@@ -123,6 +135,7 @@ const Shop = () => {
   }, [tableSettings]);
 
   const [categories, setCategories] = useState(getShopCategories());
+  // eslint-disable-next-line no-unused-vars
   const [vendors, setVendors] = useState(getShopVendors());
   const [defaultCategory, setDefaultCategory] = useState(getDefaultCategory());
   const [defaultVendor, setDefaultVendor] = useState(getDefaultVendor());
@@ -302,6 +315,7 @@ const Shop = () => {
   // Helper function to get visible columns
   const getVisibleColumns = () => {
     const allColumns = [
+      { key: 'select', label: '', sortable: false, width: '40px' }, // Selection checkbox column
       { key: 'billNumber', label: 'Bill #', sortable: true },
       { key: 'billStatus', label: 'Bill Status', sortable: false },
       { key: 'date', label: 'Date', sortable: true },
@@ -317,7 +331,8 @@ const Shop = () => {
       { key: 'actions', label: 'Actions' }
     ];
 
-    return allColumns.filter(col => tableSettings.columns[col.key]);
+    // Select column is always shown, others depend on settings
+    return allColumns.filter(col => col.key === 'select' || tableSettings.columns[col.key]);
   };
 
   // Handler to navigate to Bills view with specific bill
@@ -325,6 +340,117 @@ const Shop = () => {
     if (billId) {
       setSearch(billNumber); // Set search to bill number
       setViewMode('bills'); // Switch to bills view
+    }
+  };
+
+  // Handler to navigate from Bills view to Products view for a specific product
+  const handleNavigateToProduct = (product) => {
+    if (product) {
+      setSearch(product.productName); // Set search to product name
+      setViewMode('products'); // Switch to products view
+      // Optionally select the product for editing
+      setSelectedProduct(product);
+      setModalOpen(true);
+    }
+  };
+
+  // Handler to open assign modal for single product
+  const handleOpenAssignModal = (product) => {
+    setProductsToAssign([product]);
+    setAssignMode('single');
+    setAssignModalOpen(true);
+  };
+
+  // Handler to open assign modal for bulk products
+  const handleOpenBulkAssignModal = () => {
+    const products = sortedData.filter(p => selectedProducts.has(p.id) && !p.billId);
+    if (products.length === 0) {
+      showToast('Please select standalone products to assign', 'error');
+      return;
+    }
+    setProductsToAssign(products);
+    setAssignMode('bulk');
+    setAssignModalOpen(true);
+  };
+
+  // Handler to assign products to a bill
+  const handleAssignToBill = async (billId, bill) => {
+    try {
+      for (const product of productsToAssign) {
+        await moveProductToBill(product.id, billId);
+      }
+      showToast(
+        productsToAssign.length === 1
+          ? `Product assigned to ${bill.billNumber}!`
+          : `${productsToAssign.length} products assigned to ${bill.billNumber}!`,
+        'success'
+      );
+      setSelectedProducts(new Set());
+      setShowBulkActions(false);
+    } catch (error) {
+      console.error('Error assigning to bill:', error);
+      throw error;
+    }
+  };
+
+  // Handler to remove product from bill
+  const handleRemoveFromBill = async (product) => {
+    if (!window.confirm(`Remove "${product.productName}" from bill ${product.billNumber}?`)) {
+      return;
+    }
+    try {
+      await removeProductFromBill(product.id);
+      showToast(`Product removed from ${product.billNumber}!`, 'success');
+    } catch (error) {
+      console.error('Error removing from bill:', error);
+      showToast('Failed to remove product from bill', 'error');
+    }
+  };
+
+  // Bulk selection handlers
+  const handleSelectProduct = (productId) => {
+    const newSelected = new Set(selectedProducts);
+    if (newSelected.has(productId)) {
+      newSelected.delete(productId);
+    } else {
+      newSelected.add(productId);
+    }
+    setSelectedProducts(newSelected);
+    setShowBulkActions(newSelected.size > 0);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedProducts.size === sortedData.length) {
+      setSelectedProducts(new Set());
+      setShowBulkActions(false);
+    } else {
+      const allIds = new Set(sortedData.map(p => p.id));
+      setSelectedProducts(allIds);
+      setShowBulkActions(true);
+    }
+  };
+
+  const handleClearSelection = () => {
+    setSelectedProducts(new Set());
+    setShowBulkActions(false);
+  };
+
+  // Bulk delete handler
+  const handleBulkDelete = async () => {
+    const count = selectedProducts.size;
+    if (!window.confirm(`Are you sure you want to delete ${count} product(s)? This action cannot be undone.`)) {
+      return;
+    }
+    try {
+      for (const productId of selectedProducts) {
+        await deleteShopProduct(productId);
+      }
+      showToast(`${count} product(s) deleted successfully!`, 'success');
+      setSelectedProducts(new Set());
+      setShowBulkActions(false);
+    } catch (error) {
+      console.error('Error bulk deleting:', error);
+      showToast('Failed to delete some products', 'error');
     }
   };
 
@@ -469,13 +595,17 @@ const Shop = () => {
     return <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${color}`}>{icon}{cat || ''}</span>;
   };
 
-  // Date formatting helper
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '';
+  // Date formatting helper - handles Firestore Timestamps, Date objects, and strings
+  const formatDate = (dateValue) => {
+    if (!dateValue) return '';
     try {
-      return format(new Date(dateStr), 'dd MMM yyyy');
+      // Handle Firestore Timestamp (has toDate method)
+      const date = dateValue?.toDate ? dateValue.toDate() :
+                   dateValue instanceof Date ? dateValue :
+                   new Date(dateValue);
+      return format(date, 'dd MMM yyyy');
     } catch {
-      return dateStr;
+      return '';
     }
   };
 
@@ -638,6 +768,7 @@ const Shop = () => {
           <BillsView
             searchTerm={search}
             onSearchChange={setSearch}
+            onProductClick={handleNavigateToProduct}
           />
         ) : viewMode === 'pricelist' ? (
           <PriceList />
@@ -1130,6 +1261,43 @@ const Shop = () => {
               )}
             </div>
 
+            {/* Bulk Actions Bar */}
+            {showBulkActions && selectedProducts.size > 0 && (
+              <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="font-medium text-blue-800">
+                    {selectedProducts.size} product{selectedProducts.size > 1 ? 's' : ''} selected
+                  </span>
+                  <button
+                    className="text-blue-600 hover:text-blue-800 text-sm underline"
+                    onClick={handleClearSelection}
+                  >
+                    Clear selection
+                  </button>
+                </div>
+                <div className="flex items-center gap-3">
+                  {/* Bulk Assign to Bill - only for standalone products */}
+                  {Array.from(selectedProducts).some(id => !sortedData.find(p => p.id === id)?.billId) && (
+                    <button
+                      className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                      onClick={handleOpenBulkAssignModal}
+                    >
+                      <Link2 size={16} />
+                      Assign to Bill
+                    </button>
+                  )}
+                  {/* Bulk Delete */}
+                  <button
+                    className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    onClick={handleBulkDelete}
+                  >
+                    <Trash2 size={16} />
+                    Delete Selected
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="dashboard-card dashboard-table-container">
               <table className="dashboard-table">
                 <thead>
@@ -1139,9 +1307,23 @@ const Shop = () => {
                         key={column.key}
                         className={column.align === 'right' ? 'text-right' : ''}
                         onClick={column.sortable ? () => handleSort(column.key) : undefined}
-                        style={{ cursor: column.sortable ? 'pointer' : 'default' }}
+                        style={{ cursor: column.sortable ? 'pointer' : 'default', width: column.width }}
                       >
-                        {column.label} {column.sortable && renderSortIcon(column.key)}
+                        {column.key === 'select' ? (
+                          <button
+                            className="flex items-center justify-center p-1 hover:bg-gray-100 rounded"
+                            onClick={(e) => { e.stopPropagation(); handleSelectAll(); }}
+                            title={selectedProducts.size === sortedData.length ? 'Deselect all' : 'Select all'}
+                          >
+                            {selectedProducts.size === sortedData.length && sortedData.length > 0 ? (
+                              <CheckSquare size={18} className="text-blue-600" />
+                            ) : (
+                              <Square size={18} className="text-gray-400" />
+                            )}
+                          </button>
+                        ) : (
+                          <>{column.label} {column.sortable && renderSortIcon(column.key)}</>
+                        )}
                       </th>
                     ))}
                   </tr>
@@ -1166,6 +1348,20 @@ const Shop = () => {
                           <td key={column.key} className={column.align === 'right' ? 'text-right' : ''}>
                             {(() => {
                               switch (column.key) {
+                                case 'select':
+                                  return (
+                                    <button
+                                      className="flex items-center justify-center p-1 hover:bg-gray-100 rounded"
+                                      onClick={(e) => { e.stopPropagation(); handleSelectProduct(row.id); }}
+                                      title={selectedProducts.has(row.id) ? 'Deselect' : 'Select'}
+                                    >
+                                      {selectedProducts.has(row.id) ? (
+                                        <CheckSquare size={18} className="text-blue-600" />
+                                      ) : (
+                                        <Square size={18} className="text-gray-400" />
+                                      )}
+                                    </button>
+                                  );
                                 case 'billNumber':
                                   return row.billId ? (
                                     <button
@@ -1225,6 +1421,46 @@ const Shop = () => {
                                 case 'actions':
                                   return (
                                     <div className="flex gap-2 items-center justify-center">
+                                      {/* Assign to Bill / Remove from Bill button */}
+                                      {row.billId ? (
+                                        <button
+                                          className="bg-orange-100 text-orange-700 border border-orange-300 hover:bg-orange-600 hover:text-white shadow-sm"
+                                          style={{
+                                            padding: '8px',
+                                            width: '40px',
+                                            height: '40px',
+                                            borderRadius: '6px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            transition: 'all 0.2s'
+                                          }}
+                                          aria-label="Remove from Bill"
+                                          title={`Remove from ${row.billNumber}`}
+                                          onClick={(e) => { e.stopPropagation(); handleRemoveFromBill(row); }}
+                                        >
+                                          <Unlink size={18} strokeWidth={2} />
+                                        </button>
+                                      ) : (
+                                        <button
+                                          className="bg-green-100 text-green-700 border border-green-300 hover:bg-green-600 hover:text-white shadow-sm"
+                                          style={{
+                                            padding: '8px',
+                                            width: '40px',
+                                            height: '40px',
+                                            borderRadius: '6px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            transition: 'all 0.2s'
+                                          }}
+                                          aria-label="Assign to Bill"
+                                          title="Assign to Bill"
+                                          onClick={(e) => { e.stopPropagation(); handleOpenAssignModal(row); }}
+                                        >
+                                          <Link2 size={18} strokeWidth={2} />
+                                        </button>
+                                      )}
                                       <button
                                         className="bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-600 hover:text-white shadow-sm"
                                         style={{
@@ -1302,15 +1538,6 @@ const Shop = () => {
               </table>
             </div>
 
-            <ProductModal
-              isOpen={modalOpen}
-              onClose={handleModalClose}
-              product={selectedProduct}
-              onSave={handleModalSave}
-              mode={selectedProduct ? 'edit' : 'create'}
-              bill={selectedProduct?.billId ? { id: selectedProduct.billId, billNumber: selectedProduct.billNumber, vendor: selectedProduct.vendor } : null}
-            />
-
             {/* Settings Modal */}
             {settingsOpen && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
@@ -1357,9 +1584,31 @@ const Shop = () => {
                 </div>
               </div>
             )}
+
+            {/* Assign Bill Modal */}
+            <AssignBillModal
+              isOpen={assignModalOpen}
+              onClose={() => {
+                setAssignModalOpen(false);
+                setProductsToAssign([]);
+              }}
+              onAssign={handleAssignToBill}
+              products={productsToAssign}
+              mode={assignMode}
+            />
           </>
         )
       }
+
+      {/* Product Modal - Outside view conditional for cross-view access */}
+      <ProductModal
+        isOpen={modalOpen}
+        onClose={handleModalClose}
+        product={selectedProduct}
+        onSave={handleModalSave}
+        mode={selectedProduct ? 'edit' : 'create'}
+        bill={selectedProduct?.billId ? { id: selectedProduct.billId, billNumber: selectedProduct.billNumber, vendor: selectedProduct.vendor } : null}
+      />
     </div >
   );
 };

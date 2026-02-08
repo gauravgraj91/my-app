@@ -77,7 +77,10 @@ const VirtualizedBillsList = ({
 
     if (filters.startDate) {
       result = result.filter(bill => {
-        const billDate = bill.date instanceof Date ? bill.date : new Date(bill.date);
+        // Handle Firestore Timestamp, Date object, or string
+        const billDate = bill.date?.toDate ? bill.date.toDate() :
+                         bill.date instanceof Date ? bill.date :
+                         new Date(bill.date);
         const startDate = new Date(filters.startDate);
         startDate.setHours(0, 0, 0, 0);
         return billDate >= startDate;
@@ -86,7 +89,10 @@ const VirtualizedBillsList = ({
 
     if (filters.endDate) {
       result = result.filter(bill => {
-        const billDate = bill.date instanceof Date ? bill.date : new Date(bill.date);
+        // Handle Firestore Timestamp, Date object, or string
+        const billDate = bill.date?.toDate ? bill.date.toDate() :
+                         bill.date instanceof Date ? bill.date :
+                         new Date(bill.date);
         const endDate = new Date(filters.endDate);
         endDate.setHours(23, 59, 59, 999);
         return billDate <= endDate;
@@ -116,10 +122,14 @@ const VirtualizedBillsList = ({
       let aValue = a[sortField];
       let bValue = b[sortField];
 
-      // Handle date sorting
+      // Handle date sorting - support Firestore Timestamp, Date object, or string
       if (sortField === 'date') {
-        aValue = a.date instanceof Date ? a.date : new Date(a.date);
-        bValue = b.date instanceof Date ? b.date : new Date(b.date);
+        aValue = a.date?.toDate ? a.date.toDate() :
+                 a.date instanceof Date ? a.date :
+                 new Date(a.date);
+        bValue = b.date?.toDate ? b.date.toDate() :
+                 b.date instanceof Date ? b.date :
+                 new Date(b.date);
       }
 
       // Handle string sorting

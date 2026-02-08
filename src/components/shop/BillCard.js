@@ -10,7 +10,8 @@ import {
   User,
   Package,
   IndianRupee,
-  TrendingUp
+  TrendingUp,
+  Plus
 } from 'lucide-react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
@@ -26,6 +27,7 @@ const BillCard = ({
   onDelete,
   onDuplicate,
   onExport,
+  onAddProduct,
   onProductClick,
   className = '',
   style = {}
@@ -42,11 +44,14 @@ const BillCard = ({
     }).format(value || 0);
   };
 
-  // Format date helper
+  // Format date helper - handles Firestore Timestamps, Date objects, and strings
   const formatDate = (date) => {
     if (!date) return 'No date';
     try {
-      const dateObj = date instanceof Date ? date : new Date(date);
+      // Handle Firestore Timestamp (has toDate method)
+      const dateObj = date?.toDate ? date.toDate() :
+                      date instanceof Date ? date :
+                      new Date(date);
       return format(dateObj, 'dd MMM yyyy');
     } catch {
       return 'Invalid date';
@@ -164,6 +169,18 @@ const BillCard = ({
 
             {/* Action Buttons */}
             <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+              {onAddProduct && (
+                <Button
+                  variant="primary"
+                  size="small"
+                  icon={<Plus size={14} />}
+                  onClick={() => onAddProduct(bill)}
+                  aria-label="Add product to bill"
+                  style={{ marginRight: '4px' }}
+                >
+                  Add Product
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="small"
@@ -332,20 +349,30 @@ const BillCard = ({
                           {product.category && <span>Category: {product.category}</span>}
                         </div>
                       </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{
-                          fontSize: '14px',
-                          fontWeight: '600',
-                          color: '#1f2937'
-                        }}>
-                          {formatCurrency(product.totalAmount)}
+                      <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div>
+                          <div style={{
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            color: '#1f2937'
+                          }}>
+                            {formatCurrency(product.totalAmount)}
+                          </div>
+                          <div style={{
+                            fontSize: '12px',
+                            color: (product.profitPerPiece || 0) >= 0 ? '#10b981' : '#ef4444'
+                          }}>
+                            Profit: {formatCurrency((product.profitPerPiece || 0) * (product.totalQuantity || product.quantity || 0))}
+                          </div>
                         </div>
-                        <div style={{
-                          fontSize: '12px',
-                          color: (product.profitPerPiece || 0) >= 0 ? '#10b981' : '#ef4444'
-                        }}>
-                          Profit: {formatCurrency((product.profitPerPiece || 0) * (product.totalQuantity || product.quantity || 0))}
-                        </div>
+                        {onProductClick && (
+                          <div style={{
+                            color: '#9ca3af',
+                            transition: 'color 0.2s'
+                          }}>
+                            <Edit size={14} />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

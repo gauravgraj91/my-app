@@ -13,7 +13,10 @@
       "Bash(git commit -m \"$\\(cat <<''EOF''\nMerge origin/2025-10-30-osew-ocWq6 into dev\n\nResolved conflicts by keeping dev version \\(newer code\\).\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git push:*)",
       "Bash(npm start)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: Prevent duplicate notifications on bill creation\n\nMove recently created bill tracking before showing success notification\nand increase cleanup delay to 10s to ensure real-time subscription\ncallback has processed, preventing duplicate notifications.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(npm run build:*)",
+      "Bash(pkill:*)"
     ]
   }
 }

@@ -189,6 +189,11 @@ const ProductModal = ({
         date: new Date()
       };
 
+      // Include the id when editing an existing product
+      if (mode === 'edit' && product?.id) {
+        productData.id = product.id;
+      }
+
       await onSave(productData);
       onClose();
     } catch (error) {
@@ -243,8 +248,16 @@ const ProductModal = ({
               fontSize: '14px',
               color: '#0369a1'
             }}>
-              <strong>Bill:</strong> {bill.billNumber} | <strong>Vendor:</strong> {bill.vendor} |
-              <strong>Date:</strong> {new Date(bill.date).toLocaleDateString()}
+              <strong>Bill:</strong> {bill.billNumber} | <strong>Vendor:</strong> {bill.vendor}
+              {bill.date && (
+                <> | <strong>Date:</strong> {(() => {
+                  // Handle Firestore Timestamp, Date object, or date string
+                  const date = bill.date?.toDate ? bill.date.toDate() :
+                               bill.date instanceof Date ? bill.date :
+                               new Date(bill.date);
+                  return date.toLocaleDateString();
+                })()}</>
+              )}
             </div>
           )}
 

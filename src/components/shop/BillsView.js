@@ -33,6 +33,7 @@ import {
 } from '../ui/LoadingStates';
 import BillCard from './BillCard';
 import BillCreateModal from './BillCreateModal';
+import ProductModal from './ProductModal';
 import ConflictResolutionModal from './ConflictResolutionModal';
 import {
   subscribeToBills,
@@ -64,7 +65,7 @@ import { performanceMonitor } from '../../utils/performanceUtils';
 import { getProductsByBill } from '../../firebase/shopProductService';
 import realtimeSyncManager from '../../firebase/realtimeSync';
 
-const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
+const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductClick }) => {
   // Notification system
   const { showSuccess, showError, showWarning, showInfo } = useNotifications();
 
@@ -118,8 +119,9 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
   const [itemsPerPage] = useState(10);
 
   // Modals
-  // Modals
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showAddProductModal, setShowAddProductModal] = useState(false);
+  const [selectedBillForProduct, setSelectedBillForProduct] = useState(null);
 
   // Conflict resolution
   const [conflicts, setConflicts] = useState([]);
@@ -409,7 +411,10 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
 
     if (filters.startDate) {
       result = result.filter(bill => {
-        const billDate = bill.date instanceof Date ? bill.date : new Date(bill.date);
+        // Handle Firestore Timestamp, Date object, or string
+        const billDate = bill.date?.toDate ? bill.date.toDate() :
+                         bill.date instanceof Date ? bill.date :
+                         new Date(bill.date);
         const startDate = new Date(filters.startDate);
         startDate.setHours(0, 0, 0, 0);
         return billDate >= startDate;
@@ -418,7 +423,10 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
 
     if (filters.endDate) {
       result = result.filter(bill => {
-        const billDate = bill.date instanceof Date ? bill.date : new Date(bill.date);
+        // Handle Firestore Timestamp, Date object, or string
+        const billDate = bill.date?.toDate ? bill.date.toDate() :
+                         bill.date instanceof Date ? bill.date :
+                         new Date(bill.date);
         const endDate = new Date(filters.endDate);
         endDate.setHours(23, 59, 59, 999);
         return billDate <= endDate;
@@ -484,10 +492,14 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
       let aValue = a[sortField];
       let bValue = b[sortField];
 
-      // Handle date sorting
+      // Handle date sorting - support Firestore Timestamp, Date object, or string
       if (sortField === 'date') {
-        aValue = a.date instanceof Date ? a.date : new Date(a.date);
-        bValue = b.date instanceof Date ? b.date : new Date(b.date);
+        aValue = a.date?.toDate ? a.date.toDate() :
+                 a.date instanceof Date ? a.date :
+                 new Date(a.date);
+        bValue = b.date?.toDate ? b.date.toDate() :
+                 b.date instanceof Date ? b.date :
+                 new Date(b.date);
       }
 
       // Handle string sorting
@@ -821,6 +833,46 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
           onClick: () => handleExportBill(billId)
         }
       });
+    }
+  };
+
+  // Handler to open add product modal for a specific bill
+  const handleOpenAddProductModal = (bill) => {
+    setSelectedBillForProduct(bill);
+    setShowAddProductModal(true);
+  };
+
+  // Handler to add a product to a bill
+  const handleAddProductToBill = async (productData) => {
+    const retryHandler = createRetryHandler(2, 1000);
+
+    try {
+      await retryHandler(async () => {
+        // Add the product with the bill ID
+        await addShopProduct(productData, selectedBillForProduct.id);
+      }, { context: 'add_product_to_bill', billId: selectedBillForProduct?.id });
+
+      showSuccess(`Product "${productData.productName}" added to ${selectedBillForProduct.billNumber}!`);
+
+      // Refresh the products for this bill
+      try {
+        const products = await getProductsByBill(selectedBillForProduct.id);
+        setBillProducts(prev => ({
+          ...prev,
+          [selectedBillForProduct.id]: products
+        }));
+      } catch (error) {
+        console.error('Error refreshing bill products:', error);
+      }
+
+      setShowAddProductModal(false);
+      setSelectedBillForProduct(null);
+    } catch (error) {
+      const billError = classifyError(error);
+      reportError(billError, { context: 'add_product_to_bill', billId: selectedBillForProduct?.id });
+
+      const errorMessage = getErrorMessage(billError);
+      throw new Error(errorMessage.message);
     }
   };
 
@@ -1777,6 +1829,8 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
                     onDelete={handleDeleteBill}
                     onDuplicate={handleDuplicateBill}
                     onExport={handleExportBill}
+                    onAddProduct={handleOpenAddProductModal}
+                    onProductClick={onProductClick}
                     style={{
                       paddingLeft: '60px',
                       ...(selectedBills.has(bill.id) && {
@@ -1862,6 +1916,18 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
           onClearAll={handleClearAllConflicts}
           isOpen={showConflictModal}
           onClose={() => setShowConflictModal(false)}
+        />
+
+        {/* Add Product to Bill Modal */}
+        <ProductModal
+          isOpen={showAddProductModal}
+          onClose={() => {
+            setShowAddProductModal(false);
+            setSelectedBillForProduct(null);
+          }}
+          onSave={handleAddProductToBill}
+          bill={selectedBillForProduct}
+          mode="create"
         />
       </div>
     </ErrorBoundary>
