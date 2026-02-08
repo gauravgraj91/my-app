@@ -443,6 +443,42 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
       result = result.filter(bill => bill.status === filters.status);
     }
 
+    // Apply profit range filters
+    if (filters.minProfit && filters.minProfit !== '') {
+      const minProfit = parseFloat(filters.minProfit);
+      if (!isNaN(minProfit)) {
+        result = result.filter(bill => (bill.totalProfit || 0) >= minProfit);
+      }
+    }
+
+    if (filters.maxProfit && filters.maxProfit !== '') {
+      const maxProfit = parseFloat(filters.maxProfit);
+      if (!isNaN(maxProfit)) {
+        result = result.filter(bill => (bill.totalProfit || 0) <= maxProfit);
+      }
+    }
+
+    // Apply product count filters
+    if (filters.minProductCount && filters.minProductCount !== '') {
+      const minCount = parseInt(filters.minProductCount);
+      if (!isNaN(minCount)) {
+        result = result.filter(bill => {
+          const productCount = bill.productCount || (billProducts[bill.id]?.length || 0);
+          return productCount >= minCount;
+        });
+      }
+    }
+
+    if (filters.maxProductCount && filters.maxProductCount !== '') {
+      const maxCount = parseInt(filters.maxProductCount);
+      if (!isNaN(maxCount)) {
+        result = result.filter(bill => {
+          const productCount = bill.productCount || (billProducts[bill.id]?.length || 0);
+          return productCount <= maxCount;
+        });
+      }
+    }
+
     // Apply sorting
     result.sort((a, b) => {
       let aValue = a[sortField];

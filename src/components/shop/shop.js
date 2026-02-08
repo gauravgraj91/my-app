@@ -89,6 +89,7 @@ const Shop = () => {
   const [filterCategory, setFilterCategory] = useState('');
   const [filterPriceMin, setFilterPriceMin] = useState('');
   const [filterPriceMax, setFilterPriceMax] = useState('');
+  const [filterBillStatus, setFilterBillStatus] = useState(''); // 'all', 'linked', 'standalone'
 
   // Table settings state with persistence
   const defaultTableSettings = {
@@ -97,6 +98,7 @@ const Shop = () => {
     showTotals: true,
     columns: {
       billNumber: true,
+      billStatus: true, // New column for bill link status
       date: true,
       productName: true,
       category: true,
@@ -300,7 +302,8 @@ const Shop = () => {
   // Helper function to get visible columns
   const getVisibleColumns = () => {
     const allColumns = [
-      { key: 'billNumber', label: 'Bill Number', sortable: true },
+      { key: 'billNumber', label: 'Bill #', sortable: true },
+      { key: 'billStatus', label: 'Bill Status', sortable: false },
       { key: 'date', label: 'Date', sortable: true },
       { key: 'productName', label: 'Product Name', sortable: true },
       { key: 'category', label: 'Category', sortable: true },
@@ -315,6 +318,14 @@ const Shop = () => {
     ];
 
     return allColumns.filter(col => tableSettings.columns[col.key]);
+  };
+
+  // Handler to navigate to Bills view with specific bill
+  const handleNavigateToBill = (billId, billNumber) => {
+    if (billId) {
+      setSearch(billNumber); // Set search to bill number
+      setViewMode('bills'); // Switch to bills view
+    }
   };
 
   const renderEditableCell = (row, field, type = "text") => {
@@ -397,6 +408,13 @@ const Shop = () => {
       const max = filterPriceMax !== '' ? parseFloat(filterPriceMax) : null;
       if (min !== null && (row.mrp ?? 0) < min) return false;
       if (max !== null && (row.mrp ?? 0) > max) return false;
+      return true;
+    })
+    // Filter by bill association status
+    .filter(row => {
+      if (!filterBillStatus || filterBillStatus === 'all') return true;
+      if (filterBillStatus === 'linked') return !!row.billId;
+      if (filterBillStatus === 'standalone') return !row.billId;
       return true;
     });
 
@@ -904,6 +922,18 @@ const Shop = () => {
                 {/* Filters Grouped in a box */}
                 {tableSettings.filtering && (
                   <div className="flex gap-2 items-center bg-gray-50 border border-gray-200 rounded-md px-3 py-2 flex-wrap">
+                    {/* Bill Status Filter */}
+                    <select
+                      value={filterBillStatus}
+                      onChange={e => setFilterBillStatus(e.target.value)}
+                      className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{ minWidth: 140 }}
+                      aria-label="Filter by bill status"
+                    >
+                      <option value="all">📋 All Products</option>
+                      <option value="linked">🔗 Linked to Bill</option>
+                      <option value="standalone">📦 Standalone</option>
+                    </select>
                     {/* Category Dropdown with icons */}
                     <select
                       value={filterCategory}
@@ -949,6 +979,7 @@ const Shop = () => {
                         setFilterCategory('');
                         setFilterPriceMin('');
                         setFilterPriceMax('');
+                        setFilterBillStatus('');
                       }}
                       type="button"
                       aria-label="Clear filters"
@@ -1068,6 +1099,37 @@ const Shop = () => {
               </div>
             )}
 
+            {/* Product Stats Bar */}
+            <div className="mb-4 flex flex-wrap gap-3 items-center">
+              <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 shadow-sm">
+                <span className="text-gray-500 text-sm">Total:</span>
+                <span className="font-bold text-gray-800">{data.length}</span>
+              </div>
+              <div
+                className={`flex items-center gap-2 bg-white border rounded-lg px-4 py-2 shadow-sm cursor-pointer transition-all ${filterBillStatus === 'linked' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}
+                onClick={() => setFilterBillStatus(filterBillStatus === 'linked' ? '' : 'linked')}
+              >
+                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                <span className="text-gray-500 text-sm">Linked to Bills:</span>
+                <span className="font-bold text-green-700">{data.filter(p => p.billId).length}</span>
+              </div>
+              <div
+                className={`flex items-center gap-2 bg-white border rounded-lg px-4 py-2 shadow-sm cursor-pointer transition-all ${filterBillStatus === 'standalone' ? 'border-gray-500 bg-gray-50' : 'border-gray-200 hover:border-gray-400'}`}
+                onClick={() => setFilterBillStatus(filterBillStatus === 'standalone' ? '' : 'standalone')}
+              >
+                <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
+                <span className="text-gray-500 text-sm">Standalone:</span>
+                <span className="font-bold text-gray-700">{data.filter(p => !p.billId).length}</span>
+              </div>
+              {(filterBillStatus || filterCategory || filterPriceMin || filterPriceMax) && (
+                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 shadow-sm">
+                  <span className="text-blue-600 text-sm">Showing:</span>
+                  <span className="font-bold text-blue-800">{sortedData.length}</span>
+                  <span className="text-blue-600 text-sm">of {data.length}</span>
+                </div>
+              )}
+            </div>
+
             <div className="dashboard-card dashboard-table-container">
               <table className="dashboard-table">
                 <thead>
@@ -1105,7 +1167,35 @@ const Shop = () => {
                             {(() => {
                               switch (column.key) {
                                 case 'billNumber':
-                                  return row.billNumber;
+                                  return row.billId ? (
+                                    <button
+                                      onClick={() => handleNavigateToBill(row.billId, row.billNumber)}
+                                      className="text-blue-600 hover:text-blue-800 hover:underline font-medium flex items-center gap-1"
+                                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                                      title={`View Bill ${row.billNumber}`}
+                                    >
+                                      {row.billNumber}
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                        <polyline points="15 3 21 3 21 9" />
+                                        <line x1="10" y1="14" x2="21" y2="3" />
+                                      </svg>
+                                    </button>
+                                  ) : (
+                                    <span className="text-gray-400 italic">—</span>
+                                  );
+                                case 'billStatus':
+                                  return row.billId ? (
+                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
+                                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span>
+                                      Linked
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
+                                      <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mr-1.5"></span>
+                                      Standalone
+                                    </span>
+                                  );
                                 case 'date':
                                   return renderDateCell(row);
                                 case 'productName':
@@ -1213,12 +1303,12 @@ const Shop = () => {
             </div>
 
             <ProductModal
-              open={modalOpen}
+              isOpen={modalOpen}
               onClose={handleModalClose}
               product={selectedProduct}
               onSave={handleModalSave}
-              categories={categories}
-              vendors={vendors}
+              mode={selectedProduct ? 'edit' : 'create'}
+              bill={selectedProduct?.billId ? { id: selectedProduct.billId, billNumber: selectedProduct.billNumber, vendor: selectedProduct.vendor } : null}
             />
 
             {/* Settings Modal */}

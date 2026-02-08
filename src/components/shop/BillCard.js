@@ -53,10 +53,11 @@ const BillCard = ({
     }
   };
 
-  // Calculate profit margin
+  // Calculate profit margin (profit as percentage of cost)
   const getProfitMargin = () => {
-    if (!bill.totalAmount || bill.totalAmount === 0) return 0;
-    return ((bill.totalProfit || 0) / bill.totalAmount * 100).toFixed(1);
+    const cost = (bill.totalAmount || 0) - (bill.totalProfit || 0);
+    if (cost <= 0) return 0;
+    return ((bill.totalProfit || 0) / cost * 100).toFixed(1);
   };
 
   // Get status badge variant
@@ -156,7 +157,7 @@ const BillCard = ({
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <Package size={14} />
-                  <span>{bill.productCount || 0} items</span>
+                  <span>{bill.productCount || products.length || 0} items</span>
                 </div>
               </div>
             </div>
@@ -239,11 +240,11 @@ const BillCard = ({
               </div>
             </div>
 
-            <div className="summary-item">
+            <div className="summary-item" title="Profit as percentage of cost (Profit / Cost × 100)">
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
                 <TrendingUp size={16} color="#8b5cf6" />
                 <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500' }}>
-                  Margin
+                  Profit %
                 </span>
               </div>
               <div style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937' }}>
@@ -322,10 +323,12 @@ const BillCard = ({
                           fontSize: '12px',
                           color: '#6b7280',
                           display: 'flex',
-                          gap: '12px'
+                          gap: '12px',
+                          flexWrap: 'wrap'
                         }}>
-                          <span>Qty: {product.totalQuantity || 0}</span>
-                          <span>Price: {formatCurrency(product.pricePerPiece)}</span>
+                          <span>Qty: {product.totalQuantity || product.quantity || 0}</span>
+                          <span>MRP: {formatCurrency(product.mrp || product.pricePerPiece)}</span>
+                          <span>Cost: {formatCurrency(product.costPerUnit || (product.totalAmount / (product.totalQuantity || product.quantity || 1)))}</span>
                           {product.category && <span>Category: {product.category}</span>}
                         </div>
                       </div>
@@ -339,9 +342,9 @@ const BillCard = ({
                         </div>
                         <div style={{
                           fontSize: '12px',
-                          color: product.profitPerPiece >= 0 ? '#10b981' : '#ef4444'
+                          color: (product.profitPerPiece || 0) >= 0 ? '#10b981' : '#ef4444'
                         }}>
-                          Profit: {formatCurrency((product.profitPerPiece || 0) * (product.totalQuantity || 0))}
+                          Profit: {formatCurrency((product.profitPerPiece || 0) * (product.totalQuantity || product.quantity || 0))}
                         </div>
                       </div>
                     </div>

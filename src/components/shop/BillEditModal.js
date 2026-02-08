@@ -105,9 +105,13 @@ const BillEditModal = ({
 
     setLoading(true);
     try {
+      // Only include editable fields, exclude calculated financial fields
       const updatedBill = {
-        ...formData,
-        date: new Date(formData.date)
+        billNumber: formData.billNumber,
+        date: new Date(formData.date),
+        vendor: formData.vendor,
+        notes: formData.notes,
+        status: formData.status
       };
 
       await onSave(updatedBill);
@@ -200,7 +204,7 @@ const BillEditModal = ({
             </div>
           </div>
 
-          {/* Financials Section */}
+          {/* Financials Section - Read Only */}
           <div style={{
             padding: '16px',
             background: '#f9fafb',
@@ -210,58 +214,89 @@ const BillEditModal = ({
             flexDirection: 'column',
             gap: '16px'
           }}>
-            <h3 style={{
-              fontSize: '14px',
-              fontWeight: '600',
-              color: '#374151',
-              margin: '0 0 4px 0'
-            }}>
-              Financial Details
-            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#374151',
+                margin: 0
+              }}>
+                Financial Summary
+              </h3>
+              <span style={{
+                fontSize: '11px',
+                color: '#6b7280',
+                background: '#e5e7eb',
+                padding: '2px 8px',
+                borderRadius: '4px'
+              }}>
+                Auto-calculated from products
+              </span>
+            </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '16px',
+              background: '#ffffff',
+              padding: '12px',
+              borderRadius: '6px',
+              border: '1px solid #e5e7eb'
+            }}>
               {/* Total Amount */}
               <div>
-                <Input
-                  label="Total Amount"
-                  icon={<IndianRupee size={16} />}
-                  type="number"
-                  value={formData.totalAmount}
-                  onChange={(e) => handleChange('totalAmount', e.target.value)}
-                  placeholder="0.00"
-                  min="0"
-                  step="0.01"
-                  disabled={loading}
-                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                  <IndianRupee size={14} color="#10b981" />
+                  <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500' }}>
+                    Total Amount
+                  </span>
+                </div>
+                <div style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937' }}>
+                  ₹{(parseFloat(formData.totalAmount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </div>
               </div>
 
               {/* Total Quantity */}
               <div>
-                <Input
-                  label="Total Quantity"
-                  icon={<Package size={16} />}
-                  type="number"
-                  value={formData.totalQuantity}
-                  onChange={(e) => handleChange('totalQuantity', e.target.value)}
-                  placeholder="0"
-                  min="0"
-                  disabled={loading}
-                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                  <Package size={14} color="#3b82f6" />
+                  <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500' }}>
+                    Total Quantity
+                  </span>
+                </div>
+                <div style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937' }}>
+                  {parseFloat(formData.totalQuantity) || 0}
+                </div>
+              </div>
+
+              {/* Total Profit */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                  <TrendingUp size={14} color="#f59e0b" />
+                  <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500' }}>
+                    Total Profit
+                  </span>
+                </div>
+                <div style={{
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  color: (parseFloat(formData.totalProfit) || 0) >= 0 ? '#10b981' : '#ef4444'
+                }}>
+                  ₹{(parseFloat(formData.totalProfit) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </div>
               </div>
             </div>
 
-            {/* Total Profit */}
-            <div>
-              <Input
-                label="Total Profit"
-                icon={<TrendingUp size={16} />}
-                type="number"
-                value={formData.totalProfit}
-                onChange={(e) => handleChange('totalProfit', e.target.value)}
-                placeholder="0.00"
-                step="0.01"
-                disabled={loading}
-              />
+            <div style={{
+              fontSize: '12px',
+              color: '#6b7280',
+              fontStyle: 'italic',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              <FileText size={12} />
+              To modify these values, edit the products within this bill.
             </div>
           </div>
 
