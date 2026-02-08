@@ -584,16 +584,17 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange }) => {
         return bill;
       }, { context: 'create_bill', billNumber: billData.billNumber });
 
-      // Track this bill as recently created to prevent duplicate notification from subscription
+      // Track this bill as recently created BEFORE showing notification
+      // This prevents duplicate notification from real-time subscription callback
       recentlyCreatedBills.current.add(newBill.id);
+
+      // Clean up tracking after a longer delay to ensure subscription has processed
+      setTimeout(() => {
+        recentlyCreatedBills.current.delete(newBill.id);
+      }, 10000);
 
       showSuccess(`Bill ${newBill.billNumber} created successfully!`);
       setShowCreateModal(false);
-
-      // Clean up tracking after a delay
-      setTimeout(() => {
-        recentlyCreatedBills.current.delete(newBill.id);
-      }, 5000);
     } catch (error) {
       const billError = classifyError(error);
       reportError(billError, { context: 'create_bill', billData });
