@@ -11,7 +11,9 @@ import {
   Package,
   IndianRupee,
   TrendingUp,
-  Plus
+  Plus,
+  MoreVertical,
+  AlertTriangle
 } from 'lucide-react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
@@ -19,6 +21,14 @@ import Badge from '../ui/Badge';
 import Modal from '../ui/Modal';
 import BillEditModal from './BillEditModal';
 import { format } from 'date-fns';
+
+// Status config for colors and labels
+const STATUS_CONFIG = {
+  active: { color: '#10b981', bg: '#ecfdf5', border: '#10b981', label: 'Active' },
+  paid: { color: '#06b6d4', bg: '#ecfeff', border: '#06b6d4', label: 'Paid' },
+  archived: { color: '#6b7280', bg: '#f3f4f6', border: '#9ca3af', label: 'Archived' },
+  returned: { color: '#ef4444', bg: '#fef2f2', border: '#ef4444', label: 'Returned' },
+};
 
 const BillCard = ({
   bill,
@@ -32,11 +42,11 @@ const BillCard = ({
   className = '',
   style = {}
 }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showActions, setShowActions] = useState(false);
 
-  // Format currency helper
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -44,28 +54,45 @@ const BillCard = ({
     }).format(value || 0);
   };
 
-  // Format date helper - handles Firestore Timestamps, Date objects, and strings
   const formatDate = (date) => {
     if (!date) return 'No date';
     try {
-      // Handle Firestore Timestamp (has toDate method)
       const dateObj = date?.toDate ? date.toDate() :
-                      date instanceof Date ? date :
-                      new Date(date);
+        date instanceof Date ? date :
+          new Date(date);
       return format(dateObj, 'dd MMM yyyy');
     } catch {
       return 'Invalid date';
     }
   };
 
-  // Calculate profit margin (profit as percentage of cost)
+  const getRelativeDate = (date) => {
+    if (!date) return '';
+    try {
+      const dateObj = date?.toDate ? date.toDate() :
+        date instanceof Date ? date : new Date(date);
+      const now = new Date();
+      const diffTime = now.setHours(0, 0, 0, 0) - new Date(dateObj).setHours(0, 0, 0, 0);
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays === 0) return 'Today';
+      if (diffDays === 1) return 'Yesterday';
+      if (diffDays < 7) return `${diffDays}d ago`;
+      return '';
+    } catch { return ''; }
+  };
+
   const getProfitMargin = () => {
     const cost = (bill.totalAmount || 0) - (bill.totalProfit || 0);
     if (cost <= 0) return 0;
     return ((bill.totalProfit || 0) / cost * 100).toFixed(1);
   };
 
-  // Get status badge variant
+  const getMarginColor = (margin) => {
+    if (margin <= 5) return { bg: '#fef2f2', color: '#dc2626', border: '#fecaca' };
+    if (margin <= 15) return { bg: '#fffbeb', color: '#d97706', border: '#fde68a' };
+    return { bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0' };
+  };
+
   const getStatusVariant = (status) => {
     switch (status) {
       case 'active': return 'success';
@@ -76,7 +103,12 @@ const BillCard = ({
     }
   };
 
-  // Handle edit save
+  const statusConfig = STATUS_CONFIG[bill.status] || STATUS_CONFIG.active;
+  const profitMargin = parseFloat(getProfitMargin());
+  const isPositiveProfit = (bill.totalProfit || 0) >= 0;
+  const marginColors = getMarginColor(profitMargin);
+  const relativeDate = getRelativeDate(bill.date);
+
   const handleEditSave = async (updatedBill) => {
     try {
       await onEdit(bill.id, updatedBill);
@@ -87,7 +119,6 @@ const BillCard = ({
     }
   };
 
-  // Handle delete confirmation
   const handleDeleteConfirm = async () => {
     try {
       await onDelete(bill.id);
@@ -97,7 +128,6 @@ const BillCard = ({
     }
   };
 
-  // Handle duplicate
   const handleDuplicate = async () => {
     try {
       await onDuplicate(bill.id);
@@ -106,7 +136,6 @@ const BillCard = ({
     }
   };
 
-  // Handle export
   const handleExport = async () => {
     try {
       await onExport(bill.id);
@@ -121,271 +150,318 @@ const BillCard = ({
         className={`bill-card ${className}`}
         padding={0}
         style={{
-          border: '1px solid #d1d5db', // Darker border by default
+          border: '1px solid #e2e8f0',
+          borderLeft: `4px solid ${statusConfig.border}`,
+          overflow: 'hidden',
+          transition: 'box-shadow 0.2s ease, transform 0.15s ease',
           ...style
         }}
       >
-        {/* Bill Header */}
-        <div className="bill-header" style={{
-          padding: '20px 24px',
-          borderBottom: '1px solid #e5e7eb',
-          background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
+        {/* Compact Bill Header — single dense block */}
+        <div style={{
+          padding: '14px 20px',
+          background: '#fafbfc',
+          borderBottom: '1px solid #f0f1f3',
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            {/* Bill Info */}
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                <h3 style={{
-                  margin: 0,
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  color: '#1f2937'
-                }}>
-                  {bill.billNumber}
-                </h3>
-                <Badge
-                  variant={getStatusVariant(bill.status)}
-                  size="small"
-                >
-                  {bill.status || 'active'}
-                </Badge>
-              </div>
+          {/* Row 1: Bill ID + badges + actions */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <h3 style={{
+                margin: 0, fontSize: '15px', fontWeight: '700',
+                color: '#1e293b', letterSpacing: '-0.01em'
+              }}>
+                {bill.billNumber}
+              </h3>
+              <Badge variant={getStatusVariant(bill.status)} size="small"
+                style={{ fontWeight: 600, textTransform: 'capitalize', letterSpacing: '0.02em', fontSize: '10px', padding: '1px 6px' }}>
+                {bill.status || 'active'}
+              </Badge>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: '3px',
+                fontSize: '10px', fontWeight: '600', padding: '2px 7px', borderRadius: '10px',
+                background: marginColors.bg, color: marginColors.color,
+                border: `1px solid ${marginColors.border}`,
+              }}>
+                <TrendingUp size={9} />
+                {profitMargin}%
+              </span>
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', color: '#6b7280', fontSize: '14px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Calendar size={14} />
-                  <span>{formatDate(bill.date)}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <User size={14} />
-                  <span>{bill.vendor || 'Unknown Vendor'}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Package size={14} />
-                  <span>{bill.productCount || products.length || 0} items</span>
-                </div>
-              </div>
+              {/* Inline stats */}
+              <span style={{ fontSize: '12px', color: '#64748b', marginLeft: '4px' }}>·</span>
+              <span style={{ fontSize: '12px', fontWeight: '600', color: '#1e293b' }}>
+                {formatCurrency(bill.totalAmount)}
+              </span>
+              <span style={{ fontSize: '11px', color: '#94a3b8' }}>amt</span>
+              <span style={{ fontSize: '12px', color: '#64748b' }}>·</span>
+              <span style={{ fontSize: '12px', fontWeight: '600', color: isPositiveProfit ? '#16a34a' : '#dc2626' }}>
+                {formatCurrency(bill.totalProfit)}
+              </span>
+              <span style={{ fontSize: '11px', color: '#94a3b8' }}>profit</span>
             </div>
 
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+            {/* Right: Compact Actions */}
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
               {onAddProduct && (
-                <Button
-                  variant="primary"
-                  size="small"
-                  icon={<Plus size={14} />}
+                <button
                   onClick={() => onAddProduct(bill)}
-                  aria-label="Add product to bill"
-                  style={{ marginRight: '4px' }}
+                  aria-label="Add product"
+                  title="Add product"
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: '#10b981', border: 'none', borderRadius: '6px',
+                    width: '28px', height: '28px', cursor: 'pointer', color: 'white',
+                    transition: 'background 0.15s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#059669'}
+                  onMouseLeave={e => e.currentTarget.style.background = '#10b981'}
                 >
-                  Add Product
-                </Button>
+                  <Plus size={14} strokeWidth={2.5} />
+                </button>
               )}
-              <Button
-                variant="outline"
-                size="small"
-                icon={<Edit size={14} />}
+              <button
                 onClick={() => setShowEditModal(true)}
                 aria-label="Edit bill"
-              />
-              <Button
-                variant="outline"
-                size="small"
-                icon={<Copy size={14} />}
-                onClick={handleDuplicate}
-                aria-label="Duplicate bill"
-              />
-              <Button
-                variant="outline"
-                size="small"
-                icon={<Download size={14} />}
-                onClick={handleExport}
-                aria-label="Export bill"
-              />
-              <Button
-                variant="danger"
-                size="small"
-                icon={<Trash2 size={14} />}
-                onClick={() => setShowDeleteConfirm(true)}
-                aria-label="Delete bill"
-              />
+                title="Edit bill"
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: 'none', border: '1px solid #e2e8f0', borderRadius: '6px',
+                  width: '28px', height: '28px', cursor: 'pointer', color: '#64748b',
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.color = '#334155'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.color = '#64748b'; }}
+              >
+                <Edit size={13} />
+              </button>
+
+              {/* More actions dropdown */}
+              <div style={{ position: 'relative' }}>
+                <button
+                  onClick={() => setShowActions(!showActions)}
+                  aria-label="More actions"
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'none', border: '1px solid #e2e8f0', borderRadius: '6px',
+                    width: '28px', height: '28px', cursor: 'pointer', color: '#64748b',
+                    transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.color = '#334155'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.color = '#64748b'; }}
+                >
+                  <MoreVertical size={13} />
+                </button>
+                {showActions && (
+                  <>
+                    <div
+                      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 50 }}
+                      onClick={() => setShowActions(false)}
+                    />
+                    <div style={{
+                      position: 'absolute', top: '100%', right: 0, marginTop: '4px',
+                      background: 'white', border: '1px solid #e2e8f0', borderRadius: '10px',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 51,
+                      minWidth: '150px', overflow: 'hidden',
+                    }}>
+                      <button
+                        onClick={() => { handleDuplicate(); setShowActions(false); }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '13px', color: '#374151', transition: 'background 0.15s' }}
+                        onMouseEnter={e => e.target.style.background = '#f8fafc'}
+                        onMouseLeave={e => e.target.style.background = 'none'}
+                      >
+                        <Copy size={14} /> Duplicate
+                      </button>
+                      <button
+                        onClick={() => { handleExport(); setShowActions(false); }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '13px', color: '#374151', transition: 'background 0.15s' }}
+                        onMouseEnter={e => e.target.style.background = '#f8fafc'}
+                        onMouseLeave={e => e.target.style.background = 'none'}
+                      >
+                        <Download size={14} /> Export CSV
+                      </button>
+                      <div style={{ height: '1px', background: '#f1f5f9' }} />
+                      <button
+                        onClick={() => { setShowDeleteConfirm(true); setShowActions(false); }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '13px', color: '#ef4444', transition: 'background 0.15s' }}
+                        onMouseEnter={e => e.target.style.background = '#fef2f2'}
+                        onMouseLeave={e => e.target.style.background = 'none'}
+                      >
+                        <Trash2 size={14} /> Delete
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Row 2: Meta info — date, vendor, items */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', color: '#64748b', fontSize: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Calendar size={12} strokeWidth={2} />
+              <span>{formatDate(bill.date)}</span>
+              {relativeDate && (
+                <span style={{ fontSize: '10px', color: '#3b82f6', fontWeight: '600', marginLeft: '2px' }}>
+                  {relativeDate}
+                </span>
+              )}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <User size={12} strokeWidth={2} />
+              <span style={{ fontWeight: '500', color: '#475569' }}>{bill.vendor || 'Unknown Vendor'}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Package size={12} strokeWidth={2} />
+              <span>{bill.productCount || products.length || 0} items</span>
             </div>
           </div>
         </div>
 
-        {/* Bill Summary */}
-        <div className="bill-summary" style={{ padding: '20px 24px' }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-            gap: '16px',
-            marginBottom: '16px'
-          }}>
-            <div className="summary-item">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                <IndianRupee size={16} color="#10b981" />
-                <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500' }}>
-                  Total Amount
-                </span>
-              </div>
-              <div style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937' }}>
-                {formatCurrency(bill.totalAmount)}
-              </div>
-            </div>
-
-            <div className="summary-item">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                <Package size={16} color="#3b82f6" />
-                <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500' }}>
-                  Quantity
-                </span>
-              </div>
-              <div style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937' }}>
-                {bill.totalQuantity || 0}
-              </div>
-            </div>
-
-            <div className="summary-item">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                <TrendingUp size={16} color="#f59e0b" />
-                <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500' }}>
-                  Profit
-                </span>
-              </div>
-              <div style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937' }}>
-                {formatCurrency(bill.totalProfit)}
-              </div>
-            </div>
-
-            <div className="summary-item" title="Profit as percentage of cost (Profit / Cost × 100)">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                <TrendingUp size={16} color="#8b5cf6" />
-                <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500' }}>
-                  Profit %
-                </span>
-              </div>
-              <div style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937' }}>
-                {getProfitMargin()}%
-              </div>
-            </div>
-          </div>
-
+        {/* Compact body: notes + expand toggle */}
+        <div style={{ padding: '8px 20px 10px' }}>
           {/* Notes */}
           {bill.notes && (
             <div style={{
-              padding: '12px',
-              background: '#f9fafb',
-              borderRadius: '8px',
-              marginBottom: '16px'
+              padding: '6px 10px', background: '#fefce8', borderRadius: '6px',
+              border: '1px solid #fef08a', fontSize: '12px', marginBottom: '8px',
             }}>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Notes:</div>
-              <div style={{ fontSize: '14px', color: '#374151' }}>{bill.notes}</div>
+              <span style={{ fontWeight: '600', color: '#a16207', marginRight: '4px' }}>Note:</span>
+              <span style={{ color: '#92400e' }}>{bill.notes}</span>
             </div>
           )}
 
-          {/* Expand/Collapse Button */}
-          <Button
-            variant="outline"
-            size="small"
-            icon={isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          {/* Expand/Collapse Products */}
+          <button
             onClick={() => setIsExpanded(!isExpanded)}
-            style={{ width: '100%' }}
+            style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              gap: '5px', margin: '0 auto', padding: '4px 14px',
+              background: isExpanded ? '#f1f5f9' : 'transparent',
+              border: '1px solid #e2e8f0', borderRadius: '16px', cursor: 'pointer',
+              fontSize: '11px', fontWeight: '600',
+              color: isExpanded ? '#475569' : '#94a3b8',
+              transition: 'all 0.15s ease',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#e2e8f0'; e.currentTarget.style.color = '#334155'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = isExpanded ? '#f1f5f9' : 'transparent'; e.currentTarget.style.color = isExpanded ? '#475569' : '#94a3b8'; }}
           >
-            {isExpanded ? 'Hide Products' : `Show Products (${products.length})`}
-          </Button>
+            {isExpanded ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+            {isExpanded ? 'Hide' : `Products (${products.length})`}
+          </button>
         </div>
 
         {/* Expandable Product List */}
         {isExpanded && (
-          <div className="bill-products" style={{
-            borderTop: '1px solid #e5e7eb',
-            maxHeight: '400px',
-            overflowY: 'auto'
+          <div style={{
+            borderTop: '1px solid #f1f5f9',
           }}>
             {products.length > 0 ? (
               <div>
-                {products.map((product, index) => (
-                  <div
-                    key={product.id || index}
-                    className="product-item"
-                    style={{
-                      padding: '12px 24px',
-                      borderBottom: index < products.length - 1 ? '1px solid #f3f4f6' : 'none',
-                      cursor: onProductClick ? 'pointer' : 'default',
-                      transition: 'background-color 0.2s'
-                    }}
-                    onClick={() => onProductClick && onProductClick(product)}
-                    onMouseEnter={(e) => {
-                      if (onProductClick) {
-                        e.target.style.backgroundColor = '#f9fafb';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (onProductClick) {
-                        e.target.style.backgroundColor = 'transparent';
-                      }
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ flex: 1 }}>
+                {/* Product list header */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr auto auto',
+                  gap: '12px',
+                  padding: '10px 20px',
+                  background: '#f8fafc',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  color: '#94a3b8',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                }}>
+                  <span>Product</span>
+                  <span>Qty & MRP</span>
+                  <span style={{ textAlign: 'right' }}>Amount</span>
+                </div>
+
+                <div style={{ maxHeight: '320px', overflowY: 'auto' }}>
+                  {products.map((product, index) => (
+                    <div
+                      key={product.id || index}
+                      style={{
+                        padding: '12px 20px',
+                        borderBottom: index < products.length - 1 ? '1px solid #f8fafc' : 'none',
+                        cursor: onProductClick ? 'pointer' : 'default',
+                        transition: 'background 0.15s',
+                        display: 'grid',
+                        gridTemplateColumns: '1fr auto auto',
+                        gap: '12px',
+                        alignItems: 'center',
+                      }}
+                      onClick={() => onProductClick && onProductClick(product)}
+                      onMouseEnter={(e) => {
+                        if (onProductClick) e.currentTarget.style.background = '#fafbfc';
+                      }}
+                      onMouseLeave={(e) => {
+                        if (onProductClick) e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      {/* Product name & category */}
+                      <div>
                         <div style={{
-                          fontSize: '14px',
-                          fontWeight: '500',
-                          color: '#1f2937',
-                          marginBottom: '4px'
+                          fontSize: '13px', fontWeight: '600',
+                          color: product.productName ? '#1e293b' : '#d97706',
+                          marginBottom: '2px',
+                          display: 'flex', alignItems: 'center', gap: '4px',
                         }}>
+                          {!product.productName && <AlertTriangle size={12} color="#d97706" />}
                           {product.productName || 'Unnamed Product'}
                         </div>
-                        <div style={{
-                          fontSize: '12px',
-                          color: '#6b7280',
-                          display: 'flex',
-                          gap: '12px',
-                          flexWrap: 'wrap'
-                        }}>
-                          <span>Qty: {product.totalQuantity || product.quantity || 0}</span>
-                          <span>MRP: {formatCurrency(product.mrp || product.pricePerPiece)}</span>
-                          <span>Cost: {formatCurrency(product.costPerUnit || (product.totalAmount / (product.totalQuantity || product.quantity || 1)))}</span>
-                          {product.category && <span>Category: {product.category}</span>}
-                        </div>
+                        {product.category && (
+                          <span style={{
+                            fontSize: '11px', color: '#94a3b8',
+                            background: '#f1f5f9', padding: '1px 6px', borderRadius: '4px',
+                          }}>
+                            {product.category}
+                          </span>
+                        )}
                       </div>
-                      <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '12px' }}>
+
+                      {/* Details */}
+                      <div style={{
+                        display: 'flex',
+                        gap: '12px',
+                        fontSize: '12px',
+                        color: '#64748b',
+                      }}>
+                        <span>Qty: <strong style={{ color: '#334155' }}>{product.totalQuantity || product.quantity || 0}</strong></span>
+                        <span>MRP: <strong style={{ color: '#334155' }}>{formatCurrency(product.mrp || product.pricePerPiece)}</strong></span>
+                      </div>
+
+                      {/* Amount & profit */}
+                      <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <div>
                           <div style={{
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            color: '#1f2937'
+                            fontSize: '13px',
+                            fontWeight: '700',
+                            color: '#1e293b'
                           }}>
                             {formatCurrency(product.totalAmount)}
                           </div>
                           <div style={{
-                            fontSize: '12px',
-                            color: (product.profitPerPiece || 0) >= 0 ? '#10b981' : '#ef4444'
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            color: (product.profitPerPiece || 0) >= 0 ? '#16a34a' : '#dc2626'
                           }}>
-                            Profit: {formatCurrency((product.profitPerPiece || 0) * (product.totalQuantity || product.quantity || 0))}
+                            {(product.profitPerPiece || 0) >= 0 ? '+' : ''}{formatCurrency((product.profitPerPiece || 0) * (product.totalQuantity || product.quantity || 0))}
                           </div>
                         </div>
                         {onProductClick && (
-                          <div style={{
-                            color: '#9ca3af',
-                            transition: 'color 0.2s'
-                          }}>
-                            <Edit size={14} />
-                          </div>
+                          <Edit size={12} color="#cbd5e1" />
                         )}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             ) : (
               <div style={{
-                padding: '40px 24px',
+                padding: '32px 24px',
                 textAlign: 'center',
-                color: '#6b7280'
+                color: '#94a3b8'
               }}>
-                <Package size={32} style={{ margin: '0 auto 12px', opacity: 0.5 }} />
-                <div>No products in this bill</div>
+                <Package size={28} style={{ margin: '0 auto 8px', opacity: 0.4 }} />
+                <div style={{ fontSize: '13px' }}>No products in this bill</div>
               </div>
             )}
           </div>
@@ -411,38 +487,41 @@ const BillCard = ({
       >
         <div style={{ textAlign: 'center' }}>
           <div style={{
-            fontSize: '48px',
-            marginBottom: '16px',
-            color: '#ef4444'
+            width: '56px', height: '56px', borderRadius: '50%',
+            background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '0 auto 16px',
           }}>
-            ⚠️
+            <Trash2 size={24} color="#ef4444" />
           </div>
           <h3 style={{
-            margin: '0 0 12px 0',
-            fontSize: '18px',
-            fontWeight: '600',
-            color: '#1f2937'
+            margin: '0 0 8px 0',
+            fontSize: '17px',
+            fontWeight: '700',
+            color: '#1e293b'
           }}>
-            Delete Bill {bill.billNumber}?
+            Delete {bill.billNumber}?
           </h3>
           <p style={{
             margin: '0 0 24px 0',
-            color: '#6b7280',
-            lineHeight: '1.5'
+            color: '#64748b',
+            lineHeight: '1.6',
+            fontSize: '14px'
           }}>
             This will permanently delete the bill and all its associated products.
             This action cannot be undone.
           </p>
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
             <Button
               variant="secondary"
               onClick={() => setShowDeleteConfirm(false)}
+              style={{ borderRadius: '8px' }}
             >
               Cancel
             </Button>
             <Button
               variant="danger"
               onClick={handleDeleteConfirm}
+              style={{ borderRadius: '8px' }}
             >
               Delete Bill
             </Button>

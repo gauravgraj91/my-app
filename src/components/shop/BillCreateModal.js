@@ -167,107 +167,143 @@ const BillCreateModal = ({
       maxWidth={500}
     >
       <form onSubmit={handleSubmit}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-            {/* Bill Number */}
-            <div>
-              <Input
-                label="Bill Number *"
-                icon={<Tag size={16} />}
-                type="text"
-                value={formData.billNumber}
-                onChange={(e) => handleChange('billNumber', e.target.value)}
-                placeholder="Enter bill number"
-                error={errors.billNumber}
-                disabled={loading}
-              />
-              <div style={{
-                marginTop: '4px',
-                fontSize: '12px',
-                color: '#6b7280'
-              }}>
-                Auto-generated
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+          {/* ── Bill Info Section ── */}
+          <div style={{
+            background: '#fafbfc',
+            border: '1px solid #e5e7eb',
+            borderRadius: '10px',
+            padding: '16px'
+          }}>
+            <div style={{
+              fontSize: '11px',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              color: '#6b7280',
+              marginBottom: '12px'
+            }}>
+              Bill Info
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+              <div style={{ flex: 1 }}>
+                <Input
+                  label={
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <Tag size={14} /> Bill # <span style={{ color: '#ef4444' }}>*</span>
+                      <span style={{
+                        fontSize: '10px',
+                        color: '#6b7280',
+                        background: '#f3f4f6',
+                        padding: '1px 6px',
+                        borderRadius: '4px',
+                        fontWeight: 500
+                      }}>Auto</span>
+                    </span>
+                  }
+                  type="text"
+                  value={formData.billNumber}
+                  onChange={(e) => handleChange('billNumber', e.target.value)}
+                  placeholder="B001"
+                  error={errors.billNumber}
+                  disabled={loading}
+                  containerStyle={{ marginBottom: 0 }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <Input
+                  label={
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <Calendar size={14} /> Date <span style={{ color: '#ef4444' }}>*</span>
+                    </span>
+                  }
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => handleChange('date', e.target.value)}
+                  error={errors.date}
+                  disabled={loading}
+                  containerStyle={{ marginBottom: 0 }}
+                />
               </div>
             </div>
 
-            {/* Date */}
-            <div>
-              <Input
-                label="Date *"
-                icon={<Calendar size={16} />}
-                type="date"
-                value={formData.date}
-                onChange={(e) => handleChange('date', e.target.value)}
-                error={errors.date}
-                disabled={loading}
-              />
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{ flex: 1 }}>
+                <Input
+                  label={
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <User size={14} /> Vendor <span style={{ color: '#ef4444' }}>*</span>
+                    </span>
+                  }
+                  type="text"
+                  value={formData.vendor}
+                  onChange={(e) => handleChange('vendor', e.target.value)}
+                  placeholder="Enter vendor name"
+                  error={errors.vendor}
+                  disabled={loading}
+                  containerStyle={{ marginBottom: 0 }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <Select
+                  label={
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      Status
+                    </span>
+                  }
+                  value={formData.status}
+                  onChange={(e) => handleChange('status', e.target.value)}
+                  options={statusOptions}
+                  disabled={loading}
+                  containerStyle={{ marginBottom: 0 }}
+                />
+              </div>
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-            {/* Vendor */}
-            <div>
-              <Input
-                label="Vendor *"
-                icon={<User size={16} />}
-                type="text"
-                value={formData.vendor}
-                onChange={(e) => handleChange('vendor', e.target.value)}
-                placeholder="Enter vendor name"
-                error={errors.vendor}
-                disabled={loading}
-              />
-            </div>
-
-            {/* Status */}
-            <div>
-              <Select
-                label="Status"
-                value={formData.status}
-                onChange={(e) => handleChange('status', e.target.value)}
-                options={statusOptions}
-                disabled={loading}
-              />
-            </div>
-          </div>
-
-          {/* Product Details Section */}
+          {/* ── Product Details Section ── */}
           <div style={{
-            padding: '16px',
-            background: '#f9fafb',
-            borderRadius: '8px',
+            background: '#fafbfc',
             border: '1px solid #e5e7eb',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px'
+            borderRadius: '10px',
+            padding: '16px'
           }}>
-            <h3 style={{
-              fontSize: '14px',
-              fontWeight: '600',
-              color: '#374151',
-              margin: '0 0 4px 0'
+            <div style={{
+              fontSize: '11px',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              color: '#6b7280',
+              marginBottom: '12px'
             }}>
               Product Details
-            </h3>
-
-            {/* Product Name */}
-            <div>
-              <Input
-                label="Product Name"
-                icon={<Tag size={16} />}
-                type="text"
-                value={formData.productName}
-                onChange={(e) => handleChange('productName', e.target.value)}
-                placeholder="Enter product name"
-                disabled={loading}
-              />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              {/* MRP */}
-              <div>
+            <Input
+              label={
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <Tag size={14} /> Product Name
+                </span>
+              }
+              type="text"
+              value={formData.productName}
+              onChange={(e) => handleChange('productName', e.target.value)}
+              placeholder="Enter product name"
+              disabled={loading}
+              containerStyle={{ marginBottom: 12 }}
+            />
+
+            {/* MRP, Total Cost, Qty in 3-column layout */}
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+              <div style={{ flex: 1 }}>
                 <Input
-                  label="MRP"
+                  label={
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <IndianRupee size={14} /> MRP
+                    </span>
+                  }
                   type="number"
                   value={formData.mrp}
                   onChange={(e) => handleChange('mrp', e.target.value)}
@@ -275,69 +311,149 @@ const BillCreateModal = ({
                   min="0"
                   step="0.01"
                   disabled={loading}
+                  containerStyle={{ marginBottom: 0 }}
                 />
               </div>
-
-              {/* Quantity */}
-              <div>
+              <div style={{ flex: 1 }}>
                 <Input
-                  label="Quantity"
+                  label={
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <IndianRupee size={14} /> Total Cost
+                    </span>
+                  }
+                  type="number"
+                  value={formData.totalAmount}
+                  onChange={(e) => handleChange('totalAmount', e.target.value)}
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                  disabled={loading}
+                  containerStyle={{ marginBottom: 0 }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <Input
+                  label={
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      # Qty
+                    </span>
+                  }
                   type="number"
                   value={formData.quantity}
                   onChange={(e) => handleChange('quantity', e.target.value)}
                   placeholder="0"
                   min="1"
                   disabled={loading}
+                  containerStyle={{ marginBottom: 0 }}
                 />
               </div>
             </div>
 
-            {/* Total Amount Paid */}
-            <div>
-              <Input
-                label="Total Amount Paid (Cost)"
-                icon={<IndianRupee size={16} />}
-                type="number"
-                value={formData.totalAmount}
-                onChange={(e) => handleChange('totalAmount', e.target.value)}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-                disabled={loading}
-              />
-            </div>
-
-            {/* Calculated Values Display */}
+            {/* Auto-calculated values in green card */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr 1fr',
-              gap: '12px',
-              marginTop: '8px',
+              display: 'flex',
+              gap: '0',
               padding: '12px',
-              background: '#ffffff',
-              borderRadius: '6px',
-              border: '1px solid #e5e7eb'
+              background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)',
+              border: '1px solid #bbf7d0',
+              borderRadius: '8px'
             }}>
-              <div>
-                <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '2px' }}>Cost / Unit</div>
-                <div style={{ fontWeight: '600', color: '#374151' }}>
+              <div style={{ flex: 1, textAlign: 'center' }}>
+                <div style={{
+                  fontSize: '10px',
+                  color: '#15803d',
+                  fontWeight: 500,
+                  marginBottom: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px'
+                }}>
+                  Cost/Unit
+                  <span style={{
+                    fontSize: '9px',
+                    color: '#86efac',
+                    background: '#166534',
+                    padding: '1px 4px',
+                    borderRadius: '3px',
+                    fontWeight: 600
+                  }}>AUTO</span>
+                </div>
+                <div style={{
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  color: '#166534',
+                  fontVariantNumeric: 'tabular-nums'
+                }}>
                   ₹{calculatedValues.costPerUnit.toFixed(2)}
                 </div>
               </div>
-              <div>
-                <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '2px' }}>Profit / Unit</div>
+              <div style={{
+                width: '1px',
+                background: '#bbf7d0',
+                alignSelf: 'stretch'
+              }} />
+              <div style={{ flex: 1, textAlign: 'center' }}>
                 <div style={{
-                  fontWeight: '600',
-                  color: calculatedValues.profitPerPiece >= 0 ? '#059669' : '#dc2626'
+                  fontSize: '10px',
+                  color: '#15803d',
+                  fontWeight: 500,
+                  marginBottom: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px'
+                }}>
+                  Profit/Unit
+                  <span style={{
+                    fontSize: '9px',
+                    color: '#86efac',
+                    background: '#166534',
+                    padding: '1px 4px',
+                    borderRadius: '3px',
+                    fontWeight: 600
+                  }}>AUTO</span>
+                </div>
+                <div style={{
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  color: calculatedValues.profitPerPiece >= 0 ? '#166534' : '#dc2626',
+                  fontVariantNumeric: 'tabular-nums'
                 }}>
                   ₹{calculatedValues.profitPerPiece.toFixed(2)}
                 </div>
               </div>
-              <div>
-                <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '2px' }}>Total Profit</div>
+              <div style={{
+                width: '1px',
+                background: '#bbf7d0',
+                alignSelf: 'stretch'
+              }} />
+              <div style={{ flex: 1, textAlign: 'center' }}>
                 <div style={{
-                  fontWeight: '600',
-                  color: calculatedValues.totalProfit >= 0 ? '#059669' : '#dc2626'
+                  fontSize: '10px',
+                  color: '#15803d',
+                  fontWeight: 500,
+                  marginBottom: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px'
+                }}>
+                  Total Profit
+                  <span style={{
+                    fontSize: '9px',
+                    color: '#86efac',
+                    background: '#166534',
+                    padding: '1px 4px',
+                    borderRadius: '3px',
+                    fontWeight: 600
+                  }}>AUTO</span>
+                </div>
+                <div style={{
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  color: calculatedValues.totalProfit >= 0 ? '#166534' : '#dc2626',
+                  fontVariantNumeric: 'tabular-nums'
                 }}>
                   ₹{calculatedValues.totalProfit.toFixed(2)}
                 </div>
@@ -345,44 +461,41 @@ const BillCreateModal = ({
             </div>
           </div>
 
-
-
           {/* Notes */}
           <div>
             <Textarea
               label={
-                <span>
-                  <FileText size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                  Notes
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <FileText size={14} /> Notes
+                  <span style={{ fontSize: '11px', color: '#9ca3af', fontWeight: 400 }}>
+                    ({formData.notes.length}/500)
+                  </span>
                 </span>
               }
               value={formData.notes}
               onChange={(e) => handleChange('notes', e.target.value)}
-              placeholder="Enter any notes about this bill..."
-              rows={3}
+              placeholder="Add any notes about this bill..."
+              rows={2}
               error={errors.notes}
               disabled={loading}
+              containerStyle={{ marginBottom: 0 }}
             />
-            <div style={{
-              marginTop: '4px',
-              fontSize: '12px',
-              color: '#6b7280'
-            }}>
-              {formData.notes.length}/500 characters
-            </div>
           </div>
 
           {/* Submit Error */}
           {errors.submit && (
             <div style={{
-              padding: '12px',
+              padding: '10px 14px',
               background: '#fef2f2',
               border: '1px solid #fecaca',
               borderRadius: '8px',
               color: '#dc2626',
-              fontSize: '14px'
+              fontSize: '13px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
             }}>
-              {errors.submit}
+              ⚠️ {errors.submit}
             </div>
           )}
 
@@ -391,7 +504,7 @@ const BillCreateModal = ({
             display: 'flex',
             gap: '12px',
             justifyContent: 'flex-end',
-            paddingTop: '20px',
+            paddingTop: '12px',
             borderTop: '1px solid #e5e7eb'
           }}>
             <Button

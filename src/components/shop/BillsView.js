@@ -76,6 +76,8 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
   const isFirstLoad = useRef(true);
   const recentlyCreatedBills = useRef(new Set()); // Track bills we just created to avoid duplicate notifications
   const recentlyEditedBills = useRef(new Set()); // Track bills we just edited to avoid duplicate notifications
+  const knownBillIds = useRef(new Set()); // Track all bills we've seen to avoid spurious notifications on remount
+  const modifiedNotificationTimeouts = useRef(new Map()); // Debounce modified notifications
   const [analytics, setAnalytics] = useState(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [virtualScrollEnabled, setVirtualScrollEnabled] = useState(false);
@@ -176,25 +178,50 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
           // Handle real-time changes
           // Handle real-time changes
           if (metadata?.changes) {
-            // Skip notifications on first load to avoid duplicate "added" messages for existing bills
-            if (!isFirstLoad.current) {
+            // On first load, just populate knownBillIds without showing notifications
+            if (isFirstLoad.current) {
+              metadata.changes.forEach(change => {
+                if (change.type === 'added') {
+                  knownBillIds.current.add(change.bill.id);
+                }
+              });
+            } else {
+              // Not first load - show notifications for genuinely new or modified bills
               metadata.changes.forEach(change => {
                 if (change.type === 'added' && !change.optimistic) {
-                  // Skip notification if this is a bill we just created (to avoid duplicate notifications)
-                  if (!recentlyCreatedBills.current.has(change.bill.id)) {
+                  // Check if this is a genuinely new bill (not just a remount receiving existing data)
+                  if (!recentlyCreatedBills.current.has(change.bill.id) &&
+                    !knownBillIds.current.has(change.bill.id)) {
                     showSuccess(`New bill ${change.bill.billNumber} added!`);
-                  } else {
+                  } else if (recentlyCreatedBills.current.has(change.bill.id)) {
                     // Remove from tracking set after a short delay
                     setTimeout(() => {
                       recentlyCreatedBills.current.delete(change.bill.id);
                     }, 2000);
                   }
+                  // Always track the bill as known
+                  knownBillIds.current.add(change.bill.id);
                 } else if (change.type === 'modified' && !change.optimistic) {
                   // Skip notification if this bill was recently created or edited by this client
                   // This prevents duplicate notifications from recalculateBillTotals updates
                   if (!recentlyCreatedBills.current.has(change.bill.id) &&
                     !recentlyEditedBills.current.has(change.bill.id)) {
-                    showInfo(`Bill ${change.bill.billNumber} updated!`);
+                    // Debounce modified notifications to prevent duplicates from cascading updates
+                    const billId = change.bill.id;
+                    const billNumber = change.bill.billNumber;
+
+                    // Clear any pending notification for this bill
+                    if (modifiedNotificationTimeouts.current.has(billId)) {
+                      clearTimeout(modifiedNotificationTimeouts.current.get(billId));
+                    }
+
+                    // Set a new debounced notification
+                    const timeoutId = setTimeout(() => {
+                      showInfo(`Bill ${billNumber} updated!`);
+                      modifiedNotificationTimeouts.current.delete(billId);
+                    }, 1000); // 1 second debounce
+
+                    modifiedNotificationTimeouts.current.set(billId, timeoutId);
                   }
                 }
                 // Removed notification handled by local action to avoid duplicates
@@ -301,6 +328,9 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
       if (unsubscribe) {
         unsubscribe();
       }
+      // Clear any pending modified notification timeouts
+      modifiedNotificationTimeouts.current.forEach(timeoutId => clearTimeout(timeoutId));
+      modifiedNotificationTimeouts.current.clear();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [retryCount]);
@@ -413,8 +443,8 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
       result = result.filter(bill => {
         // Handle Firestore Timestamp, Date object, or string
         const billDate = bill.date?.toDate ? bill.date.toDate() :
-                         bill.date instanceof Date ? bill.date :
-                         new Date(bill.date);
+          bill.date instanceof Date ? bill.date :
+            new Date(bill.date);
         const startDate = new Date(filters.startDate);
         startDate.setHours(0, 0, 0, 0);
         return billDate >= startDate;
@@ -425,8 +455,8 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
       result = result.filter(bill => {
         // Handle Firestore Timestamp, Date object, or string
         const billDate = bill.date?.toDate ? bill.date.toDate() :
-                         bill.date instanceof Date ? bill.date :
-                         new Date(bill.date);
+          bill.date instanceof Date ? bill.date :
+            new Date(bill.date);
         const endDate = new Date(filters.endDate);
         endDate.setHours(23, 59, 59, 999);
         return billDate <= endDate;
@@ -495,11 +525,11 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
       // Handle date sorting - support Firestore Timestamp, Date object, or string
       if (sortField === 'date') {
         aValue = a.date?.toDate ? a.date.toDate() :
-                 a.date instanceof Date ? a.date :
-                 new Date(a.date);
+          a.date instanceof Date ? a.date :
+            new Date(a.date);
         bValue = b.date?.toDate ? b.date.toDate() :
-                 b.date instanceof Date ? b.date :
-                 new Date(b.date);
+          b.date instanceof Date ? b.date :
+            new Date(b.date);
       }
 
       // Handle string sorting
@@ -1279,22 +1309,23 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
           </div>
         )}
 
-        {/* Header */}
+        {/* Header — compact */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '24px'
+          marginBottom: '20px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <h1 style={{
-              fontSize: '28px',
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <h2 style={{
+              fontSize: '18px',
               fontWeight: '700',
-              color: '#1f2937',
-              margin: 0
+              color: '#0f172a',
+              margin: 0,
+              letterSpacing: '-0.01em'
             }}>
-              Bills Management
-            </h1>
+              Bills
+            </h2>
             {conflicts.length > 0 && (
               <Button
                 variant="outline"
@@ -1316,24 +1347,18 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 {virtualScrollEnabled && (
                   <div style={{
-                    fontSize: '12px',
-                    padding: '4px 8px',
-                    backgroundColor: '#dbeafe',
-                    color: '#1e40af',
-                    borderRadius: '4px',
-                    fontWeight: '500'
+                    fontSize: '11px', padding: '3px 7px',
+                    backgroundColor: '#dbeafe', color: '#1e40af',
+                    borderRadius: '4px', fontWeight: '500'
                   }}>
                     Virtual Scrolling
                   </div>
                 )}
                 {infiniteScrollEnabled && (
                   <div style={{
-                    fontSize: '12px',
-                    padding: '4px 8px',
-                    backgroundColor: '#dcfce7',
-                    color: '#166534',
-                    borderRadius: '4px',
-                    fontWeight: '500'
+                    fontSize: '11px', padding: '3px 7px',
+                    backgroundColor: '#dcfce7', color: '#166534',
+                    borderRadius: '4px', fontWeight: '500'
                   }}>
                     Infinite Scroll
                   </div>
@@ -1342,7 +1367,7 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
             )}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             {/* Performance mode selector */}
             {bills.length > 50 && (
               <Select
@@ -1356,13 +1381,14 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
                 style={{ minWidth: '120px' }}
                 title="Performance Mode"
               />
-
             )}
 
             <Button
               variant="primary"
-              icon={<Plus size={16} />}
+              size="small"
+              icon={<Plus size={14} />}
               onClick={() => setShowCreateModal(true)}
+              style={{ borderRadius: '8px', fontWeight: '600' }}
             >
               Add new bill
             </Button>
@@ -1376,81 +1402,93 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
           ) : analytics ? (
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '16px'
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '12px'
             }}>
-              <Card padding={20}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Card padding={20} style={{ borderLeft: '4px solid #6366f1', transition: 'box-shadow 0.2s ease' }}
+                className="summary-card"
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                   <div style={{
-                    background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                    background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
                     borderRadius: '12px',
                     padding: '12px',
-                    color: 'white'
+                    color: 'white',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <Package size={20} />
                   </div>
                   <div>
-                    <div style={{ fontSize: '24px', fontWeight: '700', color: '#1f2937' }}>
+                    <div style={{ fontSize: '22px', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.02em' }}>
                       {analytics.totalBills}
                     </div>
-                    <div style={{ fontSize: '14px', color: '#6b7280' }}>Total Bills</div>
+                    <div style={{ fontSize: '13px', color: '#64748b', fontWeight: '500' }}>Total Bills</div>
                   </div>
                 </div>
               </Card>
 
-              <Card padding={20}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Card padding={20} style={{ borderLeft: '4px solid #10b981', transition: 'box-shadow 0.2s ease' }}
+                className="summary-card"
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                   <div style={{
                     background: 'linear-gradient(135deg, #10b981, #059669)',
                     borderRadius: '12px',
                     padding: '12px',
-                    color: 'white'
+                    color: 'white',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <IndianRupee size={20} />
                   </div>
                   <div>
-                    <div style={{ fontSize: '24px', fontWeight: '700', color: '#1f2937' }}>
+                    <div style={{ fontSize: '22px', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.02em' }}>
                       {formatCurrency(analytics.totalAmount)}
                     </div>
-                    <div style={{ fontSize: '14px', color: '#6b7280' }}>Total Amount</div>
+                    <div style={{ fontSize: '13px', color: '#64748b', fontWeight: '500' }}>Total Amount</div>
                   </div>
                 </div>
               </Card>
 
-              <Card padding={20}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Card padding={20} style={{ borderLeft: '4px solid #f59e0b', transition: 'box-shadow 0.2s ease' }}
+                className="summary-card"
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                   <div style={{
                     background: 'linear-gradient(135deg, #f59e0b, #d97706)',
                     borderRadius: '12px',
                     padding: '12px',
-                    color: 'white'
+                    color: 'white',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <TrendingUp size={20} />
                   </div>
                   <div>
-                    <div style={{ fontSize: '24px', fontWeight: '700', color: '#1f2937' }}>
+                    <div style={{ fontSize: '22px', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.02em' }}>
                       {formatCurrency(analytics.totalProfit)}
                     </div>
-                    <div style={{ fontSize: '14px', color: '#6b7280' }}>Total Profit</div>
+                    <div style={{ fontSize: '13px', color: '#64748b', fontWeight: '500' }}>Total Profit</div>
                   </div>
                 </div>
               </Card>
 
-              <Card padding={20}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Card padding={20} style={{ borderLeft: '4px solid #8b5cf6', transition: 'box-shadow 0.2s ease' }}
+                className="summary-card"
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                   <div style={{
                     background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
                     borderRadius: '12px',
                     padding: '12px',
-                    color: 'white'
+                    color: 'white',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <Calendar size={20} />
                   </div>
                   <div>
-                    <div style={{ fontSize: '24px', fontWeight: '700', color: '#1f2937' }}>
+                    <div style={{ fontSize: '22px', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.02em' }}>
                       {formatCurrency(analytics.averageBillValue)}
                     </div>
-                    <div style={{ fontSize: '14px', color: '#6b7280' }}>Avg Bill Value</div>
+                    <div style={{ fontSize: '13px', color: '#64748b', fontWeight: '500' }}>Avg Bill Value</div>
                   </div>
                 </div>
               </Card>
@@ -1459,12 +1497,12 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
         </div>
 
         {/* Search and Filter Controls */}
-        <Card style={{ marginBottom: '24px' }}>
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <Card style={{ marginBottom: '16px', padding: '12px 16px' }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: '200px' }}>
               <Input
                 placeholder="Search bills by number, vendor, notes, or product names..."
-                icon={<Search size={16} />}
+                icon={<Search size={14} />}
                 value={searchTerm}
                 onChange={(e) => {
                   const newValue = e.target.value;
@@ -1473,15 +1511,11 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
                     onSearchChange(newValue);
                   }
                 }}
-                style={{ marginBottom: 0 }}
+                containerStyle={{ marginBottom: 0 }}
+                style={{ background: '#f8fafc', border: '1px solid #e2e8f0', fontSize: '13px', padding: '8px 12px' }}
               />
               {searchTerm && (
-                <div style={{
-                  fontSize: '12px',
-                  color: '#6b7280',
-                  marginTop: '4px',
-                  fontStyle: 'italic'
-                }}>
+                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
                   Searching across bills and their products...
                 </div>
               )}
@@ -1489,8 +1523,10 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
 
             <Button
               variant="outline"
-              icon={<Filter size={16} />}
+              size="small"
+              icon={<Filter size={14} />}
               onClick={() => setShowFilters(!showFilters)}
+              style={{ borderRadius: '8px', padding: '6px 12px', fontSize: '12px' }}
             >
               Filters
             </Button>
@@ -1663,155 +1699,108 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
           )}
         </Card>
 
-        {/* Sorting Controls and Bulk Actions */}
+        {/* Sort Controls + Select All */}
         <div style={{
           display: 'flex',
-          justifyContent: 'space-between',
           alignItems: 'center',
           marginBottom: '16px',
-          flexWrap: 'wrap',
-          gap: '16px'
+          gap: '12px',
+          flexWrap: 'wrap'
         }}>
-          <div style={{
-            display: 'flex',
-            gap: '12px',
-            alignItems: 'center'
-          }}>
-            <span style={{ fontSize: '14px', color: '#6b7280' }}>Sort by:</span>
-            {[
-              { field: 'date', label: 'Date' },
-              { field: 'billNumber', label: 'Bill Number' },
-              { field: 'vendor', label: 'Vendor' },
-              { field: 'totalAmount', label: 'Amount' },
-              { field: 'totalProfit', label: 'Profit' }
-            ].map(({ field, label }) => (
-              <Button
-                key={field}
-                variant={sortField === field ? 'primary' : 'outline'}
-                size="small"
-                onClick={() => handleSort(field)}
-                icon={
-                  sortField === field ?
-                    (sortDirection === 'asc' ? <SortAsc size={14} /> : <SortDesc size={14} />) :
-                    null
-                }
-              >
-                {label}
-              </Button>
-            ))}
-          </div>
+          {/* Select All Checkbox */}
+          {paginatedBills.length > 0 && (
+            <button
+              onClick={handleSelectAll}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'none',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                padding: '5px 10px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                fontWeight: '500',
+                color: selectedBills.size === paginatedBills.length ? '#3b82f6' : '#6b7280',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              {selectedBills.size === paginatedBills.length ?
+                <CheckSquare size={14} color="#3b82f6" /> :
+                <Square size={14} />
+              }
+              All
+            </button>
+          )}
 
-          {/* Bulk Actions */}
-          <div style={{
-            display: 'flex',
-            gap: '8px',
-            alignItems: 'center',
-            background: '#f3f4f6',
-            padding: '8px 12px',
-            borderRadius: '8px',
-            border: '1px solid #e5e7eb'
-          }}>
-            <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>
-              {selectedBills.size} {selectedBills.size === 1 ? 'bill' : 'bills'} selected
-            </span>
-            <div style={{ width: '1px', height: '20px', background: '#d1d5db' }} />
-            <Button
-              variant="outline"
-              size="small"
-              icon={<Copy size={14} />}
-              onClick={handleBulkDuplicate}
-              disabled={bulkActionLoading || selectedBills.size === 0}
+          <div style={{ width: '1px', height: '20px', background: '#e2e8f0' }} />
+
+          {/* Sort Pills */}
+          <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: '500' }}>Sort:</span>
+          {[
+            { field: 'date', label: 'Date' },
+            { field: 'billNumber', label: 'Bill #' },
+            { field: 'vendor', label: 'Vendor' },
+            { field: 'totalAmount', label: 'Amount' },
+            { field: 'totalProfit', label: 'Profit' }
+          ].map(({ field, label }) => (
+            <button
+              key={field}
+              onClick={() => handleSort(field)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '5px 12px',
+                border: sortField === field ? '1px solid #3b82f6' : '1px solid #e2e8f0',
+                borderRadius: '20px',
+                background: sortField === field ? '#eff6ff' : '#fff',
+                color: sortField === field ? '#2563eb' : '#64748b',
+                fontSize: '12px',
+                fontWeight: sortField === field ? '600' : '500',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
             >
-              Duplicate
-            </Button>
-            <Button
-              variant="outline"
-              size="small"
-              icon={<Archive size={14} />}
-              onClick={handleBulkArchive}
-              disabled={bulkActionLoading || selectedBills.size === 0}
-            >
-              Archive
-            </Button>
-            <Button
-              variant="outline"
-              size="small"
-              icon={<Download size={14} />}
-              onClick={handleBulkExport}
-              disabled={bulkActionLoading || selectedBills.size === 0}
-            >
-              Export
-            </Button>
-            <Button
-              variant="danger"
-              size="small"
-              icon={<Trash2 size={14} />}
-              onClick={handleBulkDelete}
-              disabled={bulkActionLoading || selectedBills.size === 0}
-            >
-              Delete
-            </Button>
-          </div>
+              {label}
+              {sortField === field && (
+                sortDirection === 'asc' ? <SortAsc size={12} /> : <SortDesc size={12} />
+              )}
+            </button>
+          ))}
+
+          {/* Bills count */}
+          <span style={{ marginLeft: 'auto', fontSize: '12px', color: '#94a3b8', fontWeight: '500' }}>
+            {filteredAndSortedBills.length} bill{filteredAndSortedBills.length !== 1 ? 's' : ''}
+          </span>
         </div>
 
         {/* Bills List */}
         <div style={{ marginBottom: '24px' }}>
           {paginatedBills.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* Select All Header */}
-              <Card style={{ padding: '12px 20px' }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  fontSize: '14px',
-                  color: '#6b7280'
-                }}>
-                  <button
-                    onClick={handleSelectAll}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      color: '#6b7280'
-                    }}
-                  >
-                    {selectedBills.size === paginatedBills.length ?
-                      <CheckSquare size={16} /> :
-                      <Square size={16} />
-                    }
-                  </button>
-                  <span>
-                    {selectedBills.size === paginatedBills.length ?
-                      'Deselect all' :
-                      'Select all'
-                    } ({paginatedBills.length} bills)
-                  </span>
-                </div>
-              </Card>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+
 
               {paginatedBills.map(bill => (
-                <div key={bill.id} style={{ position: 'relative' }}>
-                  {/* Selection Checkbox */}
+                <div key={bill.id} style={{ position: 'relative', paddingLeft: '30px' }}>
+                  {/* Selection Checkbox — tight to left edge */}
                   <button
                     onClick={() => handleSelectBill(bill.id)}
                     style={{
                       position: 'absolute',
-                      top: '20px',
-                      left: '20px',
+                      top: '16px',
+                      left: '0px',
                       zIndex: 10,
                       background: 'white',
                       border: '2px solid #e5e7eb',
                       borderRadius: '4px',
-                      width: '20px',
-                      height: '20px',
+                      width: '18px',
+                      height: '18px',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                       ...(selectedBills.has(bill.id) && {
                         background: '#3b82f6',
                         borderColor: '#3b82f6',
@@ -1819,7 +1808,7 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
                       })
                     }}
                   >
-                    {selectedBills.has(bill.id) && <CheckSquare size={12} />}
+                    {selectedBills.has(bill.id) && <CheckSquare size={11} />}
                   </button>
 
                   <BillCard
@@ -1834,8 +1823,8 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
                     style={{
                       paddingLeft: '60px',
                       ...(selectedBills.has(bill.id) && {
-                        borderColor: '#3b82f6',
-                        boxShadow: '0 0 0 1px #3b82f6'
+                        outline: '2px solid #3b82f6',
+                        outlineOffset: '-2px'
                       })
                     }}
                   />
@@ -1929,6 +1918,131 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
           bill={selectedBillForProduct}
           mode="create"
         />
+
+        {/* Floating Bulk Actions Bar */}
+        {selectedBills.size > 0 && (
+          <div style={{
+            position: 'fixed',
+            bottom: '24px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            background: '#1e293b',
+            color: 'white',
+            padding: '12px 20px',
+            borderRadius: '14px',
+            boxShadow: '0 12px 40px rgba(0,0,0,0.25)',
+            zIndex: 1000,
+            animation: 'slideUp 0.25s ease-out',
+          }}>
+            <span style={{
+              fontSize: '13px',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span style={{
+                background: '#3b82f6',
+                padding: '2px 8px',
+                borderRadius: '10px',
+                fontSize: '12px',
+                fontWeight: '700'
+              }}>
+                {selectedBills.size}
+              </span>
+              selected
+            </span>
+
+            <div style={{ width: '1px', height: '24px', background: '#475569' }} />
+
+            <button
+              onClick={handleBulkDuplicate}
+              disabled={bulkActionLoading}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                background: 'none', border: 'none', color: '#cbd5e1',
+                cursor: bulkActionLoading ? 'not-allowed' : 'pointer',
+                fontSize: '13px', fontWeight: '500', padding: '6px 10px',
+                borderRadius: '8px', transition: 'all 0.15s',
+                opacity: bulkActionLoading ? 0.5 : 1,
+              }}
+              onMouseEnter={e => { if (!bulkActionLoading) { e.currentTarget.style.background = '#334155'; e.currentTarget.style.color = 'white'; } }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#cbd5e1'; }}
+            >
+              <Copy size={14} /> Duplicate
+            </button>
+            <button
+              onClick={handleBulkArchive}
+              disabled={bulkActionLoading}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                background: 'none', border: 'none', color: '#cbd5e1',
+                cursor: bulkActionLoading ? 'not-allowed' : 'pointer',
+                fontSize: '13px', fontWeight: '500', padding: '6px 10px',
+                borderRadius: '8px', transition: 'all 0.15s',
+                opacity: bulkActionLoading ? 0.5 : 1,
+              }}
+              onMouseEnter={e => { if (!bulkActionLoading) { e.currentTarget.style.background = '#334155'; e.currentTarget.style.color = 'white'; } }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#cbd5e1'; }}
+            >
+              <Archive size={14} /> Archive
+            </button>
+            <button
+              onClick={handleBulkExport}
+              disabled={bulkActionLoading}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                background: 'none', border: 'none', color: '#cbd5e1',
+                cursor: bulkActionLoading ? 'not-allowed' : 'pointer',
+                fontSize: '13px', fontWeight: '500', padding: '6px 10px',
+                borderRadius: '8px', transition: 'all 0.15s',
+                opacity: bulkActionLoading ? 0.5 : 1,
+              }}
+              onMouseEnter={e => { if (!bulkActionLoading) { e.currentTarget.style.background = '#334155'; e.currentTarget.style.color = 'white'; } }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#cbd5e1'; }}
+            >
+              <Download size={14} /> Export
+            </button>
+
+            <div style={{ width: '1px', height: '24px', background: '#475569' }} />
+
+            <button
+              onClick={handleBulkDelete}
+              disabled={bulkActionLoading}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                background: '#dc2626', border: 'none', color: 'white',
+                cursor: bulkActionLoading ? 'not-allowed' : 'pointer',
+                fontSize: '13px', fontWeight: '600', padding: '6px 12px',
+                borderRadius: '8px', transition: 'all 0.15s',
+                opacity: bulkActionLoading ? 0.5 : 1,
+              }}
+              onMouseEnter={e => { if (!bulkActionLoading) e.currentTarget.style.background = '#b91c1c'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = '#dc2626'; }}
+            >
+              <Trash2 size={14} /> Delete
+            </button>
+
+            <button
+              onClick={() => setSelectedBills(new Set())}
+              style={{
+                display: 'flex', alignItems: 'center',
+                background: 'none', border: 'none', color: '#64748b',
+                cursor: 'pointer', padding: '6px',
+                borderRadius: '8px', transition: 'all 0.15s',
+                marginLeft: '4px',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#94a3b8'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#64748b'; }}
+              title="Clear selection"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
       </div>
     </ErrorBoundary>
   );

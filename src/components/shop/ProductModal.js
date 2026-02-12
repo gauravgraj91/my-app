@@ -3,7 +3,7 @@ import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
-import { Package, DollarSign, Hash, Tag, User, Plus, Edit } from 'lucide-react';
+import { Package, IndianRupee, Hash, Tag, User, Plus, Edit } from 'lucide-react';
 
 const ProductModal = ({
   isOpen,
@@ -87,6 +87,21 @@ const ProductModal = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.totalQuantity, formData.pricePerPiece]);
 
+  // Calculate profit per piece when MRP or price per piece changes
+  useEffect(() => {
+    const mrp = parseFloat(formData.mrp) || 0;
+    const pricePerPiece = parseFloat(formData.pricePerPiece) || 0;
+    const profitPerPiece = mrp - pricePerPiece;
+
+    if (profitPerPiece.toFixed(2) !== parseFloat(formData.profitPerPiece).toFixed(2)) {
+      setFormData(prev => ({
+        ...prev,
+        profitPerPiece: profitPerPiece.toFixed(2)
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.mrp, formData.pricePerPiece]);
+
   // Handle input changes
   const handleChange = (field, value) => {
     setFormData(prev => ({
@@ -146,19 +161,9 @@ const ProductModal = ({
       newErrors.pricePerPiece = 'Price per piece must be a positive number';
     }
 
-    // Profit per piece validation
-    const profitPerPiece = parseFloat(formData.profitPerPiece);
-    if (!formData.profitPerPiece || isNaN(profitPerPiece)) {
-      newErrors.profitPerPiece = 'Profit per piece must be a valid number';
-    }
-
     // Business logic validation
     if (!isNaN(mrp) && !isNaN(pricePerPiece) && pricePerPiece > mrp) {
       newErrors.pricePerPiece = 'Price per piece cannot be greater than MRP';
-    }
-
-    if (!isNaN(pricePerPiece) && !isNaN(profitPerPiece) && profitPerPiece >= pricePerPiece) {
-      newErrors.profitPerPiece = 'Profit per piece must be less than price per piece';
     }
 
     setErrors(newErrors);
@@ -237,37 +242,60 @@ const ProductModal = ({
       maxWidth={600}
     >
       <form onSubmit={handleSubmit}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Bill Context Info */}
           {bill && (
             <div style={{
-              padding: '12px',
-              background: '#f0f9ff',
-              border: '1px solid #bae6fd',
+              padding: '10px 14px',
+              background: 'linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%)',
+              border: '1px solid #bfdbfe',
               borderRadius: '8px',
-              fontSize: '14px',
-              color: '#0369a1'
+              fontSize: '13px',
+              color: '#1e40af',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              flexWrap: 'wrap'
             }}>
-              <strong>Bill:</strong> {bill.billNumber} | <strong>Vendor:</strong> {bill.vendor}
+              <span style={{ fontWeight: 600 }}>📋 {bill.billNumber}</span>
+              <span style={{ color: '#93c5fd' }}>•</span>
+              <span>{bill.vendor}</span>
               {bill.date && (
-                <> | <strong>Date:</strong> {(() => {
-                  // Handle Firestore Timestamp, Date object, or date string
-                  const date = bill.date?.toDate ? bill.date.toDate() :
-                               bill.date instanceof Date ? bill.date :
-                               new Date(bill.date);
-                  return date.toLocaleDateString();
-                })()}</>
+                <>
+                  <span style={{ color: '#93c5fd' }}>•</span>
+                  <span>{(() => {
+                    const date = bill.date?.toDate ? bill.date.toDate() :
+                      bill.date instanceof Date ? bill.date :
+                        new Date(bill.date);
+                    return date.toLocaleDateString();
+                  })()}</span>
+                </>
               )}
             </div>
           )}
 
-          {/* Product Name */}
-          <div>
+          {/* ── Product Details Section ── */}
+          <div style={{
+            background: '#fafbfc',
+            border: '1px solid #e5e7eb',
+            borderRadius: '10px',
+            padding: '16px'
+          }}>
+            <div style={{
+              fontSize: '11px',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              color: '#6b7280',
+              marginBottom: '12px'
+            }}>
+              Product Details
+            </div>
+
             <Input
               label={
-                <span>
-                  <Package size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                  Product Name *
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <Package size={14} /> Product Name <span style={{ color: '#ef4444' }}>*</span>
                 </span>
               }
               type="text"
@@ -276,159 +304,217 @@ const ProductModal = ({
               placeholder="Enter product name"
               error={errors.productName}
               disabled={loading}
+              containerStyle={{ marginBottom: 12 }}
             />
-          </div>
 
-          {/* Category and Vendor Row */}
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <div style={{ flex: 1 }}>
-              <Select
-                label={
-                  <span>
-                    <Tag size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                    Category *
-                  </span>
-                }
-                value={formData.category}
-                onChange={(e) => handleChange('category', e.target.value)}
-                options={categoryOptions}
-                error={errors.category}
-                disabled={loading}
-              />
-            </div>
-            <div style={{ flex: 1 }}>
-              <Input
-                label={
-                  <span>
-                    <User size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                    Vendor *
-                  </span>
-                }
-                type="text"
-                value={formData.vendor}
-                onChange={(e) => handleChange('vendor', e.target.value)}
-                placeholder="Enter vendor name"
-                error={errors.vendor}
-                disabled={loading}
-              />
-            </div>
-          </div>
-
-          {/* MRP and Quantity Row */}
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <div style={{ flex: 1 }}>
-              <Input
-                label={
-                  <span>
-                    <DollarSign size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                    MRP *
-                  </span>
-                }
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.mrp}
-                onChange={(e) => handleChange('mrp', e.target.value)}
-                placeholder="0.00"
-                error={errors.mrp}
-                disabled={loading}
-              />
-            </div>
-            <div style={{ flex: 1 }}>
-              <Input
-                label={
-                  <span>
-                    <Hash size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                    Quantity *
-                  </span>
-                }
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.totalQuantity}
-                onChange={(e) => handleChange('totalQuantity', e.target.value)}
-                placeholder="0"
-                error={errors.totalQuantity}
-                disabled={loading}
-              />
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{ flex: 1 }}>
+                <Select
+                  label={
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <Tag size={14} /> Category <span style={{ color: '#ef4444' }}>*</span>
+                    </span>
+                  }
+                  value={formData.category}
+                  onChange={(e) => handleChange('category', e.target.value)}
+                  options={categoryOptions}
+                  error={errors.category}
+                  disabled={loading}
+                  containerStyle={{ marginBottom: 0 }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <Input
+                  label={
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <User size={14} /> Vendor <span style={{ color: '#ef4444' }}>*</span>
+                    </span>
+                  }
+                  type="text"
+                  value={formData.vendor}
+                  onChange={(e) => handleChange('vendor', e.target.value)}
+                  placeholder="Enter vendor name"
+                  error={errors.vendor}
+                  disabled={loading}
+                  containerStyle={{ marginBottom: 0 }}
+                />
+              </div>
             </div>
           </div>
 
-          {/* Price Per Piece and Profit Per Piece Row */}
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <div style={{ flex: 1 }}>
-              <Input
-                label={
-                  <span>
-                    <DollarSign size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                    Price Per Piece *
-                  </span>
-                }
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.pricePerPiece}
-                onChange={(e) => handleChange('pricePerPiece', e.target.value)}
-                placeholder="0.00"
-                error={errors.pricePerPiece}
-                disabled={loading}
-              />
-            </div>
-            <div style={{ flex: 1 }}>
-              <Input
-                label={
-                  <span>
-                    <DollarSign size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                    Profit Per Piece *
-                  </span>
-                }
-                type="number"
-                step="0.01"
-                value={formData.profitPerPiece}
-                onChange={(e) => handleChange('profitPerPiece', e.target.value)}
-                placeholder="0.00"
-                error={errors.profitPerPiece}
-                disabled={loading}
-              />
-            </div>
-          </div>
-
-          {/* Total Amount (Read-only) */}
-          <div>
-            <Input
-              label={
-                <span>
-                  <DollarSign size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                  Total Amount
-                </span>
-              }
-              type="number"
-              step="0.01"
-              value={formData.totalAmount}
-              placeholder="0.00"
-              disabled={true}
-              style={{ background: '#f9fafb', color: '#6b7280' }}
-            />
+          {/* ── Pricing Section ── */}
+          <div style={{
+            background: '#fafbfc',
+            border: '1px solid #e5e7eb',
+            borderRadius: '10px',
+            padding: '16px'
+          }}>
             <div style={{
-              marginTop: '4px',
-              fontSize: '12px',
-              color: '#6b7280'
+              fontSize: '11px',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              color: '#6b7280',
+              marginBottom: '12px'
             }}>
-              Automatically calculated: Quantity × Price Per Piece
+              Pricing & Quantity
+            </div>
+
+            {/* MRP, Quantity, Price Per Piece - 3 column */}
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+              <div style={{ flex: 1 }}>
+                <Input
+                  label={
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <IndianRupee size={14} /> MRP <span style={{ color: '#ef4444' }}>*</span>
+                    </span>
+                  }
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.mrp}
+                  onChange={(e) => handleChange('mrp', e.target.value)}
+                  placeholder="0.00"
+                  error={errors.mrp}
+                  disabled={loading}
+                  containerStyle={{ marginBottom: 0 }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <Input
+                  label={
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <IndianRupee size={14} /> Cost/pc <span style={{ color: '#ef4444' }}>*</span>
+                    </span>
+                  }
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.pricePerPiece}
+                  onChange={(e) => handleChange('pricePerPiece', e.target.value)}
+                  placeholder="0.00"
+                  error={errors.pricePerPiece}
+                  disabled={loading}
+                  containerStyle={{ marginBottom: 0 }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <Input
+                  label={
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <Hash size={14} /> Qty <span style={{ color: '#ef4444' }}>*</span>
+                    </span>
+                  }
+                  type="number"
+                  step="1"
+                  min="0"
+                  value={formData.totalQuantity}
+                  onChange={(e) => handleChange('totalQuantity', e.target.value)}
+                  placeholder="0"
+                  error={errors.totalQuantity}
+                  disabled={loading}
+                  containerStyle={{ marginBottom: 0 }}
+                />
+              </div>
+            </div>
+
+            {/* Auto-calculated fields */}
+            <div style={{
+              display: 'flex',
+              gap: '12px',
+              padding: '12px',
+              background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)',
+              border: '1px solid #bbf7d0',
+              borderRadius: '8px'
+            }}>
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  fontSize: '11px',
+                  color: '#15803d',
+                  fontWeight: 500,
+                  marginBottom: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}>
+                  <IndianRupee size={12} /> Profit/pc
+                  <span style={{
+                    fontSize: '10px',
+                    color: '#86efac',
+                    background: '#166534',
+                    padding: '1px 6px',
+                    borderRadius: '4px',
+                    fontWeight: 600,
+                    marginLeft: '4px'
+                  }}>AUTO</span>
+                </div>
+                <div style={{
+                  fontSize: '18px',
+                  fontWeight: 600,
+                  color: parseFloat(formData.profitPerPiece) >= 0 ? '#166534' : '#dc2626',
+                  fontVariantNumeric: 'tabular-nums'
+                }}>
+                  ₹{formData.profitPerPiece || '0.00'}
+                </div>
+                <div style={{ fontSize: '10px', color: '#6b7280', marginTop: '2px' }}>
+                  MRP − Cost/pc
+                </div>
+              </div>
+              <div style={{
+                width: '1px',
+                background: '#bbf7d0',
+                alignSelf: 'stretch'
+              }} />
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  fontSize: '11px',
+                  color: '#15803d',
+                  fontWeight: 500,
+                  marginBottom: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}>
+                  <IndianRupee size={12} /> Total Amount
+                  <span style={{
+                    fontSize: '10px',
+                    color: '#86efac',
+                    background: '#166534',
+                    padding: '1px 6px',
+                    borderRadius: '4px',
+                    fontWeight: 600,
+                    marginLeft: '4px'
+                  }}>AUTO</span>
+                </div>
+                <div style={{
+                  fontSize: '18px',
+                  fontWeight: 600,
+                  color: '#166534',
+                  fontVariantNumeric: 'tabular-nums'
+                }}>
+                  ₹{formData.totalAmount || '0.00'}
+                </div>
+                <div style={{ fontSize: '10px', color: '#6b7280', marginTop: '2px' }}>
+                  Cost/pc × Qty
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Submit Error */}
           {errors.submit && (
             <div style={{
-              padding: '12px',
+              padding: '10px 14px',
               background: '#fef2f2',
               border: '1px solid #fecaca',
               borderRadius: '8px',
               color: '#dc2626',
-              fontSize: '14px'
+              fontSize: '13px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
             }}>
-              {errors.submit}
+              ⚠️ {errors.submit}
             </div>
           )}
 
@@ -437,7 +523,7 @@ const ProductModal = ({
             display: 'flex',
             gap: '12px',
             justifyContent: 'flex-end',
-            paddingTop: '20px',
+            paddingTop: '12px',
             borderTop: '1px solid #e5e7eb'
           }}>
             <Button
