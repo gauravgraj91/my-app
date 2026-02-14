@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Search, X, Download, Plus, Save as SaveIcon, ChevronDown, Check, Trash2, Pencil, Calendar, Settings as SettingsIcon, Grid, List, Tag, Link2, Unlink, CheckSquare, Square, Filter, Package, TrendingUp, IndianRupee, SortAsc, SortDesc } from 'lucide-react';
+import { Search, X, Download, Plus, Save as SaveIcon, ChevronDown, Check, Trash2, Pencil, Calendar, Settings as SettingsIcon, Grid, List, Tag, Link2, Unlink, CheckSquare, Square, Filter, Package, TrendingUp, IndianRupee, SortAsc, SortDesc, Users } from 'lucide-react';
 import './Shop.css';
 // ShopTransactions component is reserved for future use
 import PriceList from './PriceList';
 import ProductModal from './ProductModal';
 import BillsView from './BillsView';
+import VendorsView from './VendorsView';
 import { BillsProvider } from '../../context/BillsContext';
+import { VendorsProvider } from '../../context/VendorsContext';
 import AssignBillModal from './AssignBillModal';
 import {
   addShopProduct,
@@ -756,6 +758,7 @@ const Shop = () => {
 
   return (
     <BillsProvider>
+    <VendorsProvider>
       <div className="dashboard-container">
         <div className="dashboard-card dashboard-header">
           <h1 className="dashboard-title">Shop Dashboard</h1>
@@ -795,6 +798,17 @@ const Shop = () => {
                 <Tag size={16} />
                 Price List
               </button>
+              <button
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${viewMode === 'vendors'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                onClick={() => setViewMode('vendors')}
+                aria-label="Vendors View"
+              >
+                <Users size={16} />
+                Vendors
+              </button>
             </div>
           </div>
         </div>
@@ -808,6 +822,13 @@ const Shop = () => {
               searchTerm={search}
               onSearchChange={setSearch}
               onProductClick={handleNavigateToProduct}
+            />
+          ) : viewMode === 'vendors' ? (
+            <VendorsView
+              onNavigateToBill={(billNumber) => {
+                setSearch(billNumber);
+                setViewMode('bills');
+              }}
             />
           ) : viewMode === 'pricelist' ? (
             <PriceList />
@@ -1568,6 +1589,7 @@ const Shop = () => {
           bill={selectedProduct?.billId ? { id: selectedProduct.billId, billNumber: selectedProduct.billNumber, vendor: selectedProduct.vendor } : null}
         />
       </div >
+    </VendorsProvider>
     </BillsProvider>
   );
 };
