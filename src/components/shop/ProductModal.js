@@ -4,15 +4,16 @@ import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 import { Package, IndianRupee, Hash, Tag, User, Plus, Edit } from 'lucide-react';
+import { useBills } from '../../context/BillsContext';
 
 const ProductModal = ({
   isOpen,
   onClose,
-  onSave,
   product = null, // null for create, object for edit
   bill = null, // bill context for product creation
   mode = 'create' // 'create' or 'edit'
 }) => {
+  const { handleAddProductToBill } = useBills();
   const [formData, setFormData] = useState({
     productName: '',
     category: '',
@@ -199,7 +200,7 @@ const ProductModal = ({
         productData.id = product.id;
       }
 
-      await onSave(productData);
+      await handleAddProductToBill(productData, bill);
       onClose();
     } catch (error) {
       console.error('Error saving product:', error);

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Search, X, Download, Plus, Save as SaveIcon, ChevronDown, Check, Trash2, Pencil, Calendar, Settings as SettingsIcon, Grid, List, Tag, Link2, Unlink, CheckSquare, Square } from 'lucide-react';
+import { Search, X, Download, Plus, Save as SaveIcon, ChevronDown, Check, Trash2, Pencil, Calendar, Settings as SettingsIcon, Grid, List, Tag, Link2, Unlink, CheckSquare, Square, Filter, Package, TrendingUp, IndianRupee, SortAsc, SortDesc } from 'lucide-react';
 import './Shop.css';
 // ShopTransactions component is reserved for future use
 import PriceList from './PriceList';
 import ProductModal from './ProductModal';
 import BillsView from './BillsView';
+import { BillsProvider } from '../../context/BillsContext';
 import AssignBillModal from './AssignBillModal';
 import {
   addShopProduct,
@@ -15,7 +16,7 @@ import {
   moveProductToBill,
   removeProductFromBill
 } from '../../firebase/shopProductService';
-import { format } from 'date-fns';
+import { formatCurrency, formatDate } from '../../utils/formatters';
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#82ca9d", "#8dd1e1", "#a4de6c", "#d0ed57"];
 // Remove hardcoded CATEGORIES and VENDORS
@@ -102,6 +103,9 @@ const Shop = () => {
   // Bulk selection state
   const [selectedProducts, setSelectedProducts] = useState(new Set());
   const [showBulkActions, setShowBulkActions] = useState(false);
+
+  // Advanced filters panel toggle
+  const [showFilters, setShowFilters] = useState(false);
 
   // Table settings state with persistence
   const defaultTableSettings = {
@@ -305,13 +309,6 @@ const Shop = () => {
     }
   };
 
-  const formatCurrency = value => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR"
-    }).format(value);
-  };
-
   // Helper function to get visible columns
   const getVisibleColumns = () => {
     const allColumns = [
@@ -478,8 +475,17 @@ const Shop = () => {
               type === "number" ? parseFloat(tempEditValue) : tempEditValue
             )
           }
-          className="dashboard-input"
+          style={{
+            padding: '6px 8px',
+            border: '1px solid #3b82f6',
+            borderRadius: '6px',
+            fontSize: '13px',
+            width: '100%',
+            outline: 'none',
+            background: '#fff',
+          }}
           aria-label={field}
+          autoFocus
         />
       );
     } else {
@@ -489,13 +495,13 @@ const Shop = () => {
             setEditingCell(`${row.id}-${field}`);
             setTempEditValue(value.toString());
           }}
-          className="cursor-pointer"
+          style={{ cursor: 'pointer' }}
         >
           {field === "totalQuantity"
             ? value
             : type === "number"
               ? formatCurrency(value)
-              : value}
+              : (value || <span style={{ color: '#94a3b8' }}>&mdash;</span>)}
         </span>
       );
     }
@@ -511,6 +517,12 @@ const Shop = () => {
 
   const calculateProfitPerPiece = (mrp, pricePerPiece) => {
     return (mrp - pricePerPiece).toFixed(2);
+  };
+
+  const calculateAverageMRP = () => {
+    if (data.length === 0) return 0;
+    const totalMRP = data.reduce((total, item) => total + (item.mrp || 0), 0);
+    return totalMRP / data.length;
   };
 
   // Combine search, filters, and sorting
@@ -578,35 +590,33 @@ const Shop = () => {
   };
   const renderSortIcon = (column) => {
     if (sortColumn !== column) return null;
-    return sortDirection === 'asc' ? '▲' : '▼';
+    return sortDirection === 'asc' ? <SortAsc size={12} /> : <SortDesc size={12} />;
   };
 
-  // Category color mapping and icon
-  const categoryTag = (cat) => {
-    let color = 'bg-gray-100 text-gray-800';
-    let icon = <span className="mr-1">📦</span>;
+  // Category badge with clean pill style (no emoji)
+  const getCategoryBadge = (cat) => {
+    let bgColor = '#f1f5f9';
+    let textColor = '#475569';
     switch ((cat || '').toLowerCase()) {
-      case 'groceries': color = 'bg-green-100 text-green-800'; icon = <span className="mr-1">🛒</span>; break;
-      case 'electronics': color = 'bg-blue-100 text-blue-800'; icon = <span className="mr-1">💻</span>; break;
-      case 'accessories': color = 'bg-orange-100 text-orange-800'; icon = <span className="mr-1">🧢</span>; break;
-      case 'clothing': color = 'bg-purple-100 text-purple-800'; icon = <span className="mr-1">👕</span>; break;
+      case 'groceries': bgColor = '#ecfdf5'; textColor = '#059669'; break;
+      case 'electronics': bgColor = '#eff6ff'; textColor = '#2563eb'; break;
+      case 'clothing': bgColor = '#f5f3ff'; textColor = '#7c3aed'; break;
+      case 'accessories': bgColor = '#fff7ed'; textColor = '#ea580c'; break;
       default: break;
     }
-    return <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${color}`}>{icon}{cat || ''}</span>;
-  };
-
-  // Date formatting helper - handles Firestore Timestamps, Date objects, and strings
-  const formatDate = (dateValue) => {
-    if (!dateValue) return '';
-    try {
-      // Handle Firestore Timestamp (has toDate method)
-      const date = dateValue?.toDate ? dateValue.toDate() :
-                   dateValue instanceof Date ? dateValue :
-                   new Date(dateValue);
-      return format(date, 'dd MMM yyyy');
-    } catch {
-      return '';
-    }
+    return (
+      <span style={{
+        display: 'inline-block',
+        padding: '3px 10px',
+        borderRadius: '12px',
+        fontSize: '12px',
+        fontWeight: '600',
+        background: bgColor,
+        color: textColor,
+      }}>
+        {cat || '\u2014'}
+      </span>
+    );
   };
 
   // Date cell rendering
@@ -708,6 +718,34 @@ const Shop = () => {
     }))
   ];
 
+  // Sortable header component matching BillsView style
+  const SortableHeader = ({ field, label, style: headerStyle = {} }) => (
+    <th
+      onClick={() => handleSort(field)}
+      style={{
+        padding: '12px 16px',
+        textAlign: 'left',
+        fontSize: '12px',
+        fontWeight: '600',
+        color: '#64748b',
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
+        cursor: 'pointer',
+        userSelect: 'none',
+        whiteSpace: 'nowrap',
+        borderBottom: '1px solid #e2e8f0',
+        background: '#f8fafc',
+        transition: 'color 0.15s',
+        ...headerStyle
+      }}
+    >
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+        {label}
+        {renderSortIcon(field)}
+      </span>
+    </th>
+  );
+
   if (loading) {
     return (
       <div className="dashboard-container">
@@ -717,899 +755,820 @@ const Shop = () => {
   }
 
   return (
-    <div className="dashboard-container">
-      <div className="dashboard-card dashboard-header">
-        <h1 className="dashboard-title">Shop Dashboard</h1>
-        <div className="flex items-center gap-4">
-          {/* View Mode Toggle */}
-          <div className="flex items-center bg-gray-100 rounded-lg p-1">
-            <button
-              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${viewMode === 'bills'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
-                }`}
-              onClick={() => setViewMode('bills')}
-              aria-label="Bills View"
-            >
-              <List size={16} />
-              Bills
-            </button>
-            <button
-              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${viewMode === 'products'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
-                }`}
-              onClick={() => setViewMode('products')}
-              aria-label="Products View"
-            >
-              <Grid size={16} />
-              Products
-            </button>
-            <button
-              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${viewMode === 'pricelist'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
-                }`}
-              onClick={() => setViewMode('pricelist')}
-              aria-label="Price List View"
-            >
-              <Tag size={16} />
-              Price List
-            </button>
+    <BillsProvider>
+      <div className="dashboard-container">
+        <div className="dashboard-card dashboard-header">
+          <h1 className="dashboard-title">Shop Dashboard</h1>
+          <div className="flex items-center gap-4">
+            {/* View Mode Toggle */}
+            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <button
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${viewMode === 'bills'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                onClick={() => setViewMode('bills')}
+                aria-label="Bills View"
+              >
+                <List size={16} />
+                Bills
+              </button>
+              <button
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${viewMode === 'products'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                onClick={() => setViewMode('products')}
+                aria-label="Products View"
+              >
+                <Grid size={16} />
+                Products
+              </button>
+              <button
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${viewMode === 'pricelist'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                onClick={() => setViewMode('pricelist')}
+                aria-label="Price List View"
+              >
+                <Tag size={16} />
+                Price List
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
 
 
-      {/* Conditionally render based on view mode */}
-      {
-        viewMode === 'bills' ? (
-          <BillsView
-            searchTerm={search}
-            onSearchChange={setSearch}
-            onProductClick={handleNavigateToProduct}
-          />
-        ) : viewMode === 'pricelist' ? (
-          <PriceList />
-        ) : (
-          <>
-            {/* Simplified Charts Section with CSS-based charts */}
-            <div className="mb-8">
-              <h2 className="text-xl font-bold text-gray-800 mb-4 px-4">Analytics Dashboard</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Row 1: Sales and Profit Charts */}
-                <div className="dashboard-card dashboard-chart shadow-lg border border-gray-100 rounded-xl overflow-hidden">
-                  <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-5 py-3 border-b border-blue-200">
-                    <h2 className="dashboard-chart-title flex items-center justify-between">
-                      <span className="font-semibold text-blue-800">Product Sales</span>
-                      <div className="text-xs font-medium text-blue-700 bg-blue-100 px-3 py-1 rounded-full border border-blue-200">
-                        By Amount
-                      </div>
-                    </h2>
+        {/* Conditionally render based on view mode */}
+        {
+          viewMode === 'bills' ? (
+            <BillsView
+              searchTerm={search}
+              onSearchChange={setSearch}
+              onProductClick={handleNavigateToProduct}
+            />
+          ) : viewMode === 'pricelist' ? (
+            <PriceList />
+          ) : (
+            <>
+              {/* Toast notification */}
+              {toast.show && (
+                <div style={{
+                  position: 'fixed', top: '24px', right: '24px', zIndex: 50,
+                  padding: '12px 24px', borderRadius: '8px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  fontSize: '14px', fontWeight: '600',
+                  background: toast.type === 'error' ? '#ef4444' : '#22c55e',
+                  color: '#fff',
+                  transition: 'all 0.3s',
+                }}>
+                  {toast.message}
+                </div>
+              )}
+
+              {/* ===== HEADER ===== */}
+              <div style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+                marginBottom: '24px', flexWrap: 'wrap', gap: '12px', padding: '0 4px',
+              }}>
+                <div>
+                  <h2 style={{
+                    fontSize: '24px', fontWeight: '800', color: '#0f172a',
+                    margin: '0 0 4px 0', letterSpacing: '-0.02em'
+                  }}>
+                    Products
+                  </h2>
+                  <p style={{ margin: 0, fontSize: '14px', color: '#64748b' }}>
+                    Manage your shop products and inventory
+                  </p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <button
+                    onClick={handleExportVisible}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '6px',
+                      padding: '8px 14px', borderRadius: '8px',
+                      border: '1px solid #e2e8f0', background: '#fff',
+                      fontSize: '13px', fontWeight: '500', color: '#475569',
+                      cursor: 'pointer', transition: 'all 0.15s',
+                    }}
+                  >
+                    <Download size={14} />
+                    Export
+                  </button>
+                  <button
+                    onClick={handleAddRow}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '6px',
+                      padding: '8px 16px', borderRadius: '8px',
+                      border: 'none',
+                      background: 'linear-gradient(135deg, #10b981, #059669)',
+                      fontSize: '13px', fontWeight: '600', color: '#fff',
+                      cursor: 'pointer', transition: 'all 0.15s',
+                      boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
+                    }}
+                  >
+                    <Plus size={14} />
+                    Add Product
+                  </button>
+                </div>
+              </div>
+
+              {/* ===== SUMMARY CARDS ===== */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '16px',
+                marginBottom: '24px',
+              }}>
+                {/* Total Products */}
+                <div style={{
+                  background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
+                  padding: '20px', position: 'relative', overflow: 'hidden',
+                }}>
+                  <div style={{
+                    position: 'absolute', top: '16px', right: '16px',
+                    width: '40px', height: '40px', borderRadius: '10px',
+                    background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <Package size={20} color="#64748b" />
                   </div>
-                  <div className="p-4">
-                    {data.length > 0 ? (
-                      <div className="h-60">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={data.slice(0, 5).map((item, index) => ({
-                                name: item.productName || 'Unnamed',
-                                value: parseFloat(item.totalAmount) || 0
-                              }))}
-                              cx="50%"
-                              cy="50%"
-                              innerRadius={40}
-                              outerRadius={80}
-                              paddingAngle={2}
-                              dataKey="value"
-                            >
-                              {data.slice(0, 5).map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                              ))}
-                            </Pie>
-                            <Tooltip
-                              formatter={(value) => [formatCurrency(value), 'Amount']}
-                              labelFormatter={(label) => `Product: ${label}`}
-                            />
-                            <Legend
-                              verticalAlign="bottom"
-                              height={36}
-                            />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
-                    ) : (
-                      <div className="h-60">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={[
-                                { name: 'No Data', value: 1, color: '#e5e7eb' }
-                              ]}
-                              cx="50%"
-                              cy="50%"
-                              innerRadius={40}
-                              outerRadius={80}
-                              dataKey="value"
-                            >
-                              <Cell fill="#e5e7eb" />
-                            </Pie>
-                            <Tooltip />
-                            <Legend />
-                          </PieChart>
-                        </ResponsiveContainer>
-                        <div className="text-center text-gray-500 mt-2">
-                          <div className="text-sm">No sales data available</div>
-                        </div>
-                      </div>
-                    )}
+                  <div style={{ fontSize: '13px', fontWeight: '500', color: '#64748b', marginBottom: '8px' }}>
+                    Total Products
+                  </div>
+                  <div style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', marginBottom: '4px' }}>
+                    {data.length}
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#94a3b8' }}>
+                    {data.filter(p => p.billId).length} linked, {data.filter(p => !p.billId).length} standalone
                   </div>
                 </div>
 
-                <div className="dashboard-card dashboard-chart shadow-lg border border-gray-100 rounded-xl overflow-hidden">
-                  <div className="bg-gradient-to-r from-green-50 to-green-100 px-5 py-3 border-b border-green-200">
-                    <h2 className="dashboard-chart-title flex items-center justify-between">
-                      <span className="font-semibold text-green-800">Profit Analysis</span>
-                      <div className="text-xs font-medium text-green-700 bg-green-100 px-3 py-1 rounded-full border border-green-200">
-                        Nett vs Profit
-                      </div>
-                    </h2>
+                {/* Total Value */}
+                <div style={{
+                  background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
+                  padding: '20px', position: 'relative', overflow: 'hidden',
+                }}>
+                  <div style={{
+                    position: 'absolute', top: '16px', right: '16px',
+                    width: '40px', height: '40px', borderRadius: '10px',
+                    background: '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <IndianRupee size={20} color="#10b981" />
                   </div>
-                  <div className="p-4">
-                    {calculateTotalProfit() > 0 ? (
-                      <div className="h-60">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={[
-                                { name: 'Nett Amount', value: calculateTotalAmount() - calculateTotalProfit() },
-                                { name: 'Total Profit', value: calculateTotalProfit() }
-                              ]}
-                              cx="50%"
-                              cy="50%"
-                              innerRadius={40}
-                              outerRadius={80}
-                              paddingAngle={2}
-                              dataKey="value"
-                            >
-                              <Cell fill="#3b82f6" />
-                              <Cell fill="#10b981" />
-                            </Pie>
-                            <Tooltip
-                              formatter={(value) => [formatCurrency(value), 'Amount']}
-                              labelFormatter={(label) => label}
-                            />
-                            <Legend
-                              verticalAlign="bottom"
-                              height={36}
-                            />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center h-60 text-gray-500">
-                        <div className="text-center">
-                          <div className="text-4xl mb-2">💰</div>
-                          <div>No profit data available</div>
-                        </div>
-                      </div>
-                    )}
+                  <div style={{ fontSize: '13px', fontWeight: '500', color: '#64748b', marginBottom: '8px' }}>
+                    Total Value
+                  </div>
+                  <div style={{ fontSize: '24px', fontWeight: '800', color: '#10b981', marginBottom: '4px' }}>
+                    {formatCurrency(calculateTotalAmount())}
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#94a3b8' }}>
+                    Sum of all nett amounts
                   </div>
                 </div>
 
-                {/* Row 2: Category and Vendor Charts */}
-                <div className="dashboard-card dashboard-chart shadow-lg border border-gray-100 rounded-xl overflow-hidden">
-                  <div className="bg-gradient-to-r from-purple-50 to-purple-100 px-5 py-3 border-b border-purple-200">
-                    <h2 className="dashboard-chart-title flex items-center justify-between">
-                      <span className="font-semibold text-purple-800">Category Analysis</span>
-                      <div className="text-xs font-medium text-purple-700 bg-purple-100 px-3 py-1 rounded-full border border-purple-200">
-                        By Sales
-                      </div>
-                    </h2>
+                {/* Total Profit */}
+                <div style={{
+                  background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
+                  padding: '20px', position: 'relative', overflow: 'hidden',
+                }}>
+                  <div style={{
+                    position: 'absolute', top: '16px', right: '16px',
+                    width: '40px', height: '40px', borderRadius: '10px',
+                    background: '#fff7ed', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <TrendingUp size={20} color="#f59e0b" />
                   </div>
-                  <div className="p-4">
-                    {(() => {
-                      const categoryData = Object.entries(
-                        data.reduce((acc, item) => {
-                          const category = item.category || 'Uncategorized';
-                          acc[category] = (acc[category] || 0) + (item.totalAmount || 0);
-                          return acc;
-                        }, {})
-                      ).map(([name, value]) => ({ name, value }));
-
-                      return categoryData.length > 0 ? (
-                        <div className="h-60">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                              <Pie
-                                data={categoryData}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={40}
-                                outerRadius={80}
-                                paddingAngle={2}
-                                dataKey="value"
-                              >
-                                {categoryData.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                ))}
-                              </Pie>
-                              <Tooltip
-                                formatter={(value) => [formatCurrency(value), 'Amount']}
-                                labelFormatter={(label) => `Category: ${label}`}
-                              />
-                              <Legend
-                                verticalAlign="bottom"
-                                height={36}
-                              />
-                            </PieChart>
-                          </ResponsiveContainer>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-center h-60 text-gray-500">
-                          <div className="text-center">
-                            <div className="text-4xl mb-2">📦</div>
-                            <div>No category data available</div>
-                          </div>
-                        </div>
-                      );
-                    })()}
+                  <div style={{ fontSize: '13px', fontWeight: '500', color: '#64748b', marginBottom: '8px' }}>
+                    Total Profit
+                  </div>
+                  <div style={{ fontSize: '24px', fontWeight: '800', color: '#f59e0b', marginBottom: '4px' }}>
+                    {formatCurrency(calculateTotalProfit())}
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#94a3b8' }}>
+                    Across all products
                   </div>
                 </div>
 
-                <div className="dashboard-card dashboard-chart shadow-lg border border-gray-100 rounded-xl overflow-hidden">
-                  <div className="bg-gradient-to-r from-amber-50 to-amber-100 px-5 py-3 border-b border-amber-200">
-                    <h2 className="dashboard-chart-title flex items-center justify-between">
-                      <span className="font-semibold text-amber-800">Vendor Analysis</span>
-                      <div className="text-xs font-medium text-amber-700 bg-amber-100 px-3 py-1 rounded-full border border-amber-200">
-                        By Purchase
-                      </div>
-                    </h2>
+                {/* Average MRP */}
+                <div style={{
+                  background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
+                  padding: '20px', position: 'relative', overflow: 'hidden',
+                }}>
+                  <div style={{
+                    position: 'absolute', top: '16px', right: '16px',
+                    width: '40px', height: '40px', borderRadius: '10px',
+                    background: '#f5f3ff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <Tag size={20} color="#7c3aed" />
                   </div>
-                  <div className="p-4">
-                    {(() => {
-                      const vendorData = Object.entries(
-                        data.reduce((acc, item) => {
-                          const vendor = item.vendor || 'Unknown';
-                          acc[vendor] = (acc[vendor] || 0) + (item.totalAmount || 0);
-                          return acc;
-                        }, {})
-                      ).map(([name, value]) => ({ name, value }));
-
-                      return vendorData.length > 0 ? (
-                        <div className="h-60">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                              <Pie
-                                data={vendorData}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={40}
-                                outerRadius={80}
-                                paddingAngle={2}
-                                dataKey="value"
-                              >
-                                {vendorData.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                ))}
-                              </Pie>
-                              <Tooltip
-                                formatter={(value) => [formatCurrency(value), 'Amount']}
-                                labelFormatter={(label) => `Vendor: ${label}`}
-                              />
-                              <Legend
-                                verticalAlign="bottom"
-                                height={36}
-                              />
-                            </PieChart>
-                          </ResponsiveContainer>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-center h-60 text-gray-500">
-                          <div className="text-center">
-                            <div className="text-4xl mb-2">🏭</div>
-                            <div>No vendor data available</div>
-                          </div>
-                        </div>
-                      );
-                    })()}
+                  <div style={{ fontSize: '13px', fontWeight: '500', color: '#64748b', marginBottom: '8px' }}>
+                    Average MRP
+                  </div>
+                  <div style={{ fontSize: '24px', fontWeight: '800', color: '#7c3aed', marginBottom: '4px' }}>
+                    {formatCurrency(calculateAverageMRP())}
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#94a3b8' }}>
+                    Per product average
                   </div>
                 </div>
               </div>
-            </div>
-            {/* Controls Bar - Responsive, visually grouped */}
-            <div className="dashboard-card dashboard-controls flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
-              {/* Left: Search and Filters Grouped */}
-              <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full md:w-auto">
-                {/* Enhanced Search with icon */}
-                <div className="relative w-full md:w-auto">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
-                    <Search size={20} strokeWidth={2} />
+
+              {/* ===== SEARCH + FILTER BAR ===== */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '12px',
+                marginBottom: '16px', flexWrap: 'wrap',
+              }}>
+                {/* Search input */}
+                <div style={{ flex: 1, minWidth: '250px', position: 'relative' }}>
+                  <div style={{
+                    position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)',
+                    color: '#94a3b8', pointerEvents: 'none', display: 'flex', alignItems: 'center',
+                  }}>
+                    <Search size={16} />
                   </div>
                   <input
                     type="text"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     placeholder="Search products, bills..."
-                    className="w-full md:w-72 pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-700 placeholder-gray-400"
                     style={{
-                      fontSize: '14px',
-                      fontWeight: '500'
+                      width: '100%',
+                      padding: '10px 12px 10px 36px',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      background: '#fff',
+                      outline: 'none',
+                      color: '#1e293b',
                     }}
                     aria-label="Search by product name or bill number"
                   />
                   {search && (
                     <button
                       onClick={() => setSearch('')}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      style={{
+                        position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
+                        background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8',
+                        display: 'flex', alignItems: 'center', padding: '2px',
+                      }}
                       aria-label="Clear search"
                     >
-                      <X size={18} />
+                      <X size={16} />
                     </button>
                   )}
                 </div>
-                {/* Filters Grouped in a box */}
-                {tableSettings.filtering && (
-                  <div className="flex gap-2 items-center bg-gray-50 border border-gray-200 rounded-md px-3 py-2 flex-wrap">
-                    {/* Bill Status Filter */}
-                    <select
-                      value={filterBillStatus}
-                      onChange={e => setFilterBillStatus(e.target.value)}
-                      className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      style={{ minWidth: 140 }}
-                      aria-label="Filter by bill status"
+
+                {/* Filters button */}
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                    padding: '8px 14px', borderRadius: '8px',
+                    border: '1px solid #e2e8f0', background: '#fff',
+                    fontSize: '13px', fontWeight: '500', color: '#475569',
+                    cursor: 'pointer', transition: 'all 0.15s',
+                  }}
+                >
+                  <Filter size={14} />
+                  Filters
+                </button>
+
+                {/* Category pill tabs */}
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: '4px',
+                  background: '#f1f5f9', borderRadius: '8px', padding: '3px',
+                }}>
+                  <button
+                    onClick={() => setFilterCategory('')}
+                    style={{
+                      padding: '6px 16px',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s',
+                      background: filterCategory === '' ? '#1e293b' : 'transparent',
+                      color: filterCategory === '' ? '#fff' : '#64748b',
+                    }}
+                  >
+                    All
+                  </button>
+                  {categories.map(cat => (
+                    <button
+                      key={cat}
+                      onClick={() => setFilterCategory(filterCategory === cat ? '' : cat)}
+                      style={{
+                        padding: '6px 16px',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                        background: filterCategory === cat ? '#1e293b' : 'transparent',
+                        color: filterCategory === cat ? '#fff' : '#64748b',
+                      }}
                     >
-                      <option value="all">📋 All Products</option>
-                      <option value="linked">🔗 Linked to Bill</option>
-                      <option value="standalone">📦 Standalone</option>
-                    </select>
-                    {/* Category Dropdown with icons */}
-                    <select
-                      value={filterCategory}
-                      onChange={e => setFilterCategory(e.target.value)}
-                      className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      style={{ minWidth: 140 }}
-                      aria-label="Filter by category"
-                    >
-                      {categoryOptions.map(opt => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.icon} {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                    {/* Price Range with ₹ icons */}
-                    <div className="flex items-center gap-1">
-                      <span className="text-gray-400">₹</span>
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* ===== ADVANCED FILTERS PANEL ===== */}
+              {showFilters && (
+                <div style={{
+                  background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
+                  padding: '16px', marginBottom: '16px',
+                }}>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: '16px', marginBottom: '16px',
+                  }}>
+                    {/* Bill Status */}
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#64748b', marginBottom: '6px' }}>
+                        Bill Status
+                      </label>
+                      <select
+                        value={filterBillStatus}
+                        onChange={e => setFilterBillStatus(e.target.value)}
+                        style={{
+                          width: '100%', padding: '8px 12px',
+                          border: '1px solid #e2e8f0', borderRadius: '8px',
+                          fontSize: '13px', color: '#1e293b', background: '#fff',
+                          outline: 'none',
+                        }}
+                        aria-label="Filter by bill status"
+                      >
+                        <option value="all">All Products</option>
+                        <option value="linked">Linked to Bill</option>
+                        <option value="standalone">Standalone</option>
+                      </select>
+                    </div>
+                    {/* Min Price */}
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#64748b', marginBottom: '6px' }}>
+                        Min Price (MRP)
+                      </label>
                       <input
                         type="number"
                         value={filterPriceMin}
                         onChange={e => setFilterPriceMin(e.target.value)}
-                        placeholder="Min"
-                        className="p-2 border border-gray-300 rounded-md w-20 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="0"
                         min="0"
+                        style={{
+                          width: '100%', padding: '8px 12px',
+                          border: '1px solid #e2e8f0', borderRadius: '8px',
+                          fontSize: '13px', color: '#1e293b', background: '#fff',
+                          outline: 'none',
+                        }}
                         aria-label="Minimum MRP"
                       />
-                      <span>-</span>
-                      <span className="text-gray-400">₹</span>
+                    </div>
+                    {/* Max Price */}
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#64748b', marginBottom: '6px' }}>
+                        Max Price (MRP)
+                      </label>
                       <input
                         type="number"
                         value={filterPriceMax}
                         onChange={e => setFilterPriceMax(e.target.value)}
-                        placeholder="Max"
-                        className="p-2 border border-gray-300 rounded-md w-20 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="100000"
                         min="0"
+                        style={{
+                          width: '100%', padding: '8px 12px',
+                          border: '1px solid #e2e8f0', borderRadius: '8px',
+                          fontSize: '13px', color: '#1e293b', background: '#fff',
+                          outline: 'none',
+                        }}
                         aria-label="Maximum MRP"
                       />
                     </div>
-                    {/* Clear Filters with X icon */}
-                    <button
-                      className="dashboard-btn-secondary px-3 py-2 flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      onClick={() => {
-                        setFilterCategory('');
-                        setFilterPriceMin('');
-                        setFilterPriceMax('');
-                        setFilterBillStatus('');
-                      }}
-                      type="button"
-                      aria-label="Clear filters"
-                      title="Clear filters"
-                    >
-                      <X size={16} /> Clear Filters
-                    </button>
+                    {/* Clear Filters */}
+                    <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                      <button
+                        onClick={() => {
+                          setFilterCategory('');
+                          setFilterPriceMin('');
+                          setFilterPriceMax('');
+                          setFilterBillStatus('');
+                        }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '6px',
+                          padding: '8px 14px', borderRadius: '8px',
+                          border: '1px solid #e2e8f0', background: '#fff',
+                          fontSize: '13px', fontWeight: '500', color: '#475569',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <X size={14} />
+                        Clear All Filters
+                      </button>
+                    </div>
                   </div>
-                )}
-              </div>
-              {/* Right: Actions Grouped - Enhanced UI */}
-              <div className="flex gap-3 items-center justify-end w-full md:w-auto mt-2 md:mt-0">
-                {/* Settings Button */}
-                <button
-                  className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 transition-all duration-200 rounded-md shadow-sm"
-                  style={{
-                    padding: '10px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '42px',
-                    height: '42px'
-                  }}
-                  onClick={() => setSettingsOpen(true)}
-                  aria-label="Table Settings"
-                  title="Table Settings"
-                  type="button"
-                >
-                  <SettingsIcon size={20} />
-                </button>
+                </div>
+              )}
 
-                {/* Export Dropdown */}
-                {tableSettings.showExport && (
-                  <div className="relative">
-                    <button
-                      className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 transition-all duration-200 rounded-md shadow-sm flex items-center gap-2 px-4 py-2"
-                      style={{ height: '42px' }}
-                      onClick={() => setExportOpen(v => !v)}
-                      aria-label="Export"
-                      title="Export"
-                      type="button"
-                    >
-                      <Download size={18} />
-                      <span className="font-medium">Export</span>
-                      <ChevronDown size={16} />
-                    </button>
-                    {exportOpen && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10 overflow-hidden">
-                        <button
-                          className="block w-full text-left px-4 py-3 hover:bg-blue-50 text-gray-700 font-medium border-b border-gray-100 transition-colors"
-                          onClick={handleExportAll}
-                          aria-label="Export All to CSV"
-                          title="Export All to CSV"
-                        >
-                          Export All to CSV
-                        </button>
-                        <button
-                          className="block w-full text-left px-4 py-3 hover:bg-blue-50 text-gray-700 font-medium transition-colors"
-                          onClick={handleExportVisible}
-                          aria-label="Export Visible to CSV"
-                          title="Export Visible to CSV"
-                        >
-                          Export Visible to CSV
-                        </button>
-                      </div>
+              {/* ===== TABLE ===== */}
+              <div style={{ marginBottom: '24px' }}>
+                {sortedData.length > 0 ? (
+                  <div style={{
+                    background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
+                    overflow: 'hidden',
+                  }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr>
+                          {/* Checkbox */}
+                          <th style={{
+                            padding: '12px 16px', textAlign: 'left', width: '44px',
+                            borderBottom: '1px solid #e2e8f0', background: '#f8fafc',
+                          }}>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleSelectAll(); }}
+                              style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                background: 'none', border: 'none', cursor: 'pointer', padding: '2px',
+                              }}
+                              title={selectedProducts.size === sortedData.length ? 'Deselect all' : 'Select all'}
+                            >
+                              {selectedProducts.size === sortedData.length && sortedData.length > 0 ? (
+                                <CheckSquare size={16} color="#3b82f6" />
+                              ) : (
+                                <Square size={16} color="#94a3b8" />
+                              )}
+                            </button>
+                          </th>
+                          <SortableHeader field="billNumber" label="Bill #" />
+                          <SortableHeader field="date" label="Date" />
+                          <SortableHeader field="productName" label="Product Name" />
+                          <SortableHeader field="category" label="Category" />
+                          <SortableHeader field="vendor" label="Vendor" />
+                          <SortableHeader field="mrp" label="MRP" style={{ textAlign: 'right' }} />
+                          <SortableHeader field="totalQuantity" label="Qty" style={{ textAlign: 'right' }} />
+                          <SortableHeader field="totalAmount" label="Nett Amount" style={{ textAlign: 'right' }} />
+                          <th style={{
+                            padding: '12px 16px', textAlign: 'right',
+                            fontSize: '12px', fontWeight: '600', color: '#64748b',
+                            textTransform: 'uppercase', letterSpacing: '0.05em',
+                            borderBottom: '1px solid #e2e8f0', background: '#f8fafc',
+                          }}>
+                            Total Profit
+                          </th>
+                          <th style={{
+                            padding: '12px 16px', textAlign: 'center',
+                            fontSize: '12px', fontWeight: '600', color: '#64748b',
+                            textTransform: 'uppercase', letterSpacing: '0.05em',
+                            borderBottom: '1px solid #e2e8f0', background: '#f8fafc',
+                          }}>
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sortedData.map((row, idx) => {
+                          const isSelected = selectedProducts.has(row.id);
+                          const rowProfit = calculateProfitPerPiece(row.mrp || 0, row.pricePerPiece || 0) * (row.totalQuantity || 0);
+
+                          return (
+                            <tr
+                              key={row.id}
+                              style={{
+                                borderBottom: '1px solid #f1f5f9',
+                                background: isSelected ? '#eff6ff' : (idx % 2 === 0 ? '#fff' : '#fafbfc'),
+                                transition: 'background 0.15s',
+                              }}
+                            >
+                              {/* Checkbox */}
+                              <td style={{ padding: '12px 16px' }}>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleSelectProduct(row.id); }}
+                                  style={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    background: 'none', border: 'none', cursor: 'pointer', padding: '2px',
+                                  }}
+                                  title={isSelected ? 'Deselect' : 'Select'}
+                                >
+                                  {isSelected ? (
+                                    <CheckSquare size={16} color="#3b82f6" />
+                                  ) : (
+                                    <Square size={16} color="#cbd5e1" />
+                                  )}
+                                </button>
+                              </td>
+
+                              {/* Bill # */}
+                              <td style={{ padding: '12px 16px' }}>
+                                {row.billId ? (
+                                  <button
+                                    onClick={() => handleNavigateToBill(row.billId, row.billNumber)}
+                                    style={{
+                                      background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                                      fontSize: '14px', fontWeight: '600', color: '#2563eb',
+                                      textDecoration: 'none',
+                                    }}
+                                    title={`View Bill ${row.billNumber}`}
+                                  >
+                                    {row.billNumber}
+                                  </button>
+                                ) : (
+                                  <span style={{ color: '#94a3b8' }}>&mdash;</span>
+                                )}
+                              </td>
+
+                              {/* Date */}
+                              <td style={{ padding: '12px 16px' }}>
+                                <span style={{ fontSize: '13px', color: '#64748b' }}>
+                                  {formatDate(row.date) || <span style={{ color: '#94a3b8' }}>&mdash;</span>}
+                                </span>
+                              </td>
+
+                              {/* Product Name */}
+                              <td style={{ padding: '12px 16px' }}>
+                                <span style={{ fontSize: '13px', fontWeight: '600', color: '#1e293b' }}>
+                                  {renderEditableCell(row, "productName")}
+                                </span>
+                              </td>
+
+                              {/* Category */}
+                              <td style={{ padding: '12px 16px' }}>
+                                {getCategoryBadge(row.category)}
+                              </td>
+
+                              {/* Vendor */}
+                              <td style={{ padding: '12px 16px' }}>
+                                <span style={{ fontSize: '13px', fontWeight: '500', color: '#475569' }}>
+                                  {row.vendor || <span style={{ color: '#94a3b8' }}>&mdash;</span>}
+                                </span>
+                              </td>
+
+                              {/* MRP */}
+                              <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                                <span style={{ fontSize: '13px', fontWeight: '600', color: '#1e293b' }}>
+                                  {renderEditableCell(row, "mrp", "number")}
+                                </span>
+                              </td>
+
+                              {/* Qty */}
+                              <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                                <span style={{ fontSize: '13px', fontWeight: '600', color: '#334155' }}>
+                                  {renderEditableCell(row, "totalQuantity", "number")}
+                                </span>
+                              </td>
+
+                              {/* Nett Amount */}
+                              <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                                <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
+                                  {renderEditableCell(row, "totalAmount", "number")}
+                                </span>
+                              </td>
+
+                              {/* Total Profit */}
+                              <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                                <span style={{
+                                  fontSize: '13px', fontWeight: '700',
+                                  color: rowProfit >= 0 ? '#10b981' : '#ef4444',
+                                }}>
+                                  {formatCurrency(rowProfit)}
+                                </span>
+                              </td>
+
+                              {/* Actions */}
+                              <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                <div style={{ display: 'flex', gap: '6px', alignItems: 'center', justifyContent: 'center' }}>
+                                  {/* Assign/Unassign Bill */}
+                                  {row.billId ? (
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); handleRemoveFromBill(row); }}
+                                      style={{
+                                        width: '30px', height: '30px', borderRadius: '6px',
+                                        border: '1px solid #fed7aa', background: '#fff7ed',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        cursor: 'pointer', color: '#ea580c', transition: 'all 0.15s',
+                                      }}
+                                      title={`Remove from ${row.billNumber}`}
+                                      aria-label="Remove from Bill"
+                                    >
+                                      <Unlink size={14} />
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); handleOpenAssignModal(row); }}
+                                      style={{
+                                        width: '30px', height: '30px', borderRadius: '6px',
+                                        border: '1px solid #bbf7d0', background: '#f0fdf4',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        cursor: 'pointer', color: '#16a34a', transition: 'all 0.15s',
+                                      }}
+                                      title="Assign to Bill"
+                                      aria-label="Assign to Bill"
+                                    >
+                                      <Link2 size={14} />
+                                    </button>
+                                  )}
+                                  {/* Edit */}
+                                  <button
+                                    onClick={() => { setSelectedProduct(row); setModalOpen(true); }}
+                                    style={{
+                                      width: '30px', height: '30px', borderRadius: '6px',
+                                      border: '1px solid #e2e8f0', background: '#f8fafc',
+                                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                      cursor: 'pointer', color: '#64748b', transition: 'all 0.15s',
+                                    }}
+                                    title="Edit Product"
+                                    aria-label="Edit Product"
+                                  >
+                                    <Pencil size={14} />
+                                  </button>
+                                  {/* Delete */}
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleDeleteRow(row.id); }}
+                                    style={{
+                                      width: '30px', height: '30px', borderRadius: '6px',
+                                      border: '1px solid #fecaca', background: '#fef2f2',
+                                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                      cursor: 'pointer', color: '#ef4444', transition: 'all 0.15s',
+                                    }}
+                                    title="Delete Product"
+                                    aria-label="Delete Product"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      <tfoot>
+                        <tr style={{ borderTop: '2px solid #e2e8f0' }}>
+                          <td style={{ padding: '12px 16px' }} colSpan={6}>
+                            <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>Total</span>
+                          </td>
+                          <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                            <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
+                              {formatCurrency(sortedData.reduce((sum, r) => sum + (r.mrp || 0), 0))}
+                            </span>
+                          </td>
+                          <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                            <span style={{ fontSize: '13px', fontWeight: '700', color: '#334155' }}>
+                              {sortedData.reduce((sum, r) => sum + (r.totalQuantity || 0), 0)}
+                            </span>
+                          </td>
+                          <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                            <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
+                              {formatCurrency(sortedData.reduce((sum, r) => sum + (r.totalAmount || 0), 0))}
+                            </span>
+                          </td>
+                          <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                            <span style={{ fontSize: '13px', fontWeight: '700', color: '#10b981' }}>
+                              {formatCurrency(sortedData.reduce((sum, r) => sum + (calculateProfitPerPiece(r.mrp || 0, r.pricePerPiece || 0) * (r.totalQuantity || 0)), 0))}
+                            </span>
+                          </td>
+                          <td style={{ padding: '12px 16px' }}></td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                ) : (
+                  <div style={{
+                    background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
+                    textAlign: 'center', padding: '60px 20px',
+                  }}>
+                    <Package size={48} style={{ margin: '0 auto 16px', color: '#9ca3af' }} />
+                    <h3 style={{ fontSize: '18px', color: '#374151', marginBottom: '8px' }}>
+                      No products found
+                    </h3>
+                    <p style={{ color: '#6b7280', marginBottom: '24px' }}>
+                      {search || filterCategory || filterPriceMin || filterPriceMax || filterBillStatus ?
+                        'Try adjusting your search or filters' :
+                        'Add your first product to get started'
+                      }
+                    </p>
+                    {!search && !filterCategory && !filterPriceMin && !filterPriceMax && !filterBillStatus && (
+                      <button
+                        onClick={handleAddRow}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '6px',
+                          padding: '10px 20px', borderRadius: '8px',
+                          border: 'none',
+                          background: 'linear-gradient(135deg, #10b981, #059669)',
+                          fontSize: '14px', fontWeight: '600', color: '#fff',
+                          cursor: 'pointer',
+                          boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
+                        }}
+                      >
+                        <Plus size={16} />
+                        Add First Product
+                      </button>
                     )}
                   </div>
                 )}
-
-                {/* Save Button */}
-                <button
-                  className="bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-all duration-200 rounded-md shadow-sm flex items-center gap-2 px-4 py-2"
-                  style={{ height: '42px' }}
-                  onClick={handleSave}
-                  aria-label="Save"
-                  title="Save"
-                >
-                  <SaveIcon size={18} />
-                  <span className="font-medium">Save</span>
-                  {showSaveAnimation && <Check className="text-green-500" size={18} />}
-                </button>
-
-                {/* Add Product - Enhanced Primary Action */}
-                <button
-                  className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-lg shadow-lg flex items-center gap-3 px-6 py-3 transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
-                  style={{
-                    height: '48px',
-                    fontWeight: 700,
-                    fontSize: '15px',
-                    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
-                    border: 'none'
-                  }}
-                  onClick={handleAddRow}
-                  aria-label="Add Product"
-                  title="Add New Product"
-                  onMouseEnter={(e) => {
-                    e.target.style.boxShadow = '0 6px 25px rgba(16, 185, 129, 0.5)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.4)';
-                  }}
-                >
-                  <div className="bg-white bg-opacity-20 rounded-full p-1">
-                    <Plus size={18} strokeWidth={3} />
-                  </div>
-                  <span className="tracking-wide">Add Product</span>
-                </button>
               </div>
-            </div>
 
-
-
-            {/* Toast notification */}
-            {toast.show && (
-              <div className={`fixed top-6 right-6 z-50 px-6 py-3 rounded shadow-lg text-base font-semibold transition-all ${toast.type === 'error' ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}>
-                {toast.message}
-              </div>
-            )}
-
-            {/* Product Stats Bar */}
-            <div className="mb-4 flex flex-wrap gap-3 items-center">
-              <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 shadow-sm">
-                <span className="text-gray-500 text-sm">Total:</span>
-                <span className="font-bold text-gray-800">{data.length}</span>
-              </div>
-              <div
-                className={`flex items-center gap-2 bg-white border rounded-lg px-4 py-2 shadow-sm cursor-pointer transition-all ${filterBillStatus === 'linked' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}
-                onClick={() => setFilterBillStatus(filterBillStatus === 'linked' ? '' : 'linked')}
-              >
-                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                <span className="text-gray-500 text-sm">Linked to Bills:</span>
-                <span className="font-bold text-green-700">{data.filter(p => p.billId).length}</span>
-              </div>
-              <div
-                className={`flex items-center gap-2 bg-white border rounded-lg px-4 py-2 shadow-sm cursor-pointer transition-all ${filterBillStatus === 'standalone' ? 'border-gray-500 bg-gray-50' : 'border-gray-200 hover:border-gray-400'}`}
-                onClick={() => setFilterBillStatus(filterBillStatus === 'standalone' ? '' : 'standalone')}
-              >
-                <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
-                <span className="text-gray-500 text-sm">Standalone:</span>
-                <span className="font-bold text-gray-700">{data.filter(p => !p.billId).length}</span>
-              </div>
-              {(filterBillStatus || filterCategory || filterPriceMin || filterPriceMax) && (
-                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 shadow-sm">
-                  <span className="text-blue-600 text-sm">Showing:</span>
-                  <span className="font-bold text-blue-800">{sortedData.length}</span>
-                  <span className="text-blue-600 text-sm">of {data.length}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Bulk Actions Bar */}
-            {showBulkActions && selectedProducts.size > 0 && (
-              <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="font-medium text-blue-800">
-                    {selectedProducts.size} product{selectedProducts.size > 1 ? 's' : ''} selected
+              {/* ===== FLOATING BULK ACTIONS BAR ===== */}
+              {showBulkActions && selectedProducts.size > 0 && (
+                <div style={{
+                  position: 'fixed', bottom: '24px', left: '50%',
+                  transform: 'translateX(-50%)',
+                  display: 'flex', alignItems: 'center', gap: '12px',
+                  background: '#1e293b', color: 'white',
+                  padding: '12px 20px', borderRadius: '14px',
+                  boxShadow: '0 12px 40px rgba(0,0,0,0.25)',
+                  zIndex: 1000,
+                }}>
+                  <span style={{
+                    fontSize: '13px', fontWeight: '600',
+                    display: 'flex', alignItems: 'center', gap: '8px'
+                  }}>
+                    <span style={{
+                      background: '#3b82f6', padding: '2px 8px', borderRadius: '10px',
+                      fontSize: '12px', fontWeight: '700'
+                    }}>
+                      {selectedProducts.size}
+                    </span>
+                    selected
                   </span>
-                  <button
-                    className="text-blue-600 hover:text-blue-800 text-sm underline"
-                    onClick={handleClearSelection}
-                  >
-                    Clear selection
-                  </button>
-                </div>
-                <div className="flex items-center gap-3">
+
+                  <div style={{ width: '1px', height: '24px', background: '#475569' }} />
+
                   {/* Bulk Assign to Bill - only for standalone products */}
                   {Array.from(selectedProducts).some(id => !sortedData.find(p => p.id === id)?.billId) && (
                     <button
-                      className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                       onClick={handleOpenBulkAssignModal}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '6px',
+                        background: '#16a34a', border: 'none', color: 'white',
+                        cursor: 'pointer',
+                        fontSize: '13px', fontWeight: '600', padding: '6px 12px',
+                        borderRadius: '8px', transition: 'all 0.15s',
+                      }}
                     >
-                      <Link2 size={16} />
-                      Assign to Bill
+                      <Link2 size={14} /> Assign to Bill
                     </button>
                   )}
-                  {/* Bulk Delete */}
+
                   <button
-                    className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                     onClick={handleBulkDelete}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '6px',
+                      background: '#dc2626', border: 'none', color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '13px', fontWeight: '600', padding: '6px 12px',
+                      borderRadius: '8px', transition: 'all 0.15s',
+                    }}
                   >
-                    <Trash2 size={16} />
-                    Delete Selected
+                    <Trash2 size={14} /> Delete
                   </button>
-                </div>
-              </div>
-            )}
 
-            <div className="dashboard-card dashboard-table-container">
-              <table className="dashboard-table">
-                <thead>
-                  <tr>
-                    {getVisibleColumns().map(column => (
-                      <th
-                        key={column.key}
-                        className={column.align === 'right' ? 'text-right' : ''}
-                        onClick={column.sortable ? () => handleSort(column.key) : undefined}
-                        style={{ cursor: column.sortable ? 'pointer' : 'default', width: column.width }}
-                      >
-                        {column.key === 'select' ? (
-                          <button
-                            className="flex items-center justify-center p-1 hover:bg-gray-100 rounded"
-                            onClick={(e) => { e.stopPropagation(); handleSelectAll(); }}
-                            title={selectedProducts.size === sortedData.length ? 'Deselect all' : 'Select all'}
-                          >
-                            {selectedProducts.size === sortedData.length && sortedData.length > 0 ? (
-                              <CheckSquare size={18} className="text-blue-600" />
-                            ) : (
-                              <Square size={18} className="text-gray-400" />
-                            )}
-                          </button>
-                        ) : (
-                          <>{column.label} {column.sortable && renderSortIcon(column.key)}</>
-                        )}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedData.length === 0 ? (
-                    <tr>
-                      <td colSpan={getVisibleColumns().length} className="text-center py-4 text-gray-500">
-                        <div className="flex flex-col items-center gap-2">
-                          <span className="text-2xl">🛒</span>
-                          <span>No products found. Add your first product!</span>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : (
-                    sortedData.map(row => (
-                      <tr
-                        key={row.id}
-                        className={`hover:bg-blue-100 transition-colors ${selectedProduct && selectedProduct.id === row.id && modalOpen ? 'bg-blue-50 ring-2 ring-blue-200' : ''}`}
-                      >
-                        {getVisibleColumns().map(column => (
-                          <td key={column.key} className={column.align === 'right' ? 'text-right' : ''}>
-                            {(() => {
-                              switch (column.key) {
-                                case 'select':
-                                  return (
-                                    <button
-                                      className="flex items-center justify-center p-1 hover:bg-gray-100 rounded"
-                                      onClick={(e) => { e.stopPropagation(); handleSelectProduct(row.id); }}
-                                      title={selectedProducts.has(row.id) ? 'Deselect' : 'Select'}
-                                    >
-                                      {selectedProducts.has(row.id) ? (
-                                        <CheckSquare size={18} className="text-blue-600" />
-                                      ) : (
-                                        <Square size={18} className="text-gray-400" />
-                                      )}
-                                    </button>
-                                  );
-                                case 'billNumber':
-                                  return row.billId ? (
-                                    <button
-                                      onClick={() => handleNavigateToBill(row.billId, row.billNumber)}
-                                      className="text-blue-600 hover:text-blue-800 hover:underline font-medium flex items-center gap-1"
-                                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                                      title={`View Bill ${row.billNumber}`}
-                                    >
-                                      {row.billNumber}
-                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                                        <polyline points="15 3 21 3 21 9" />
-                                        <line x1="10" y1="14" x2="21" y2="3" />
-                                      </svg>
-                                    </button>
-                                  ) : (
-                                    <span className="text-gray-400 italic">—</span>
-                                  );
-                                case 'billStatus':
-                                  return row.billId ? (
-                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
-                                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span>
-                                      Linked
-                                    </span>
-                                  ) : (
-                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
-                                      <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mr-1.5"></span>
-                                      Standalone
-                                    </span>
-                                  );
-                                case 'date':
-                                  return renderDateCell(row);
-                                case 'productName':
-                                  return renderEditableCell(row, "productName");
-                                case 'category':
-                                  return categoryTag(row.category);
-                                case 'vendor':
-                                  return row.vendor ? (
-                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
-                                      <span className="mr-1">🏭</span>{row.vendor}
-                                    </span>
-                                  ) : (
-                                    <span className="text-gray-400">Not specified</span>
-                                  );
-                                case 'mrp':
-                                  return renderEditableCell(row, "mrp", "number");
-                                case 'totalQuantity':
-                                  return renderEditableCell(row, "totalQuantity", "number");
-                                case 'totalAmount':
-                                  return renderEditableCell(row, "totalAmount", "number");
-                                case 'pricePerPiece':
-                                  return formatCurrency(row.pricePerPiece || 0);
-                                case 'profitPerPiece':
-                                  return formatCurrency(calculateProfitPerPiece(row.mrp || 0, row.pricePerPiece || 0));
-                                case 'totalProfit':
-                                  return formatCurrency(calculateProfitPerPiece(row.mrp || 0, row.pricePerPiece || 0) * (row.totalQuantity || 0));
-                                case 'actions':
-                                  return (
-                                    <div className="flex gap-2 items-center justify-center">
-                                      {/* Assign to Bill / Remove from Bill button */}
-                                      {row.billId ? (
-                                        <button
-                                          className="bg-orange-100 text-orange-700 border border-orange-300 hover:bg-orange-600 hover:text-white shadow-sm"
-                                          style={{
-                                            padding: '8px',
-                                            width: '40px',
-                                            height: '40px',
-                                            borderRadius: '6px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            transition: 'all 0.2s'
-                                          }}
-                                          aria-label="Remove from Bill"
-                                          title={`Remove from ${row.billNumber}`}
-                                          onClick={(e) => { e.stopPropagation(); handleRemoveFromBill(row); }}
-                                        >
-                                          <Unlink size={18} strokeWidth={2} />
-                                        </button>
-                                      ) : (
-                                        <button
-                                          className="bg-green-100 text-green-700 border border-green-300 hover:bg-green-600 hover:text-white shadow-sm"
-                                          style={{
-                                            padding: '8px',
-                                            width: '40px',
-                                            height: '40px',
-                                            borderRadius: '6px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            transition: 'all 0.2s'
-                                          }}
-                                          aria-label="Assign to Bill"
-                                          title="Assign to Bill"
-                                          onClick={(e) => { e.stopPropagation(); handleOpenAssignModal(row); }}
-                                        >
-                                          <Link2 size={18} strokeWidth={2} />
-                                        </button>
-                                      )}
-                                      <button
-                                        className="bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-600 hover:text-white shadow-sm"
-                                        style={{
-                                          padding: '8px',
-                                          width: '40px',
-                                          height: '40px',
-                                          borderRadius: '6px',
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          justifyContent: 'center',
-                                          transition: 'all 0.2s'
-                                        }}
-                                        aria-label="Edit Product"
-                                        title="Edit Product"
-                                        onClick={() => { setSelectedProduct(row); setModalOpen(true); }}
-                                      >
-                                        <Pencil size={20} strokeWidth={2} />
-                                      </button>
-                                      <button
-                                        className="bg-red-100 text-red-700 border border-red-300 hover:bg-red-600 hover:text-white shadow-sm"
-                                        style={{
-                                          padding: '8px',
-                                          width: '40px',
-                                          height: '40px',
-                                          borderRadius: '6px',
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          justifyContent: 'center',
-                                          transition: 'all 0.2s'
-                                        }}
-                                        aria-label="Delete Product"
-                                        title="Delete Product"
-                                        onClick={e => { e.stopPropagation(); handleDeleteRow(row.id); }}
-                                      >
-                                        <Trash2 size={20} strokeWidth={2} />
-                                      </button>
-                                    </div>
-                                  );
-                                default:
-                                  return '';
-                              }
-                            })()}
-                          </td>
-                        ))}
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-                <tfoot>
-                  {tableSettings.showTotals && (
-                    <tr>
-                      {getVisibleColumns().map((column, index) => (
-                        <td key={column.key} className={column.align === 'right' ? 'text-right' : ''}>
-                          {(() => {
-                            // Show "Total" label in the first visible column
-                            if (index === 0) {
-                              return <span className="font-bold">Total</span>;
-                            }
-                            // Show total amount in the totalAmount column
-                            if (column.key === 'totalAmount') {
-                              return <span className="font-bold">{formatCurrency(calculateTotalAmount())}</span>;
-                            }
-                            // Show total profit in the totalProfit column
-                            if (column.key === 'totalProfit') {
-                              return <span className="font-bold">{formatCurrency(calculateTotalProfit())}</span>;
-                            }
-                            // Empty cells for other columns
-                            return '';
-                          })()}
-                        </td>
-                      ))}
-                    </tr>
-                  )}
-                </tfoot>
-              </table>
-            </div>
-
-            {/* Settings Modal */}
-            {settingsOpen && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
                   <button
-                    className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl font-bold"
-                    onClick={() => setSettingsOpen(false)}
-                    aria-label="Close Settings"
+                    onClick={handleClearSelection}
+                    style={{
+                      display: 'flex', alignItems: 'center',
+                      background: 'none', border: 'none', color: '#64748b',
+                      cursor: 'pointer', padding: '6px', borderRadius: '8px',
+                      transition: 'all 0.15s', marginLeft: '4px',
+                    }}
+                    title="Clear selection"
                   >
-                    ×
+                    <X size={16} />
                   </button>
-                  <h2 className="text-xl font-bold mb-4">Table Settings</h2>
-                  <div className="space-y-4">
-                    {/* Feature Toggles */}
-                    <div className="flex items-center gap-2">
-                      <input type="checkbox" id="toggle-filtering" checked={tableSettings.filtering} onChange={e => setTableSettings(s => ({ ...s, filtering: e.target.checked }))} />
-                      <label htmlFor="toggle-filtering" className="font-medium">Enable Filtering</label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input type="checkbox" id="toggle-export" checked={tableSettings.showExport} onChange={e => setTableSettings(s => ({ ...s, showExport: e.target.checked }))} />
-                      <label htmlFor="toggle-export" className="font-medium">Enable Export</label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input type="checkbox" id="toggle-totals" checked={tableSettings.showTotals} onChange={e => setTableSettings(s => ({ ...s, showTotals: e.target.checked }))} />
-                      <label htmlFor="toggle-totals" className="font-medium">Show Totals Row</label>
-                    </div>
-                    <div className="mt-4">
-                      <div className="font-semibold mb-2">Column Visibility</div>
-                      <div className="grid grid-cols-2 gap-2">
-                        {Object.keys(tableSettings.columns).map(col => (
-                          <div key={col} className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              id={`col-${col}`}
-                              checked={tableSettings.columns[col]}
-                              onChange={e => setTableSettings(s => ({ ...s, columns: { ...s.columns, [col]: e.target.checked } }))}
-                            />
-                            <label htmlFor={`col-${col}`}>{col.charAt(0).toUpperCase() + col.slice(1).replace(/([A-Z])/g, ' $1')}</label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Assign Bill Modal */}
-            <AssignBillModal
-              isOpen={assignModalOpen}
-              onClose={() => {
-                setAssignModalOpen(false);
-                setProductsToAssign([]);
-              }}
-              onAssign={handleAssignToBill}
-              products={productsToAssign}
-              mode={assignMode}
-            />
-          </>
-        )
-      }
+              {/* Assign Bill Modal */}
+              <AssignBillModal
+                isOpen={assignModalOpen}
+                onClose={() => {
+                  setAssignModalOpen(false);
+                  setProductsToAssign([]);
+                }}
+                onAssign={handleAssignToBill}
+                products={productsToAssign}
+                mode={assignMode}
+              />
+            </>
+          )
+        }
 
-      {/* Product Modal - Outside view conditional for cross-view access */}
-      <ProductModal
-        isOpen={modalOpen}
-        onClose={handleModalClose}
-        product={selectedProduct}
-        onSave={handleModalSave}
-        mode={selectedProduct ? 'edit' : 'create'}
-        bill={selectedProduct?.billId ? { id: selectedProduct.billId, billNumber: selectedProduct.billNumber, vendor: selectedProduct.vendor } : null}
-      />
-    </div >
+        {/* Product Modal - Outside view conditional for cross-view access */}
+        <ProductModal
+          isOpen={modalOpen}
+          onClose={handleModalClose}
+          product={selectedProduct}
+          onSave={handleModalSave}
+          mode={selectedProduct ? 'edit' : 'create'}
+          bill={selectedProduct?.billId ? { id: selectedProduct.billId, billNumber: selectedProduct.billNumber, vendor: selectedProduct.vendor } : null}
+        />
+      </div >
+    </BillsProvider>
   );
 };
 

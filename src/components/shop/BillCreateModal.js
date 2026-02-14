@@ -6,13 +6,13 @@ import Select from '../ui/Select';
 import Textarea from '../ui/Textarea';
 import { Calendar, User, FileText, Tag, Plus, IndianRupee } from 'lucide-react';
 import { BillModel } from '../../firebase/billService';
+import { useBills } from '../../context/BillsContext';
 
 const BillCreateModal = ({
   isOpen,
-  onClose,
-  onSave,
-  existingBills = []
+  onClose
 }) => {
+  const { bills: existingBills, handleCreateBill } = useBills();
   const [formData, setFormData] = useState({
     billNumber: '',
     date: new Date().toISOString().split('T')[0],
@@ -134,7 +134,7 @@ const BillCreateModal = ({
         ...calculatedValues
       };
 
-      await onSave(billData);
+      await handleCreateBill(billData);
       onClose();
     } catch (error) {
       console.error('Error creating bill:', error);
