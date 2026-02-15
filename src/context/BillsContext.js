@@ -313,18 +313,33 @@ export const BillsProvider = ({ children }) => {
       const newBill = await retryHandler(async () => {
         const bill = await addBill(billData);
 
-        if (billData.productName && billData.quantity) {
+        // Handle multi-product array
+        const productsToAdd = billData.products && billData.products.length > 0
+          ? billData.products
+          : (billData.productName && billData.quantity ? [billData] : []);
+
+        for (const p of productsToAdd) {
+          const qty = parseFloat(p.quantity) || 0;
+          const amount = parseFloat(p.totalAmount) || 0;
+          const mrp = parseFloat(p.mrp) || 0;
+          const costPerUnit = qty > 0 ? amount / qty : 0;
+          const profitPerPiece = mrp - costPerUnit;
+
+          if (!p.productName && qty === 0 && amount === 0) continue;
+
           const newProductData = {
-            productName: billData.productName,
-            mrp: parseFloat(billData.mrp) || 0,
-            quantity: parseFloat(billData.quantity) || 0,
-            totalAmount: parseFloat(billData.totalAmount) || 0,
+            productName: p.productName || '',
+            mrp: mrp,
+            totalQuantity: qty,
+            quantity: qty,
+            totalAmount: amount,
             vendor: billData.vendor,
             category: 'Uncategorized',
             status: 'in_stock',
-            costPerUnit: billData.costPerUnit,
-            profitPerPiece: billData.profitPerPiece,
-            totalProfit: billData.totalProfit
+            costPerUnit: costPerUnit,
+            pricePerPiece: costPerUnit,
+            profitPerPiece: profitPerPiece,
+            totalProfit: profitPerPiece * qty
           };
 
           await addShopProduct(newProductData, bill.id);

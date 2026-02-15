@@ -37,14 +37,16 @@ export const BillModel = {
   // Calculate bill totals from products
   calculateTotals: (products = []) => {
     return products.reduce((totals, product) => {
-      const quantity = parseFloat(product.totalQuantity) || 0;
+      const quantity = parseFloat(product.totalQuantity) || parseFloat(product.quantity) || 0;
       const amount = parseFloat(product.totalAmount) || 0;
-      const profit = parseFloat(product.profitPerPiece) || 0;
+      const mrp = parseFloat(product.mrp) || parseFloat(product.pricePerPiece) || 0;
+      const costPerUnit = quantity > 0 ? amount / quantity : 0;
+      const profitPerPiece = mrp - costPerUnit;
 
       return {
         totalQuantity: totals.totalQuantity + quantity,
         totalAmount: totals.totalAmount + amount,
-        totalProfit: totals.totalProfit + (profit * quantity),
+        totalProfit: totals.totalProfit + (profitPerPiece * quantity),
         productCount: totals.productCount + 1
       };
     }, {
@@ -60,12 +62,33 @@ export const BillModel = {
     let totals;
     if (products.length > 0) {
       totals = BillModel.calculateTotals(products);
+    } else if (billData.products && billData.products.length > 0) {
+      // Compute totals from inline products array
+      totals = billData.products.reduce((acc, p) => {
+        const qty = parseFloat(p.quantity) || 0;
+        const amount = parseFloat(p.totalAmount) || 0;
+        const mrp = parseFloat(p.mrp) || 0;
+        const costPerUnit = qty > 0 ? amount / qty : 0;
+        const profitPerPiece = mrp - costPerUnit;
+        return {
+          totalQuantity: acc.totalQuantity + qty,
+          totalAmount: acc.totalAmount + amount,
+          totalProfit: acc.totalProfit + (profitPerPiece * qty),
+          productCount: acc.productCount + 1
+        };
+      }, { totalQuantity: 0, totalAmount: 0, totalProfit: 0, productCount: 0 });
     } else {
+      const qty = parseFloat(billData.totalQuantity) || parseFloat(billData.quantity) || 0;
+      const amount = parseFloat(billData.totalAmount) || 0;
+      const mrp = parseFloat(billData.mrp) || 0;
+      const costPerUnit = qty > 0 ? amount / qty : 0;
+      const profitPerPiece = mrp - costPerUnit;
+
       totals = {
-        totalQuantity: parseFloat(billData.totalQuantity) || parseFloat(billData.quantity) || 0,
-        totalAmount: parseFloat(billData.totalAmount) || 0,
-        totalProfit: parseFloat(billData.totalProfit) || 0,
-        productCount: parseFloat(billData.productCount) || 0
+        totalQuantity: qty,
+        totalAmount: amount,
+        totalProfit: parseFloat(billData.totalProfit) || (profitPerPiece * qty),
+        productCount: parseFloat(billData.productCount) || (billData.productName ? 1 : 0)
       };
     }
     const now = new Date();
