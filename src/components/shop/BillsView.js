@@ -4,9 +4,7 @@ import {
   Plus,
   Filter,
   Download,
-  Calendar,
   Package,
-  TrendingUp,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
@@ -27,7 +25,6 @@ import {
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
-import Select from '../ui/Select';
 import Badge from '../ui/Badge';
 import ErrorBoundary from '../ui/ErrorBoundary';
 import {
@@ -174,8 +171,6 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
     error,
     isRetrying,
     retryCount,
-    analytics,
-    analyticsLoading,
 
     selectedBills,
     handleSelectBill,
@@ -183,10 +178,6 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
     clearSelection,
 
     handleCreateBill,
-    handleEditBill,
-    handleDeleteBill,
-    handleDuplicateBill,
-    handleExportBill,
     handleAddProductToBill,
 
     bulkActionLoading,
@@ -452,11 +443,6 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
     });
     setActiveStatusTab('all');
     setCurrentPage(1);
-  };
-
-  const handleOpenAddProductModal = (bill) => {
-    setSelectedBillForProduct(bill);
-    setShowAddProductModal(true);
   };
 
   const onCreateBill = async (billData) => {

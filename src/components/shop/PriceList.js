@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Search, X, Package, Tag, IndianRupee, TrendingUp,
-  SortAsc, SortDesc, ShoppingBag, Calendar, Users
+  SortAsc, SortDesc
 } from 'lucide-react';
 import { subscribeToShopProducts } from '../../firebase/shopProductService';
 import { formatCurrency, formatDate } from '../../utils/formatters';

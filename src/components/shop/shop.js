@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Search, X, Download, Plus, Save as SaveIcon, ChevronDown, Check, Trash2, Pencil, Calendar, Settings as SettingsIcon, Grid, List, Tag, Link2, Unlink, CheckSquare, Square, Filter, Package, TrendingUp, IndianRupee, SortAsc, SortDesc, Users, LayoutDashboard } from 'lucide-react';
+import { Search, X, Download, Plus, Trash2, Pencil, Grid, List, Tag, Link2, Unlink, CheckSquare, Square, Filter, Package, TrendingUp, IndianRupee, SortAsc, SortDesc, Users, LayoutDashboard } from 'lucide-react';
 import './Shop.css';
 // ShopTransactions component is reserved for future use
 import PriceList from './PriceList';
@@ -22,7 +21,6 @@ import {
 } from '../../firebase/shopProductService';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#82ca9d", "#8dd1e1", "#a4de6c", "#d0ed57"];
 // Remove hardcoded CATEGORIES and VENDORS
 // const CATEGORIES = ['Clothing', 'Electronics', 'Groceries', 'Accessories', 'Other'];
 // const VENDORS = ['ABC Suppliers', 'XYZ Distributors', 'Local Market', 'Online Store', 'Direct Import', 'Other'];
@@ -77,9 +75,6 @@ const Shop = () => {
   const [editingCell, setEditingCell] = useState(null);
   const [tempEditValue, setTempEditValue] = useState("");
   // eslint-disable-next-line no-unused-vars
-  const [pieChartData, setPieChartData] = useState([]);
-  // eslint-disable-next-line no-unused-vars
-  const [profitPieChartData, setProfitPieChartData] = useState([]);
   const [showSaveAnimation, setShowSaveAnimation] = useState(false);
   const [loading, setLoading] = useState(true);
   // eslint-disable-next-line no-unused-vars
@@ -88,8 +83,7 @@ const Shop = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [search, setSearch] = useState("");
   const { showSuccess, showError } = useNotifications();
-  const [editingDateId, setEditingDateId] = useState(null);
-  const [tempDate, setTempDate] = useState("");
+  // eslint-disable-next-line no-unused-vars
   const [exportOpen, setExportOpen] = useState(false);
   // Add sorting and filtering state
   const [sortColumn, setSortColumn] = useState(null);
@@ -132,7 +126,9 @@ const Shop = () => {
       actions: true,
     }
   };
+  // eslint-disable-next-line no-unused-vars
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [tableSettings, setTableSettings] = useState(() => {
     const saved = localStorage.getItem('tableSettings');
     return saved ? JSON.parse(saved) : defaultTableSettings;
@@ -184,32 +180,7 @@ const Shop = () => {
 
 
 
-  useEffect(() => {
-    updatePieChartData();
-    updateProfitPieChartData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
-
-
-
-  const updatePieChartData = () => {
-    const newPieChartData = data.map(item => ({
-      name: item.productName || 'Unnamed Product',
-      value: item.totalAmount || 0
-    }));
-    setPieChartData(newPieChartData);
-  };
-
-  const updateProfitPieChartData = () => {
-    const totalNettAmount = calculateTotalAmount();
-    const totalProfit = calculateTotalProfit();
-    const newProfitPieChartData = [
-      { name: 'Nett Amount', value: totalNettAmount - totalProfit },
-      { name: 'Total Profit', value: totalProfit }
-    ];
-    setProfitPieChartData(newProfitPieChartData);
-  };
-
+  // eslint-disable-next-line no-unused-vars
   const handleSave = async () => {
     try {
       setShowSaveAnimation(true);
@@ -307,7 +278,7 @@ const Shop = () => {
     }
   };
 
-  // Helper function to get visible columns
+  // eslint-disable-next-line no-unused-vars
   const getVisibleColumns = () => {
     const allColumns = [
       { key: 'select', label: '', sortable: false, width: '40px' }, // Selection checkbox column
@@ -616,42 +587,6 @@ const Shop = () => {
     );
   };
 
-  // Date cell rendering
-  const renderDateCell = (row) => {
-    if (editingDateId === row.id) {
-      return (
-        <form onSubmit={async (e) => {
-          e.preventDefault();
-          await handleCellEdit(row.id, 'date', tempDate);
-          setEditingDateId(null);
-        }} className="flex items-center gap-2">
-          <input
-            type="date"
-            value={tempDate}
-            onChange={e => setTempDate(e.target.value)}
-            className="dashboard-input"
-            aria-label="Edit Date"
-            autoFocus
-            onBlur={() => setEditingDateId(null)}
-            style={{ minWidth: 120 }}
-          />
-          <button type="submit" className="text-blue-600 font-bold" aria-label="Save Date">OK</button>
-        </form>
-      );
-    }
-    return (
-      <button
-        className="flex items-center gap-1 text-gray-700 hover:text-blue-600 focus:outline-none whitespace-nowrap"
-        onClick={() => { setEditingDateId(row.id); setTempDate(row.date || ''); }}
-        aria-label="Edit Date"
-        style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-      >
-        <Calendar size={16} />
-        <span>{formatDate(row.date)}</span>
-      </button>
-    );
-  };
-
   // CSV export helper
   const toCsv = (rows) => {
     if (!rows.length) return '';
@@ -686,6 +621,7 @@ const Shop = () => {
     window.URL.revokeObjectURL(url);
   };
 
+  // eslint-disable-next-line no-unused-vars
   const handleExportAll = () => {
     const csv = toCsv(data);
     downloadCsv(csv, 'all_products.csv');
@@ -697,7 +633,7 @@ const Shop = () => {
     setExportOpen(false);
   };
 
-  // Helper for category dropdown with icons
+  // eslint-disable-next-line no-unused-vars
   const categoryOptions = [
     { value: '', label: 'All Categories', icon: '📦' },
     ...categories.map(cat => ({

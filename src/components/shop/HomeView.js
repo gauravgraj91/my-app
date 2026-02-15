@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Package, TrendingUp, IndianRupee, Users,
-  FileText, CheckCircle, Clock, AlertTriangle,
-  Tag, ChevronRight, ArrowUpRight, ArrowDownRight,
+  FileText, Clock,
+  ChevronRight,
   LayoutDashboard
 } from 'lucide-react';
 import { useBills } from '../../context/BillsContext';
@@ -86,7 +86,7 @@ const StatusRow = ({ label, count, amount, color, dotColor }) => (
 );
 
 const HomeView = ({ onNavigate }) => {
-  const { bills, billProducts } = useBills();
+  const { bills } = useBills();
   const { vendors } = useVendors();
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
