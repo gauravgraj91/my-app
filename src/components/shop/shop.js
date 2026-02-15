@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Search, X, Download, Plus, Save as SaveIcon, ChevronDown, Check, Trash2, Pencil, Calendar, Settings as SettingsIcon, Grid, List, Tag, Link2, Unlink, CheckSquare, Square, Filter, Package, TrendingUp, IndianRupee, SortAsc, SortDesc, Users } from 'lucide-react';
+import { Search, X, Download, Plus, Save as SaveIcon, ChevronDown, Check, Trash2, Pencil, Calendar, Settings as SettingsIcon, Grid, List, Tag, Link2, Unlink, CheckSquare, Square, Filter, Package, TrendingUp, IndianRupee, SortAsc, SortDesc, Users, LayoutDashboard } from 'lucide-react';
 import './Shop.css';
 // ShopTransactions component is reserved for future use
 import PriceList from './PriceList';
 import ProductModal from './ProductModal';
 import BillsView from './BillsView';
 import VendorsView from './VendorsView';
+import HomeView from './HomeView';
 import { BillsProvider } from '../../context/BillsContext';
+import { useNotifications } from '../ui/NotificationSystem';
 import { VendorsProvider } from '../../context/VendorsContext';
 import AssignBillModal from './AssignBillModal';
 import {
@@ -52,7 +54,7 @@ const Shop = () => {
     console.log('Shop.js: Calling localStorage.getItem');
     const saved = localStorage.getItem('shopViewMode');
     console.log('Shop.js: Initializing viewMode. Saved:', saved);
-    return saved || 'bills';
+    return saved || 'home';
   });
 
   const [data, setData] = useState([
@@ -85,7 +87,7 @@ const Shop = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [search, setSearch] = useState("");
-  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const { showSuccess, showError } = useNotifications();
   const [editingDateId, setEditingDateId] = useState(null);
   const [tempDate, setTempDate] = useState("");
   const [exportOpen, setExportOpen] = useState(false);
@@ -211,10 +213,10 @@ const Shop = () => {
   const handleSave = async () => {
     try {
       setShowSaveAnimation(true);
-      showToast("Data saved successfully!", 'success');
+      showSuccess("Data saved successfully!");
       setTimeout(() => setShowSaveAnimation(false), 2000);
     } catch (error) {
-      showToast("Failed to save data. Please try again.", 'error');
+      showError("Failed to save data. Please try again.");
     }
   };
 
@@ -239,7 +241,7 @@ const Shop = () => {
       setEditingCell(null);
     } catch (error) {
       console.error('Error updating product:', error);
-      showToast('Failed to update product. Please try again.', 'error');
+      showError('Failed to update product. Please try again.');
     }
   };
 
@@ -249,12 +251,6 @@ const Shop = () => {
     } else if (e.key === "Escape") {
       setEditingCell(null);
     }
-  };
-
-  // Toast helper
-  const showToast = (message, type = 'success') => {
-    setToast({ show: true, message, type });
-    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 2500);
   };
 
   const handleAddRow = async () => {
@@ -272,9 +268,9 @@ const Shop = () => {
         profitPerPiece: 0
       };
       await addShopProduct(newProduct);
-      showToast("Product added successfully!", 'success');
+      showSuccess("Product added successfully!");
     } catch (error) {
-      showToast('Failed to add product. Please try again.', 'error');
+      showError('Failed to add product. Please try again.');
     }
   };
 
@@ -282,9 +278,9 @@ const Shop = () => {
     if (window.confirm("Are you sure you want to delete this product?")) {
       try {
         await deleteShopProduct(id);
-        showToast("Product deleted successfully!", 'error');
+        showSuccess("Product deleted successfully!");
       } catch (error) {
-        showToast('Failed to delete product. Please try again.', 'error');
+        showError('Failed to delete product. Please try again.');
       }
     }
   };
@@ -303,11 +299,11 @@ const Shop = () => {
   const handleModalSave = async (updatedProduct) => {
     try {
       await updateShopProduct(updatedProduct.id, updatedProduct);
-      showToast('Product updated successfully!', 'success');
+      showSuccess('Product updated successfully!');
       setModalOpen(false);
       setSelectedProduct(null);
     } catch (error) {
-      showToast('Failed to update product. Please try again.', 'error');
+      showError('Failed to update product. Please try again.');
     }
   };
 
@@ -364,7 +360,7 @@ const Shop = () => {
   const handleOpenBulkAssignModal = () => {
     const products = sortedData.filter(p => selectedProducts.has(p.id) && !p.billId);
     if (products.length === 0) {
-      showToast('Please select standalone products to assign', 'error');
+      showError('Please select standalone products to assign');
       return;
     }
     setProductsToAssign(products);
@@ -378,11 +374,10 @@ const Shop = () => {
       for (const product of productsToAssign) {
         await moveProductToBill(product.id, billId);
       }
-      showToast(
+      showSuccess(
         productsToAssign.length === 1
           ? `Product assigned to ${bill.billNumber}!`
-          : `${productsToAssign.length} products assigned to ${bill.billNumber}!`,
-        'success'
+          : `${productsToAssign.length} products assigned to ${bill.billNumber}!`
       );
       setSelectedProducts(new Set());
       setShowBulkActions(false);
@@ -399,10 +394,10 @@ const Shop = () => {
     }
     try {
       await removeProductFromBill(product.id);
-      showToast(`Product removed from ${product.billNumber}!`, 'success');
+      showSuccess(`Product removed from ${product.billNumber}!`);
     } catch (error) {
       console.error('Error removing from bill:', error);
-      showToast('Failed to remove product from bill', 'error');
+      showError('Failed to remove product from bill');
     }
   };
 
@@ -444,12 +439,12 @@ const Shop = () => {
       for (const productId of selectedProducts) {
         await deleteShopProduct(productId);
       }
-      showToast(`${count} product(s) deleted successfully!`, 'success');
+      showSuccess(`${count} product(s) deleted successfully!`);
       setSelectedProducts(new Set());
       setShowBulkActions(false);
     } catch (error) {
       console.error('Error bulk deleting:', error);
-      showToast('Failed to delete some products', 'error');
+      showError('Failed to delete some products');
     }
   };
 
@@ -766,6 +761,17 @@ const Shop = () => {
             {/* View Mode Toggle */}
             <div className="flex items-center bg-gray-100 rounded-lg p-1">
               <button
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${viewMode === 'home'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                onClick={() => setViewMode('home')}
+                aria-label="Home View"
+              >
+                <LayoutDashboard size={16} />
+                Home
+              </button>
+              <button
                 className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${viewMode === 'bills'
                   ? 'bg-white text-blue-600 shadow-sm'
                   : 'text-gray-600 hover:text-gray-800'
@@ -817,7 +823,9 @@ const Shop = () => {
 
         {/* Conditionally render based on view mode */}
         {
-          viewMode === 'bills' ? (
+          viewMode === 'home' ? (
+            <HomeView onNavigate={setViewMode} />
+          ) : viewMode === 'bills' ? (
             <BillsView
               searchTerm={search}
               onSearchChange={setSearch}
@@ -834,21 +842,6 @@ const Shop = () => {
             <PriceList />
           ) : (
             <>
-              {/* Toast notification */}
-              {toast.show && (
-                <div style={{
-                  position: 'fixed', top: '24px', right: '24px', zIndex: 50,
-                  padding: '12px 24px', borderRadius: '8px',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                  fontSize: '14px', fontWeight: '600',
-                  background: toast.type === 'error' ? '#ef4444' : '#22c55e',
-                  color: '#fff',
-                  transition: 'all 0.3s',
-                }}>
-                  {toast.message}
-                </div>
-              )}
-
               {/* ===== HEADER ===== */}
               <div style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',

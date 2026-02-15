@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react"
 import { addTransaction, subscribeToTransactions, deleteTransaction } from '../../firebase/transactionService'
 import { format } from 'date-fns';
+import { useNotifications } from '../ui/NotificationSystem';
 
 const ShopTransactions = () => {
   const [transactions, setTransactions] = useState([])
@@ -9,9 +10,8 @@ const ShopTransactions = () => {
   const [comment, setComment] = useState("")
   const [filter, setFilter] = useState("all")
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [success, setSuccess] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+  const { showSuccess, showError } = useNotifications()
 
   // Subscribe to real-time updates
   useEffect(() => {
@@ -22,17 +22,6 @@ const ShopTransactions = () => {
 
     return () => unsubscribe()
   }, [])
-
-  // Clear notifications after 3 seconds
-  useEffect(() => {
-    if (error || success) {
-      const timer = setTimeout(() => {
-        setError(null)
-        setSuccess(null)
-      }, 3000)
-      return () => clearTimeout(timer)
-    }
-  }, [error, success])
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
@@ -50,12 +39,12 @@ const ShopTransactions = () => {
 
   const handleTransaction = async () => {
     if (amount === "" || Number(amount) === 0) {
-      setError("Amount cannot be zero")
+      showError("Amount cannot be zero")
       return
     }
 
     if (!comment.trim()) {
-      setError("Please add a comment for the transaction")
+      showError("Please add a comment for the transaction")
       return
     }
 
@@ -71,10 +60,10 @@ const ShopTransactions = () => {
       await addTransaction(newTransaction)
       setAmount("")
       setComment("")
-      setSuccess("Transaction added successfully!")
+      showSuccess("Transaction added successfully!")
     } catch (error) {
       console.error('Error adding transaction:', error)
-      setError('Failed to add transaction. Please try again.')
+      showError('Failed to add transaction. Please try again.')
     } finally {
       setSubmitting(false)
     }
@@ -84,10 +73,10 @@ const ShopTransactions = () => {
     if (window.confirm("Are you sure you want to delete this transaction?")) {
       try {
         await deleteTransaction(transactionId)
-        setSuccess("Transaction deleted successfully!")
+        showSuccess("Transaction deleted successfully!")
       } catch (error) {
         console.error('Error deleting transaction:', error)
-        setError('Failed to delete transaction. Please try again.')
+        showError('Failed to delete transaction. Please try again.')
       }
     }
   }
@@ -119,19 +108,6 @@ const ShopTransactions = () => {
     <div className="max-w-4xl mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6 text-center">Shop Transactions</h1>
       
-      {/* Notifications */}
-      {error && (
-        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-          {error}
-        </div>
-      )}
-      
-      {success && (
-        <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
-          {success}
-        </div>
-      )}
-
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-green-100 p-4 rounded-lg">

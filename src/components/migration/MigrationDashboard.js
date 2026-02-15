@@ -15,7 +15,7 @@ import {
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
-import { NotificationContainer } from '../ui/NotificationSystem';
+import { useNotifications } from '../ui/NotificationSystem';
 import MigrationService from '../../firebase/migrationService';
 import MigrationProgressIndicator from './MigrationProgressIndicator';
 import DataValidationDashboard from './DataValidationDashboard';
@@ -47,7 +47,7 @@ const MigrationDashboard = () => {
   });
 
   const [activeTab, setActiveTab] = useState('migration');
-  const [notifications, setNotifications] = useState([]);
+  const { showSuccess, showError, showWarning, showInfo } = useNotifications();
 
   // Check if migration has been run before
   useEffect(() => {
@@ -69,26 +69,13 @@ const MigrationDashboard = () => {
   };
 
   const addNotification = (type, message) => {
-    // Set default durations based on notification type
-    const durationMap = {
-      'success': 5000,
-      'error': 8000,
-      'warning': 6000,
-      'info': 5000
-    };
-    
-    const notification = {
-      id: Date.now() + Math.random(),
-      type,
-      message,
-      duration: durationMap[type] || 5000,
-      timestamp: new Date()
-    };
-    setNotifications(prev => [...prev, notification]);
-  };
-
-  const removeNotification = (id) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
+    switch (type) {
+      case 'success': showSuccess(message); break;
+      case 'error': showError(message); break;
+      case 'warning': showWarning(message); break;
+      case 'info': showInfo(message); break;
+      default: showInfo(message);
+    }
   };
 
   const startMigration = async () => {
@@ -481,10 +468,6 @@ const MigrationDashboard = () => {
         )}
       </div>
 
-      <NotificationContainer 
-        notifications={notifications}
-        onRemove={removeNotification}
-      />
     </div>
   );
 };

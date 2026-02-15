@@ -43,9 +43,18 @@ const NotificationItem = ({ notification, onRemove }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [notification.duration]);
 
+  const exitTimerRef = React.useRef(null);
+
+  // Cleanup exit timer on unmount
+  useEffect(() => {
+    return () => {
+      if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+    };
+  }, []);
+
   const handleRemove = () => {
     setIsRemoving(true);
-    setTimeout(() => {
+    exitTimerRef.current = setTimeout(() => {
       onRemove(notification.id);
     }, 300); // Match exit animation duration
   };
@@ -114,7 +123,6 @@ const NotificationItem = ({ notification, onRemove }) => {
       style={getStyles()}
       onClick={handleRemove}
       role="alert"
-      aria-live="polite"
     >
       <div style={{ flexShrink: 0 }}>
         {getIcon()}

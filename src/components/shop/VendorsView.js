@@ -1,8 +1,8 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
-  Search, Plus, Filter, X, ChevronDown, ChevronUp,
-  Package, AlertTriangle, IndianRupee, CheckCircle, Clock,
-  Phone, Mail, MapPin, FileText, Edit, Trash2, TrendingUp,
+  Search, Plus, X, ChevronDown, ChevronUp,
+  Package, AlertTriangle, CheckCircle, Clock,
+  FileText, Edit, Trash2, TrendingUp,
   TrendingDown, Minus, Users
 } from 'lucide-react';
 import Card from '../ui/Card';
@@ -13,6 +13,7 @@ import ErrorBoundary from '../ui/ErrorBoundary';
 import { useVendors } from '../../context/VendorsContext';
 import { useBills } from '../../context/BillsContext';
 import { formatCurrency, formatDate } from '../../utils/formatters';
+import { useNotifications } from '../ui/NotificationSystem';
 
 // --- Styles ---
 const STYLES = {
@@ -68,10 +69,11 @@ const VendorsView = ({ onNavigateToBill }) => {
     vendors, vendorProducts, loading,
     loadVendorProducts,
     handleAddVendor, handleUpdateVendor, handleDeleteVendor,
-    handleAddVendorProduct, handleUpdateVendorProduct, handleDeleteVendorProduct,
+    handleAddVendorProduct,
   } = useVendors();
 
   const { bills, billProducts } = useBills();
+  const { showSuccess, showError } = useNotifications();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
@@ -305,13 +307,16 @@ const VendorsView = ({ onNavigateToBill }) => {
     try {
       if (editingVendor && !editingVendor.isUnregistered) {
         await handleUpdateVendor(editingVendor.id, vendorForm);
+        showSuccess('Vendor updated successfully!');
       } else {
         await handleAddVendor(vendorForm);
+        showSuccess('Vendor added successfully!');
       }
       setShowAddModal(false);
       setEditingVendor(null);
     } catch (err) {
       console.error('Error saving vendor:', err);
+      showError('Failed to save vendor. Please try again.');
     }
   };
 
@@ -320,8 +325,10 @@ const VendorsView = ({ onNavigateToBill }) => {
     if (!window.confirm(`Delete vendor "${vendor.name}"? This won't delete their bills.`)) return;
     try {
       await handleDeleteVendor(vendor.id);
+      showSuccess(`Vendor "${vendor.name}" deleted!`);
     } catch (err) {
       console.error('Error deleting vendor:', err);
+      showError('Failed to delete vendor. Please try again.');
     }
   };
 
@@ -351,8 +358,10 @@ const VendorsView = ({ onNavigateToBill }) => {
       });
       setShowAddProductModal(false);
       setSelectedVendorForProduct(null);
+      showSuccess('Product added to vendor catalog!');
     } catch (err) {
       console.error('Error saving vendor product:', err);
+      showError('Failed to add product. Please try again.');
     }
   };
 
