@@ -46,6 +46,30 @@ function getDefaultVendor() {
   return saved ? saved : defaultVendors[0];
 }
 
+const SummaryCard = ({ label, amount, count, subtitle, icon: Icon, color, bgColor }) => (
+  <div style={{
+    background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
+    padding: '20px', position: 'relative', overflow: 'hidden',
+  }}>
+    <div style={{
+      position: 'absolute', top: '16px', right: '16px',
+      width: '40px', height: '40px', borderRadius: '10px',
+      background: bgColor, display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <Icon size={20} color={color} />
+    </div>
+    <div style={{ fontSize: '13px', fontWeight: '500', color: '#64748b', marginBottom: '8px' }}>
+      {label}
+    </div>
+    <div style={{ fontSize: '24px', fontWeight: '800', color: color, marginBottom: '4px' }}>
+      {formatCurrency(amount)}
+    </div>
+    <div style={{ fontSize: '13px', color: '#94a3b8' }}>
+      {subtitle || `${count} product${count !== 1 ? 's' : ''}`}
+    </div>
+  </div>
+);
+
 const Shop = () => {
   // View mode state - 'bills' or 'products'
   const [viewMode, setViewMode] = useState(() => {
@@ -199,14 +223,14 @@ const Shop = () => {
         const totalQuantity = field === "totalQuantity" ? value : (product?.totalQuantity || 0);
         const totalAmount = field === "totalAmount" ? value : (product?.totalAmount || 0);
         if (totalQuantity > 0) {
-          updatedData.pricePerPiece = (totalAmount / totalQuantity).toFixed(2);
+          updatedData.pricePerPiece = Math.round((totalAmount / totalQuantity + Number.EPSILON) * 100) / 100;
         }
       }
       if (field === "mrp" || field === "pricePerPiece" || field === "totalAmount" || field === "totalQuantity") {
         const product = data.find(item => item.id === id);
         const mrp = field === "mrp" ? value : (product?.mrp || 0);
         const pricePerPiece = field === "pricePerPiece" ? value : (product?.pricePerPiece || 0);
-        updatedData.profitPerPiece = (mrp - pricePerPiece).toFixed(2);
+        updatedData.profitPerPiece = Math.round((mrp - pricePerPiece + Number.EPSILON) * 100) / 100;
       }
       await updateShopProduct(id, updatedData);
       setEditingCell(null);
@@ -484,7 +508,7 @@ const Shop = () => {
   };
 
   const calculateProfitPerPiece = (mrp, pricePerPiece) => {
-    return (mrp - pricePerPiece).toFixed(2);
+    return Math.round((mrp - pricePerPiece + Number.EPSILON) * 100) / 100;
   };
 
   const calculateAverageMRP = () => {
@@ -765,7 +789,7 @@ const Shop = () => {
             <BillsView
               searchTerm={search}
               onSearchChange={setSearch}
-              onProductClick={handleNavigateToProduct}
+              onProductClick={null}
             />
           ) : viewMode === 'vendors' ? (
             <VendorsView
@@ -814,10 +838,10 @@ const Shop = () => {
                       display: 'flex', alignItems: 'center', gap: '6px',
                       padding: '8px 16px', borderRadius: '8px',
                       border: 'none',
-                      background: 'linear-gradient(135deg, #10b981, #059669)',
+                      background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
                       fontSize: '13px', fontWeight: '600', color: '#fff',
                       cursor: 'pointer', transition: 'all 0.15s',
-                      boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
+                      boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
                     }}
                   >
                     <Plus size={14} />
@@ -833,97 +857,10 @@ const Shop = () => {
                 gap: '16px',
                 marginBottom: '24px',
               }}>
-                {/* Total Products */}
-                <div style={{
-                  background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
-                  padding: '20px', position: 'relative', overflow: 'hidden',
-                }}>
-                  <div style={{
-                    position: 'absolute', top: '16px', right: '16px',
-                    width: '40px', height: '40px', borderRadius: '10px',
-                    background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <Package size={20} color="#64748b" />
-                  </div>
-                  <div style={{ fontSize: '13px', fontWeight: '500', color: '#64748b', marginBottom: '8px' }}>
-                    Total Products
-                  </div>
-                  <div style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', marginBottom: '4px' }}>
-                    {data.length}
-                  </div>
-                  <div style={{ fontSize: '13px', color: '#94a3b8' }}>
-                    {data.filter(p => p.billId).length} linked, {data.filter(p => !p.billId).length} standalone
-                  </div>
-                </div>
-
-                {/* Total Value */}
-                <div style={{
-                  background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
-                  padding: '20px', position: 'relative', overflow: 'hidden',
-                }}>
-                  <div style={{
-                    position: 'absolute', top: '16px', right: '16px',
-                    width: '40px', height: '40px', borderRadius: '10px',
-                    background: '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <IndianRupee size={20} color="#10b981" />
-                  </div>
-                  <div style={{ fontSize: '13px', fontWeight: '500', color: '#64748b', marginBottom: '8px' }}>
-                    Total Value
-                  </div>
-                  <div style={{ fontSize: '24px', fontWeight: '800', color: '#10b981', marginBottom: '4px' }}>
-                    {formatCurrency(calculateTotalAmount())}
-                  </div>
-                  <div style={{ fontSize: '13px', color: '#94a3b8' }}>
-                    Sum of all nett amounts
-                  </div>
-                </div>
-
-                {/* Total Profit */}
-                <div style={{
-                  background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
-                  padding: '20px', position: 'relative', overflow: 'hidden',
-                }}>
-                  <div style={{
-                    position: 'absolute', top: '16px', right: '16px',
-                    width: '40px', height: '40px', borderRadius: '10px',
-                    background: '#fff7ed', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <TrendingUp size={20} color="#f59e0b" />
-                  </div>
-                  <div style={{ fontSize: '13px', fontWeight: '500', color: '#64748b', marginBottom: '8px' }}>
-                    Total Profit
-                  </div>
-                  <div style={{ fontSize: '24px', fontWeight: '800', color: '#f59e0b', marginBottom: '4px' }}>
-                    {formatCurrency(calculateTotalProfit())}
-                  </div>
-                  <div style={{ fontSize: '13px', color: '#94a3b8' }}>
-                    Across all products
-                  </div>
-                </div>
-
-                {/* Average MRP */}
-                <div style={{
-                  background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
-                  padding: '20px', position: 'relative', overflow: 'hidden',
-                }}>
-                  <div style={{
-                    position: 'absolute', top: '16px', right: '16px',
-                    width: '40px', height: '40px', borderRadius: '10px',
-                    background: '#f5f3ff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <Tag size={20} color="#7c3aed" />
-                  </div>
-                  <div style={{ fontSize: '13px', fontWeight: '500', color: '#64748b', marginBottom: '8px' }}>
-                    Average MRP
-                  </div>
-                  <div style={{ fontSize: '24px', fontWeight: '800', color: '#7c3aed', marginBottom: '4px' }}>
-                    {formatCurrency(calculateAverageMRP())}
-                  </div>
-                  <div style={{ fontSize: '13px', color: '#94a3b8' }}>
-                    Per product average
-                  </div>
-                </div>
+                <SummaryCard label="Total Products" amount={data.reduce((sum, p) => sum + (parseFloat(p.totalAmount) || 0), 0)} count={data.length} subtitle={`${data.filter(p => p.billId).length} linked, ${data.filter(p => !p.billId).length} standalone`} icon={Package} color="#0f172a" bgColor="#f1f5f9" />
+                <SummaryCard label="Total Value" amount={calculateTotalAmount()} count={data.length} subtitle="Sum of all nett amounts" icon={IndianRupee} color="#10b981" bgColor="#ecfdf5" />
+                <SummaryCard label="Total Profit" amount={calculateTotalProfit()} count={data.length} subtitle="Across all products" icon={TrendingUp} color="#f59e0b" bgColor="#fff7ed" />
+                <SummaryCard label="Average MRP" amount={calculateAverageMRP()} count={data.length} subtitle="Per product average" icon={Tag} color="#7c3aed" bgColor="#f5f3ff" />
               </div>
 
               {/* ===== SEARCH + FILTER BAR ===== */}

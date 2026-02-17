@@ -17,7 +17,7 @@ const BillCreateModal = ({
   mode = 'create',
   bill = null
 }) => {
-  const { bills: existingBills, handleCreateBill, handleEditBill } = useBills();
+  const { bills: existingBills, billProducts, handleCreateBill, handleEditBill } = useBills();
   const { vendors } = useVendors();
   const isEditMode = mode === 'edit' && bill;
 
@@ -50,6 +50,19 @@ const BillCreateModal = ({
         notes: bill.notes || '',
         status: bill.status || 'active'
       });
+
+      // Load existing products into the products array
+      const existing = billProducts[bill.id];
+      if (existing && existing.length > 0) {
+        setProducts(existing.map(p => ({
+          productName: p.productName || '',
+          mrp: String(p.mrp || ''),
+          quantity: String(p.totalQuantity || p.quantity || ''),
+          totalAmount: String(p.totalAmount || '')
+        })));
+      } else {
+        setProducts([emptyProduct()]);
+      }
     } else if (existingBills.length >= 0) {
       const newBillNumber = BillModel.generateBillNumber(existingBills);
       setFormData(prev => ({
@@ -66,9 +79,10 @@ const BillCreateModal = ({
       const amount = parseFloat(p.totalAmount) || 0;
       const mrp = parseFloat(p.mrp) || 0;
       if (qty <= 0) return { costPerUnit: 0, profitPerPiece: 0, totalProfit: 0 };
-      const costPerUnit = amount / qty;
-      const profitPerPiece = mrp - costPerUnit;
-      return { costPerUnit, profitPerPiece, totalProfit: profitPerPiece * qty };
+      const costPerUnit = Math.round((amount / qty + Number.EPSILON) * 100) / 100;
+      const profitPerPiece = Math.round((mrp - costPerUnit + Number.EPSILON) * 100) / 100;
+      const totalProfit = Math.round((profitPerPiece * qty + Number.EPSILON) * 100) / 100;
+      return { costPerUnit, profitPerPiece, totalProfit };
     });
 
     const totals = products.reduce((acc, p, i) => {

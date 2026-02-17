@@ -1,13 +1,14 @@
 import React from 'react';
 
-const Button = ({ 
-  children, 
-  variant = 'primary', 
+const Button = ({
+  children,
+  variant = 'primary',
   size = 'medium',
   icon,
   loading = false,
   className = '',
-  ...props 
+  style: customStyle,
+  ...props
 }) => {
   const variants = {
     primary: {
@@ -57,7 +58,7 @@ const Button = ({
     gap: icon ? 8 : 0,
     transition: 'all 0.2s',
     opacity: loading ? 0.7 : 1,
-    ...props.style
+    ...customStyle
   };
 
   return (

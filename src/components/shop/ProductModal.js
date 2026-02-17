@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 import { Package, IndianRupee, Hash, Tag, User, Plus, Edit } from 'lucide-react';
 import { useBills } from '../../context/BillsContext';
+
+const roundTo2 = (val) => Math.round((val + Number.EPSILON) * 100) / 100;
 
 const ProductModal = ({
   isOpen,
@@ -36,11 +38,11 @@ const ProductModal = ({
         productName: product.productName || '',
         category: product.category || '',
         vendor: product.vendor || '',
-        mrp: product.mrp?.toString() || '',
+        mrp: product.mrp != null ? roundTo2(product.mrp).toString() : '',
         totalQuantity: product.totalQuantity?.toString() || '',
-        pricePerPiece: product.pricePerPiece?.toString() || '',
-        profitPerPiece: product.profitPerPiece?.toString() || '',
-        totalAmount: product.totalAmount?.toString() || '',
+        pricePerPiece: product.pricePerPiece != null ? roundTo2(product.pricePerPiece).toString() : '',
+        profitPerPiece: product.profitPerPiece != null ? roundTo2(product.profitPerPiece).toString() : '',
+        totalAmount: product.totalAmount != null ? roundTo2(product.totalAmount).toString() : '',
         billId: product.billId || '',
         billNumber: product.billNumber || ''
       });
@@ -77,12 +79,12 @@ const ProductModal = ({
   useEffect(() => {
     const quantity = parseFloat(formData.totalQuantity) || 0;
     const price = parseFloat(formData.pricePerPiece) || 0;
-    const totalAmount = quantity * price;
+    const totalAmount = roundTo2(quantity * price);
 
-    if (totalAmount !== parseFloat(formData.totalAmount)) {
+    if (totalAmount !== roundTo2(parseFloat(formData.totalAmount) || 0)) {
       setFormData(prev => ({
         ...prev,
-        totalAmount: totalAmount.toString()
+        totalAmount: totalAmount.toFixed(2)
       }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -92,9 +94,9 @@ const ProductModal = ({
   useEffect(() => {
     const mrp = parseFloat(formData.mrp) || 0;
     const pricePerPiece = parseFloat(formData.pricePerPiece) || 0;
-    const profitPerPiece = mrp - pricePerPiece;
+    const profitPerPiece = roundTo2(mrp - pricePerPiece);
 
-    if (profitPerPiece.toFixed(2) !== parseFloat(formData.profitPerPiece).toFixed(2)) {
+    if (profitPerPiece !== roundTo2(parseFloat(formData.profitPerPiece) || 0)) {
       setFormData(prev => ({
         ...prev,
         profitPerPiece: profitPerPiece.toFixed(2)
@@ -185,11 +187,11 @@ const ProductModal = ({
         productName: formData.productName.trim(),
         category: formData.category.trim(),
         vendor: formData.vendor.trim(),
-        mrp: parseFloat(formData.mrp),
+        mrp: roundTo2(parseFloat(formData.mrp)),
         totalQuantity: parseFloat(formData.totalQuantity),
-        pricePerPiece: parseFloat(formData.pricePerPiece),
-        profitPerPiece: parseFloat(formData.profitPerPiece),
-        totalAmount: parseFloat(formData.totalAmount),
+        pricePerPiece: roundTo2(parseFloat(formData.pricePerPiece)),
+        profitPerPiece: roundTo2(parseFloat(formData.profitPerPiece)),
+        totalAmount: roundTo2(parseFloat(formData.totalAmount)),
         billId: formData.billId,
         billNumber: formData.billNumber,
         date: new Date()
@@ -217,20 +219,16 @@ const ProductModal = ({
     }
   };
 
-  // Category options (you can expand this list)
-  const categoryOptions = [
-    { value: '', label: 'Select Category' },
-    { value: 'Electronics', label: 'Electronics' },
-    { value: 'Clothing', label: 'Clothing' },
-    { value: 'Food & Beverages', label: 'Food & Beverages' },
-    { value: 'Home & Garden', label: 'Home & Garden' },
-    { value: 'Sports & Outdoors', label: 'Sports & Outdoors' },
-    { value: 'Books', label: 'Books' },
-    { value: 'Toys & Games', label: 'Toys & Games' },
-    { value: 'Health & Beauty', label: 'Health & Beauty' },
-    { value: 'Automotive', label: 'Automotive' },
-    { value: 'Other', label: 'Other' }
-  ];
+  // Category options from Settings (localStorage)
+  const categoryOptions = useMemo(() => {
+    const defaultCategories = ['Clothing', 'Electronics', 'Groceries', 'Accessories', 'Other'];
+    const saved = localStorage.getItem('shopCategories');
+    const categories = saved ? JSON.parse(saved) : defaultCategories;
+    return [
+      { value: '', label: 'Select Category' },
+      ...categories.map(cat => ({ value: cat, label: cat }))
+    ];
+  }, [isOpen]);
 
   const modalTitle = mode === 'edit' ? 'Edit Product' :
     (bill ? `Add Product to ${bill.billNumber}` : 'Add Product');
