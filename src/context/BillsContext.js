@@ -13,7 +13,7 @@ import {
   bulkUpdateBillStatus,
   bulkExportBillsToCSV
 } from '../firebase/billService';
-import { addShopProduct, getProductsByBill } from '../firebase/shopProductService';
+import { addShopProduct, getProductsByBill, deleteShopProduct } from '../firebase/shopProductService';
 import {
   classifyError,
   getErrorMessage,
@@ -150,9 +150,9 @@ export const BillsProvider = ({ children }) => {
             showWarning('You are offline. Changes will sync when connection is restored.');
           }
 
-          // Load products for new bills
-          const newBills = metadata?.changes?.filter(c => c.type === 'added').map(c => c.bill) || [];
-          newBills.forEach(async (bill) => {
+          // Load products for new and modified bills
+          const billsToLoadProducts = metadata?.changes?.filter(c => c.type === 'added' || c.type === 'modified').map(c => c.bill) || [];
+          billsToLoadProducts.forEach(async (bill) => {
             try {
               const products = await getProductsByBill(bill.id);
               setBillProducts(prev => ({
@@ -374,11 +374,35 @@ export const BillsProvider = ({ children }) => {
       const originalBills = [...bills];
       const billToUpdate = bills.find(b => b.id === billId);
 
+      // Separate products from bill fields
+      const { products: updatedProducts, ...billFields } = updatedData;
+
+      // Calculate totals from the updated products
+      let totals = {};
+      if (updatedProducts && updatedProducts.length > 0) {
+        const validProducts = updatedProducts.filter(p => p.productName || p.quantity || p.totalAmount);
+        totals = validProducts.reduce((acc, p) => {
+          const qty = parseFloat(p.quantity) || 0;
+          const amount = parseFloat(p.totalAmount) || 0;
+          const mrp = parseFloat(p.mrp) || 0;
+          const costPerUnit = qty > 0 ? amount / qty : 0;
+          const profitPerPiece = mrp - costPerUnit;
+          return {
+            totalQuantity: acc.totalQuantity + qty,
+            totalAmount: acc.totalAmount + amount,
+            totalProfit: acc.totalProfit + (profitPerPiece * qty),
+            productCount: acc.productCount + 1
+          };
+        }, { totalQuantity: 0, totalAmount: 0, totalProfit: 0, productCount: 0 });
+      }
+
+      const billUpdateData = { ...billFields, ...totals };
+
       setBills(prev => prev.map(bill =>
         bill.id === billId
           ? {
             ...bill,
-            ...updatedData,
+            ...billUpdateData,
             updatedAt: new Date(),
             _metadata: { ...bill._metadata, optimistic: true }
           }
@@ -386,9 +410,66 @@ export const BillsProvider = ({ children }) => {
       ));
 
       try {
+        // 1. Update the bill document (without products array)
         await retryHandler(async () => {
-          return await updateBill(billId, updatedData);
+          return await updateBill(billId, billUpdateData);
         }, { context: 'update_bill', billId, billNumber: billToUpdate?.billNumber });
+
+        // 2. Sync products: delete old products, add new ones
+        if (updatedProducts) {
+          const existingProducts = await getProductsByBill(billId);
+
+          // Delete all existing products for this bill
+          for (const oldProduct of existingProducts) {
+            try {
+              await deleteShopProduct(oldProduct.id);
+            } catch (err) {
+              console.error(`Error deleting old product ${oldProduct.id}:`, err);
+            }
+          }
+
+          // Add updated products
+          const validProducts = updatedProducts.filter(p => p.productName || p.quantity || p.totalAmount);
+          for (const p of validProducts) {
+            const qty = parseFloat(p.quantity) || 0;
+            const amount = parseFloat(p.totalAmount) || 0;
+            const mrp = parseFloat(p.mrp) || 0;
+            const costPerUnit = qty > 0 ? amount / qty : 0;
+            const profitPerPiece = mrp - costPerUnit;
+
+            const newProductData = {
+              productName: p.productName || '',
+              mrp: mrp,
+              totalQuantity: qty,
+              quantity: qty,
+              totalAmount: amount,
+              vendor: billFields.vendor || billToUpdate?.vendor || '',
+              category: p.category || 'Uncategorized',
+              status: 'in_stock',
+              costPerUnit: costPerUnit,
+              pricePerPiece: costPerUnit,
+              profitPerPiece: profitPerPiece,
+              totalProfit: profitPerPiece * qty
+            };
+
+            try {
+              await addShopProduct(newProductData, billId);
+            } catch (err) {
+              console.error(`Error adding updated product:`, err);
+            }
+          }
+
+          // Refresh billProducts for this bill
+          try {
+            const refreshedProducts = await getProductsByBill(billId);
+            setBillProducts(prev => ({
+              ...prev,
+              [billId]: refreshedProducts
+            }));
+          } catch (err) {
+            console.error('Error refreshing bill products:', err);
+          }
+        }
 
         setBills(prev => prev.map(bill =>
           bill.id === billId
@@ -444,7 +525,7 @@ export const BillsProvider = ({ children }) => {
           return await deleteBillWithProducts(billId);
         }, { context: 'delete_bill', billId, billNumber: billToDelete?.billNumber });
 
-        showSuccess(`Bill ${billToDelete?.billNumber || billId} deleted successfully!`);
+        showError(`Bill ${billToDelete?.billNumber || billId} deleted.`, { duration: 5000 });
 
         setSelectedBills(prev => {
           const newSelected = new Set(prev);
@@ -475,7 +556,7 @@ export const BillsProvider = ({ children }) => {
         } : undefined
       });
     }
-  }, [bills, showSuccess, showError]);
+  }, [bills, showError]);
 
   const handleDuplicateBill = useCallback(async (billId) => {
     const retryHandler = createRetryHandler(2, 1000);
@@ -596,10 +677,6 @@ export const BillsProvider = ({ children }) => {
 
   // Bulk operation handlers
   const handleBulkDelete = useCallback(async () => {
-    if (!window.confirm(`Are you sure you want to delete ${selectedBills.size} bills? This action cannot be undone.`)) {
-      return;
-    }
-
     setBulkActionLoading(true);
     setBulkOperationStatus({
       operation: 'Deleting',
@@ -630,7 +707,7 @@ export const BillsProvider = ({ children }) => {
       const failedBills = results.filter(r => !r.success).map(r => r.billNumber || r.billId);
 
       if (failureCount === 0) {
-        showSuccess(`Successfully deleted ${successCount} bills!`);
+        showError(`${successCount} bill${successCount !== 1 ? 's' : ''} deleted.`, { duration: 5000 });
       } else {
         showWarning(`Deleted ${successCount} bills successfully. ${failureCount} failed.`, {
           title: 'Partial Success',
@@ -663,7 +740,7 @@ export const BillsProvider = ({ children }) => {
       setBulkActionLoading(false);
       setBulkOperationStatus(null);
     }
-  }, [selectedBills, showSuccess, showWarning, showInfo, showError]);
+  }, [selectedBills, showWarning, showInfo, showError]);
 
   const handleBulkDuplicate = useCallback(async () => {
     setBulkActionLoading(true);

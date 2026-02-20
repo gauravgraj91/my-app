@@ -20,7 +20,8 @@ import {
   AlertTriangle,
   IndianRupee,
   CheckCircle,
-  Clock
+  Clock,
+  Pencil
 } from 'lucide-react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
@@ -34,6 +35,7 @@ import {
 import BillCreateModal from './BillCreateModal';
 import ProductModal from './ProductModal';
 import ConflictResolutionModal from './ConflictResolutionModal';
+import ConfirmDialog from '../ui/ConfirmDialog';
 import { useBills } from '../../context/BillsContext';
 import { getErrorMessage, getRecoveryOptions } from '../../utils/errorHandling';
 import { usePagination } from '../../hooks/usePagination';
@@ -177,7 +179,6 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
     handleSelectAll,
     clearSelection,
 
-    handleCreateBill,
     handleAddProductToBill,
 
     bulkActionLoading,
@@ -186,6 +187,9 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
     handleBulkDuplicate,
     handleBulkArchive,
     handleBulkExport,
+
+    handleEditBill,
+    handleDeleteBill,
 
     conflicts,
     showConflictModal,
@@ -222,9 +226,16 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [selectedBillForProduct, setSelectedBillForProduct] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingBill, setEditingBill] = useState(null);
 
   // Expanded rows for table
   const [expandedRows, setExpandedRows] = useState(new Set());
+
+  // Confirm dialog state
+  const [confirmDialog, setConfirmDialog] = useState({ open: false, title: '', message: '', onConfirm: null });
+  const openConfirm = (title, message, onConfirm) => setConfirmDialog({ open: true, title, message, onConfirm });
+  const closeConfirm = () => setConfirmDialog(s => ({ ...s, open: false }));
 
   // Sync external search term
   useEffect(() => {
@@ -445,11 +456,6 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
     setCurrentPage(1);
   };
 
-  const onCreateBill = async (billData) => {
-    await handleCreateBill(billData);
-    setShowCreateModal(false);
-  };
-
   const onAddProductToBill = async (productData) => {
     await handleAddProductToBill(productData, selectedBillForProduct);
     setShowAddProductModal(false);
@@ -557,6 +563,7 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
   }
 
   return (
+    <>
     <ErrorBoundary>
       <div className="bills-view" style={{ padding: '24px' }}>
         {/* Bulk Operation Loading Overlay */}
@@ -871,6 +878,9 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
                     <th style={{ ...STYLES.headerCell, textAlign: 'center' }}>
                       Status
                     </th>
+                    <th style={{ ...STYLES.headerCell, textAlign: 'center', width: '60px' }}>
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -970,12 +980,73 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
                           <td style={{ ...STYLES.tableCell, textAlign: 'center' }}>
                             {getStatusBadge(bill)}
                           </td>
+
+                          {/* Actions */}
+                          <td style={{ ...STYLES.tableCell, textAlign: 'center' }}>
+                            <div style={{ display: 'inline-flex', gap: '4px' }}>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingBill(bill);
+                                  setShowEditModal(true);
+                                }}
+                                style={{
+                                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                  background: 'none', border: '1px solid #e2e8f0', cursor: 'pointer',
+                                  padding: '6px', borderRadius: '6px', color: '#64748b',
+                                  transition: 'all 0.15s',
+                                }}
+                                onMouseEnter={e => {
+                                  e.currentTarget.style.background = '#f1f5f9';
+                                  e.currentTarget.style.color = '#1e293b';
+                                  e.currentTarget.style.borderColor = '#cbd5e1';
+                                }}
+                                onMouseLeave={e => {
+                                  e.currentTarget.style.background = 'none';
+                                  e.currentTarget.style.color = '#64748b';
+                                  e.currentTarget.style.borderColor = '#e2e8f0';
+                                }}
+                                title="Edit bill"
+                              >
+                                <Pencil size={14} />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openConfirm(
+                                    'Delete Bill',
+                                    `Delete bill ${bill.billNumber}? This cannot be undone.`,
+                                    () => { closeConfirm(); handleDeleteBill(bill.id); }
+                                  );
+                                }}
+                                style={{
+                                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                  background: 'none', border: '1px solid #e2e8f0', cursor: 'pointer',
+                                  padding: '6px', borderRadius: '6px', color: '#64748b',
+                                  transition: 'all 0.15s',
+                                }}
+                                onMouseEnter={e => {
+                                  e.currentTarget.style.background = '#fef2f2';
+                                  e.currentTarget.style.color = '#dc2626';
+                                  e.currentTarget.style.borderColor = '#fecaca';
+                                }}
+                                onMouseLeave={e => {
+                                  e.currentTarget.style.background = 'none';
+                                  e.currentTarget.style.color = '#64748b';
+                                  e.currentTarget.style.borderColor = '#e2e8f0';
+                                }}
+                                title="Delete bill"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </td>
                         </tr>
 
                         {/* Expanded Product Details */}
                         {isExpanded && (
                           <tr>
-                            <td colSpan={9} style={{ padding: 0 }}>
+                            <td colSpan={10} style={{ padding: 0 }}>
                               <div style={{
                                 background: '#f8fafc',
                                 borderBottom: '1px solid #e2e8f0',
@@ -1132,8 +1203,16 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
         <BillCreateModal
           isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
-          onSave={onCreateBill}
-          existingBills={bills}
+        />
+
+        <BillCreateModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingBill(null);
+          }}
+          mode="edit"
+          bill={editingBill}
         />
 
         <ConflictResolutionModal
@@ -1182,13 +1261,34 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
 
             <div style={{ width: '1px', height: '24px', background: '#475569' }} />
 
+            <BulkActionButton
+              icon={Pencil}
+              label="Edit"
+              onClick={() => {
+                const billId = Array.from(selectedBills)[0];
+                const billToEdit = bills.find(b => b.id === billId);
+                if (billToEdit) {
+                  setEditingBill(billToEdit);
+                  setShowEditModal(true);
+                }
+              }}
+              disabled={bulkActionLoading || selectedBills.size !== 1}
+            />
             <BulkActionButton icon={Copy} label="Duplicate" onClick={handleBulkDuplicate} disabled={bulkActionLoading} />
             <BulkActionButton icon={Archive} label="Archive" onClick={handleBulkArchive} disabled={bulkActionLoading} />
             <BulkActionButton icon={Download} label="Export" onClick={handleBulkExport} disabled={bulkActionLoading} />
 
             <div style={{ width: '1px', height: '24px', background: '#475569' }} />
 
-            <BulkActionButton icon={Trash2} label="Delete" onClick={handleBulkDelete} disabled={bulkActionLoading} variant="danger" />
+            <BulkActionButton
+              icon={Trash2} label="Delete"
+              onClick={() => openConfirm(
+                'Delete Bills',
+                `Delete ${selectedBills.size} bill${selectedBills.size !== 1 ? 's' : ''}? This cannot be undone.`,
+                () => { closeConfirm(); handleBulkDelete(); }
+              )}
+              disabled={bulkActionLoading} variant="danger"
+            />
 
             <button
               onClick={() => clearSelection()}
@@ -1208,6 +1308,15 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
         )}
       </div>
     </ErrorBoundary>
+
+    <ConfirmDialog
+      isOpen={confirmDialog.open}
+      title={confirmDialog.title}
+      message={confirmDialog.message}
+      onConfirm={confirmDialog.onConfirm}
+      onCancel={closeConfirm}
+    />
+    </>
   );
 };
 

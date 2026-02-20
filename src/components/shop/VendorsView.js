@@ -13,6 +13,7 @@ import ErrorBoundary from '../ui/ErrorBoundary';
 import { useVendors } from '../../context/VendorsContext';
 import { useBills } from '../../context/BillsContext';
 import { formatCurrency, formatDate } from '../../utils/formatters';
+import ConfirmDialog from '../ui/ConfirmDialog';
 import { useNotifications } from '../ui/NotificationSystem';
 
 // --- Styles ---
@@ -74,6 +75,10 @@ const VendorsView = ({ onNavigateToBill }) => {
 
   const { bills, billProducts } = useBills();
   const { showSuccess, showError } = useNotifications();
+
+  const [confirmDialog, setConfirmDialog] = useState({ open: false, title: '', message: '', onConfirm: null });
+  const openConfirm = (title, message, onConfirm) => setConfirmDialog({ open: true, title, message, onConfirm });
+  const closeConfirm = () => setConfirmDialog(s => ({ ...s, open: false }));
 
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
@@ -320,16 +325,22 @@ const VendorsView = ({ onNavigateToBill }) => {
     }
   };
 
-  const handleDeleteVendorClick = async (vendor) => {
+  const handleDeleteVendorClick = (vendor) => {
     if (vendor.isUnregistered) return;
-    if (!window.confirm(`Delete vendor "${vendor.name}"? This won't delete their bills.`)) return;
-    try {
-      await handleDeleteVendor(vendor.id);
-      showSuccess(`Vendor "${vendor.name}" deleted!`);
-    } catch (err) {
-      console.error('Error deleting vendor:', err);
-      showError('Failed to delete vendor. Please try again.');
-    }
+    openConfirm(
+      'Delete Vendor',
+      `Delete vendor "${vendor.name}"? This won't delete their bills.`,
+      async () => {
+        closeConfirm();
+        try {
+          await handleDeleteVendor(vendor.id);
+          showError(`Vendor "${vendor.name}" deleted.`, { duration: 5000 });
+        } catch (err) {
+          console.error('Error deleting vendor:', err);
+          showError('Failed to delete vendor. Please try again.');
+        }
+      }
+    );
   };
 
   const openAddProductModal = (vendor) => {
@@ -413,6 +424,7 @@ const VendorsView = ({ onNavigateToBill }) => {
   }
 
   return (
+    <>
     <ErrorBoundary>
       <div style={{ padding: '24px' }}>
         {/* Header */}
@@ -978,6 +990,15 @@ const VendorsView = ({ onNavigateToBill }) => {
         )}
       </div>
     </ErrorBoundary>
+
+    <ConfirmDialog
+      isOpen={confirmDialog.open}
+      title={confirmDialog.title}
+      message={confirmDialog.message}
+      onConfirm={confirmDialog.onConfirm}
+      onCancel={closeConfirm}
+    />
+    </>
   );
 };
 
