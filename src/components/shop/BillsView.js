@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Search,
   Plus,
@@ -9,25 +10,22 @@ import {
   ChevronRight,
   ChevronDown,
   ChevronUp,
-  SortAsc,
-  SortDesc,
-  X,
   CheckSquare,
   Square,
   Trash2,
-  Copy,
-  Archive,
   AlertTriangle,
   IndianRupee,
   CheckCircle,
   Clock,
-  Pencil
+  Pencil,
 } from 'lucide-react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Badge from '../ui/Badge';
 import ErrorBoundary from '../ui/ErrorBoundary';
+import SummaryCard from '../ui/SummaryCard';
+import SortableHeader from '../ui/SortableHeader';
 import {
   BillsListLoading,
   BulkOperationLoading
@@ -35,6 +33,9 @@ import {
 import BillCreateModal from './BillCreateModal';
 import ProductModal from './ProductModal';
 import ConflictResolutionModal from './ConflictResolutionModal';
+import BillExpandedRow from './BillExpandedRow';
+import BillFilters from './BillFilters';
+import BillBulkActionsBar from './BillBulkActionsBar';
 import ConfirmDialog from '../ui/ConfirmDialog';
 import { useBills } from '../../context/BillsContext';
 import { getErrorMessage, getRecoveryOptions } from '../../utils/errorHandling';
@@ -51,100 +52,6 @@ const STYLES = {
     borderBottom: '1px solid #e2e8f0', background: '#f8fafc',
   },
   tableCell: { padding: '12px 16px' },
-  subHeaderCell: {
-    padding: '10px 16px', textAlign: 'left',
-    fontSize: '11px', fontWeight: '600', color: '#94a3b8',
-    textTransform: 'uppercase', letterSpacing: '0.05em',
-    borderBottom: '1px solid #e2e8f0',
-  },
-  subTableCell: { padding: '10px 16px' },
-};
-
-// --- Extracted sub-components ---
-
-const SortableHeader = ({ field, label, style: headerStyle = {}, sortField, sortDirection, handleSort }) => (
-  <th
-    onClick={() => handleSort(field)}
-    style={{
-      padding: '12px 16px',
-      textAlign: 'left',
-      fontSize: '12px',
-      fontWeight: '600',
-      color: '#64748b',
-      textTransform: 'uppercase',
-      letterSpacing: '0.05em',
-      cursor: 'pointer',
-      userSelect: 'none',
-      whiteSpace: 'nowrap',
-      borderBottom: '1px solid #e2e8f0',
-      background: '#f8fafc',
-      transition: 'color 0.15s',
-      ...headerStyle
-    }}
-  >
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-      {label}
-      {sortField === field && (
-        sortDirection === 'asc' ? <SortAsc size={12} /> : <SortDesc size={12} />
-      )}
-    </span>
-  </th>
-);
-
-const SummaryCard = ({ label, amount, count, icon: Icon, color, bgColor }) => (
-  <div style={{
-    background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
-    padding: '20px', position: 'relative', overflow: 'hidden',
-  }}>
-    <div style={{
-      position: 'absolute', top: '16px', right: '16px',
-      width: '40px', height: '40px', borderRadius: '10px',
-      background: bgColor, display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }}>
-      <Icon size={20} color={color} />
-    </div>
-    <div style={{ fontSize: '13px', fontWeight: '500', color: '#64748b', marginBottom: '8px' }}>
-      {label}
-    </div>
-    <div style={{ fontSize: '24px', fontWeight: '800', color: color, marginBottom: '4px' }}>
-      {formatCurrency(amount)}
-    </div>
-    <div style={{ fontSize: '13px', color: '#94a3b8' }}>
-      {count} bill{count !== 1 ? 's' : ''}
-    </div>
-  </div>
-);
-
-const BulkActionButton = ({ icon: Icon, label, onClick, disabled, variant = 'default' }) => {
-  const isDanger = variant === 'danger';
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        display: 'flex', alignItems: 'center', gap: '6px',
-        background: isDanger ? '#dc2626' : 'none', border: 'none',
-        color: isDanger ? 'white' : '#cbd5e1',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        fontSize: '13px', fontWeight: isDanger ? '600' : '500',
-        padding: isDanger ? '6px 12px' : '6px 10px',
-        borderRadius: '8px', transition: 'all 0.15s',
-        opacity: disabled ? 0.5 : 1,
-      }}
-      onMouseEnter={e => {
-        if (!disabled) {
-          if (isDanger) { e.currentTarget.style.background = '#b91c1c'; }
-          else { e.currentTarget.style.background = '#334155'; e.currentTarget.style.color = 'white'; }
-        }
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.background = isDanger ? '#dc2626' : 'none';
-        e.currentTarget.style.color = isDanger ? 'white' : '#cbd5e1';
-      }}
-    >
-      <Icon size={14} /> {label}
-    </button>
-  );
 };
 
 // --- Range filter helper ---
@@ -165,7 +72,9 @@ const applyRangeFilter = (items, getValue, min, max) => {
   return result;
 };
 
-const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductClick }) => {
+const BillsView = () => {
+  const location = useLocation();
+  const initialSearchApplied = useRef(false);
   const {
     bills,
     billProducts,
@@ -200,8 +109,16 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
     retrySubscription,
   } = useBills();
 
+  // Pick up search term from navigation state (e.g. from Products/Vendors "View Bill" links)
+  useEffect(() => {
+    if (location.state?.search && !initialSearchApplied.current) {
+      setSearchTerm(location.state.search);
+      initialSearchApplied.current = true;
+    }
+  }, [location.state]);
+
   // Local UI state
-  const [searchTerm, setSearchTerm] = useState(externalSearchTerm || '');
+  const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
     vendor: '',
     startDate: '',
@@ -237,13 +154,6 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
   const openConfirm = (title, message, onConfirm) => setConfirmDialog({ open: true, title, message, onConfirm });
   const closeConfirm = () => setConfirmDialog(s => ({ ...s, open: false }));
 
-  // Sync external search term
-  useEffect(() => {
-    if (externalSearchTerm !== undefined) {
-      setSearchTerm(externalSearchTerm);
-    }
-  }, [externalSearchTerm]);
-
   // Compute summary stats
   const summaryStats = useMemo(() => {
     const now = new Date();
@@ -276,7 +186,7 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
       }
     });
 
-    const sum = (arr) => arr.reduce((acc, b) => acc + (b.totalAmount || 0), 0);
+    const sum = (arr) => arr.reduce((acc, b) => acc + (b.finalAmount || b.totalAmount || 0), 0);
 
     return {
       total: { count: bills.length, amount: sum(bills) },
@@ -352,7 +262,7 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
       });
     }
 
-    result = applyRangeFilter(result, bill => bill.totalAmount || 0, filters.minAmount, filters.maxAmount);
+    result = applyRangeFilter(result, bill => bill.finalAmount || bill.totalAmount || 0, filters.minAmount, filters.maxAmount);
 
     if (filters.status && filters.status !== '') {
       if (activeStatusTab === 'overdue') {
@@ -378,8 +288,8 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
 
     // Sorting
     result.sort((a, b) => {
-      let aValue = a[sortField];
-      let bValue = b[sortField];
+      let aValue = sortField === 'totalAmount' ? (a.finalAmount || a.totalAmount) : a[sortField];
+      let bValue = sortField === 'totalAmount' ? (b.finalAmount || b.totalAmount) : b[sortField];
 
       if (sortField === 'date' || sortField === 'dueDate') {
         aValue = a[sortField]?.toDate ? a[sortField].toDate() :
@@ -641,10 +551,10 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
           gap: '16px',
           marginBottom: '24px',
         }}>
-          <SummaryCard label="Total Bills" amount={summaryStats.total.amount} count={summaryStats.total.count} icon={IndianRupee} color="#0f172a" bgColor="#f1f5f9" />
-          <SummaryCard label="Paid" amount={summaryStats.paid.amount} count={summaryStats.paid.count} icon={CheckCircle} color="#10b981" bgColor="#ecfdf5" />
-          <SummaryCard label="Pending" amount={summaryStats.pending.amount} count={summaryStats.pending.count} icon={Clock} color="#f59e0b" bgColor="#fff7ed" />
-          <SummaryCard label="Overdue" amount={summaryStats.overdue.amount} count={summaryStats.overdue.count} icon={AlertTriangle} color="#ef4444" bgColor="#fef2f2" />
+          <SummaryCard label="Total Bills" amount={summaryStats.total.amount} subtitle={`${summaryStats.total.count} bill${summaryStats.total.count !== 1 ? 's' : ''}`} icon={IndianRupee} color="#0f172a" bgColor="#f1f5f9" />
+          <SummaryCard label="Paid" amount={summaryStats.paid.amount} subtitle={`${summaryStats.paid.count} bill${summaryStats.paid.count !== 1 ? 's' : ''}`} icon={CheckCircle} color="#10b981" bgColor="#ecfdf5" />
+          <SummaryCard label="Pending" amount={summaryStats.pending.amount} subtitle={`${summaryStats.pending.count} bill${summaryStats.pending.count !== 1 ? 's' : ''}`} icon={Clock} color="#f59e0b" bgColor="#fff7ed" />
+          <SummaryCard label="Overdue" amount={summaryStats.overdue.amount} subtitle={`${summaryStats.overdue.count} bill${summaryStats.overdue.count !== 1 ? 's' : ''}`} icon={AlertTriangle} color="#ef4444" bgColor="#fef2f2" />
         </div>
 
         {/* ===== SEARCH BAR + STATUS TABS ===== */}
@@ -657,11 +567,7 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
               placeholder="Search bills by number, vendor, notes, or products..."
               icon={<Search size={14} />}
               value={searchTerm}
-              onChange={(e) => {
-                const newValue = e.target.value;
-                setSearchTerm(newValue);
-                if (onSearchChange) onSearchChange(newValue);
-              }}
+              onChange={(e) => setSearchTerm(e.target.value)}
               containerStyle={{ marginBottom: 0 }}
               style={{ background: '#fff', border: '1px solid #e2e8f0', fontSize: '13px', padding: '10px 12px' }}
             />
@@ -711,129 +617,7 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
 
         {/* ===== ADVANCED FILTERS PANEL ===== */}
         {showFilters && (
-          <Card style={{ marginBottom: '16px', padding: '16px' }}>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '16px', marginBottom: '16px'
-            }}>
-              <Input
-                label="Vendor"
-                placeholder="Filter by vendor name"
-                value={filters.vendor}
-                onChange={(e) => handleFilterChange('vendor', e.target.value)}
-              />
-              <Input
-                label="Start Date"
-                type="date"
-                value={filters.startDate}
-                onChange={(e) => handleFilterChange('startDate', e.target.value)}
-              />
-              <Input
-                label="End Date"
-                type="date"
-                value={filters.endDate}
-                onChange={(e) => handleFilterChange('endDate', e.target.value)}
-              />
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '16px', marginBottom: '16px'
-            }}>
-              <Input
-                label="Min Amount"
-                type="number"
-                placeholder="0"
-                min="0"
-                step="0.01"
-                value={filters.minAmount}
-                onChange={(e) => handleFilterChange('minAmount', e.target.value)}
-              />
-              <Input
-                label="Max Amount"
-                type="number"
-                placeholder="100000"
-                min="0"
-                step="0.01"
-                value={filters.maxAmount}
-                onChange={(e) => handleFilterChange('maxAmount', e.target.value)}
-              />
-              <Input
-                label="Min Profit"
-                type="number"
-                placeholder="0"
-                step="0.01"
-                value={filters.minProfit}
-                onChange={(e) => handleFilterChange('minProfit', e.target.value)}
-              />
-              <Input
-                label="Max Profit"
-                type="number"
-                placeholder="10000"
-                step="0.01"
-                value={filters.maxProfit}
-                onChange={(e) => handleFilterChange('maxProfit', e.target.value)}
-              />
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '16px', marginBottom: '16px'
-            }}>
-              <Input
-                label="Min Product Count"
-                type="number"
-                placeholder="1"
-                min="0"
-                step="1"
-                value={filters.minProductCount}
-                onChange={(e) => handleFilterChange('minProductCount', e.target.value)}
-              />
-              <Input
-                label="Max Product Count"
-                type="number"
-                placeholder="100"
-                min="0"
-                step="1"
-                value={filters.maxProductCount}
-                onChange={(e) => handleFilterChange('maxProductCount', e.target.value)}
-              />
-              <div style={{ display: 'flex', alignItems: 'end' }}>
-                <Button
-                  variant="outline"
-                  onClick={clearFilters}
-                  icon={<X size={16} />}
-                >
-                  Clear All Filters
-                </Button>
-              </div>
-            </div>
-
-            {Object.values(filters).some(value => value !== '') && (
-              <div style={{
-                background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px',
-                padding: '12px', fontSize: '14px', color: '#64748b'
-              }}>
-                <strong>Active Filters:</strong>{' '}
-                {Object.entries(filters)
-                  .filter(([_, value]) => value !== '')
-                  .map(([key, value]) => {
-                    const filterLabels = {
-                      vendor: 'Vendor', startDate: 'Start Date', endDate: 'End Date',
-                      minAmount: 'Min Amount', maxAmount: 'Max Amount',
-                      minProfit: 'Min Profit', maxProfit: 'Max Profit',
-                      minProductCount: 'Min Products', maxProductCount: 'Max Products',
-                      status: 'Status'
-                    };
-                    return `${filterLabels[key]}: ${value}`;
-                  })
-                  .join(', ')}
-              </div>
-            )}
-          </Card>
+          <BillFilters filters={filters} onFilterChange={handleFilterChange} onClear={clearFilters} />
         )}
 
         {/* ===== TABLE ===== */}
@@ -972,8 +756,13 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
                           {/* Amount */}
                           <td style={{ ...STYLES.tableCell, textAlign: 'right' }}>
                             <span style={{ fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>
-                              {formatCurrency(bill.totalAmount)}
+                              {formatCurrency(bill.finalAmount || bill.totalAmount)}
                             </span>
+                            {bill.finalAmount && bill.finalAmount !== bill.totalAmount && (
+                              <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+                                Base: {formatCurrency(bill.totalAmount)}
+                              </div>
+                            )}
                           </td>
 
                           {/* Status */}
@@ -1045,99 +834,7 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
 
                         {/* Expanded Product Details */}
                         {isExpanded && (
-                          <tr>
-                            <td colSpan={10} style={{ padding: 0 }}>
-                              <div style={{
-                                background: '#f8fafc',
-                                borderBottom: '1px solid #e2e8f0',
-                                padding: '0',
-                              }}>
-                                {products.length > 0 ? (
-                                  <table style={{ width: '100%', borderCollapse: 'collapse', margin: '0' }}>
-                                    <thead>
-                                      <tr>
-                                        <th style={{ ...STYLES.subHeaderCell, padding: '10px 20px 10px 60px' }}>
-                                          Product
-                                        </th>
-                                        <th style={STYLES.subHeaderCell}>
-                                          Category
-                                        </th>
-                                        <th style={{ ...STYLES.subHeaderCell, textAlign: 'right' }}>
-                                          Qty
-                                        </th>
-                                        <th style={{ ...STYLES.subHeaderCell, textAlign: 'right' }}>
-                                          MRP
-                                        </th>
-                                        <th style={{ ...STYLES.subHeaderCell, padding: '10px 20px 10px 16px', textAlign: 'right' }}>
-                                          Amount
-                                        </th>
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                      {products.map((product, pIdx) => (
-                                        <tr
-                                          key={product.id || pIdx}
-                                          style={{
-                                            borderBottom: pIdx < products.length - 1 ? '1px solid #eef0f2' : 'none',
-                                            cursor: onProductClick ? 'pointer' : 'default',
-                                            transition: 'background 0.1s',
-                                          }}
-                                          onClick={() => onProductClick && onProductClick(product)}
-                                          onMouseEnter={(e) => {
-                                            if (onProductClick) e.currentTarget.style.background = '#eef2ff';
-                                          }}
-                                          onMouseLeave={(e) => {
-                                            if (onProductClick) e.currentTarget.style.background = 'transparent';
-                                          }}
-                                        >
-                                          <td style={{ ...STYLES.subTableCell, padding: '10px 20px 10px 60px' }}>
-                                            <span style={{
-                                              fontSize: '13px', fontWeight: '600',
-                                              color: product.productName ? '#1e293b' : '#d97706',
-                                              display: 'flex', alignItems: 'center', gap: '4px',
-                                            }}>
-                                              {!product.productName && <AlertTriangle size={12} color="#d97706" />}
-                                              {product.productName || 'Unnamed Product'}
-                                            </span>
-                                          </td>
-                                          <td style={STYLES.subTableCell}>
-                                            <span style={{
-                                              fontSize: '12px', color: '#94a3b8',
-                                              background: '#eef0f2', padding: '1px 6px', borderRadius: '4px',
-                                            }}>
-                                              {product.category || '-'}
-                                            </span>
-                                          </td>
-                                          <td style={{ ...STYLES.subTableCell, textAlign: 'right' }}>
-                                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#334155' }}>
-                                              {product.totalQuantity || product.quantity || 0}
-                                            </span>
-                                          </td>
-                                          <td style={{ ...STYLES.subTableCell, textAlign: 'right' }}>
-                                            <span style={{ fontSize: '13px', color: '#64748b' }}>
-                                              {formatCurrency(product.mrp || product.pricePerPiece)}
-                                            </span>
-                                          </td>
-                                          <td style={{ ...STYLES.subTableCell, padding: '10px 20px 10px 16px', textAlign: 'right' }}>
-                                            <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
-                                              {formatCurrency(product.totalAmount)}
-                                            </span>
-                                          </td>
-                                        </tr>
-                                      ))}
-                                    </tbody>
-                                  </table>
-                                ) : (
-                                  <div style={{
-                                    padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '13px',
-                                  }}>
-                                    <Package size={24} style={{ margin: '0 auto 8px', opacity: 0.4 }} />
-                                    <div>No products in this bill</div>
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
+                          <BillExpandedRow bill={bill} products={products} />
                         )}
                       </React.Fragment>
                     );
@@ -1235,77 +932,24 @@ const BillsView = ({ searchTerm: externalSearchTerm, onSearchChange, onProductCl
         />
 
         {/* ===== FLOATING BULK ACTIONS BAR ===== */}
-        {selectedBills.size > 0 && (
-          <div style={{
-            position: 'fixed', bottom: '24px', left: '50%',
-            transform: 'translateX(-50%)',
-            display: 'flex', alignItems: 'center', gap: '12px',
-            background: '#1e293b', color: 'white',
-            padding: '12px 20px', borderRadius: '14px',
-            boxShadow: '0 12px 40px rgba(0,0,0,0.25)',
-            zIndex: 1000,
-            animation: 'slideUp 0.25s ease-out',
-          }}>
-            <span style={{
-              fontSize: '13px', fontWeight: '600',
-              display: 'flex', alignItems: 'center', gap: '8px'
-            }}>
-              <span style={{
-                background: '#3b82f6', padding: '2px 8px', borderRadius: '10px',
-                fontSize: '12px', fontWeight: '700'
-              }}>
-                {selectedBills.size}
-              </span>
-              selected
-            </span>
-
-            <div style={{ width: '1px', height: '24px', background: '#475569' }} />
-
-            <BulkActionButton
-              icon={Pencil}
-              label="Edit"
-              onClick={() => {
-                const billId = Array.from(selectedBills)[0];
-                const billToEdit = bills.find(b => b.id === billId);
-                if (billToEdit) {
-                  setEditingBill(billToEdit);
-                  setShowEditModal(true);
-                }
-              }}
-              disabled={bulkActionLoading || selectedBills.size !== 1}
-            />
-            <BulkActionButton icon={Copy} label="Duplicate" onClick={handleBulkDuplicate} disabled={bulkActionLoading} />
-            <BulkActionButton icon={Archive} label="Archive" onClick={handleBulkArchive} disabled={bulkActionLoading} />
-            <BulkActionButton icon={Download} label="Export" onClick={handleBulkExport} disabled={bulkActionLoading} />
-
-            <div style={{ width: '1px', height: '24px', background: '#475569' }} />
-
-            <BulkActionButton
-              icon={Trash2} label="Delete"
-              onClick={() => openConfirm(
-                'Delete Bills',
-                `Delete ${selectedBills.size} bill${selectedBills.size !== 1 ? 's' : ''}? This cannot be undone.`,
-                () => { closeConfirm(); handleBulkDelete(); }
-              )}
-              disabled={bulkActionLoading} variant="danger"
-            />
-
-            <button
-              onClick={() => clearSelection()}
-              style={{
-                display: 'flex', alignItems: 'center',
-                background: 'none', border: 'none', color: '#64748b',
-                cursor: 'pointer', padding: '6px', borderRadius: '8px',
-                transition: 'all 0.15s', marginLeft: '4px',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#94a3b8'; }}
-              onMouseLeave={e => { e.currentTarget.style.color = '#64748b'; }}
-              title="Clear selection"
-            >
-              <X size={16} />
-            </button>
-          </div>
-        )}
+        <BillBulkActionsBar
+          selectedBills={selectedBills}
+          bills={bills}
+          bulkActionLoading={bulkActionLoading}
+          onEdit={(billToEdit) => {
+            setEditingBill(billToEdit);
+            setShowEditModal(true);
+          }}
+          onDuplicate={handleBulkDuplicate}
+          onArchive={handleBulkArchive}
+          onExport={handleBulkExport}
+          onDelete={() => openConfirm(
+            'Delete Bills',
+            `Delete ${selectedBills.size} bill${selectedBills.size !== 1 ? 's' : ''}? This cannot be undone.`,
+            () => { closeConfirm(); handleBulkDelete(); }
+          )}
+          onClear={clearSelection}
+        />
       </div>
     </ErrorBoundary>
 

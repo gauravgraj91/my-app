@@ -1,59 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  Search, X, Package, Tag, IndianRupee, TrendingUp,
-  SortAsc, SortDesc
+  Search, X, Package, Tag, IndianRupee, TrendingUp
 } from 'lucide-react';
 import { subscribeToShopProducts } from '../../firebase/shopProductService';
 import { formatCurrency, formatDate } from '../../utils/formatters';
+import SummaryCard from '../ui/SummaryCard';
+import SortableHeader from '../ui/SortableHeader';
 
 // --- Styles ---
 const STYLES = {
-  headerCell: {
-    padding: '12px 16px', textAlign: 'left',
-    fontSize: '12px', fontWeight: '600', color: '#64748b',
-    textTransform: 'uppercase', letterSpacing: '0.05em',
-    borderBottom: '1px solid #e2e8f0', background: '#f8fafc',
-    cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap',
-    transition: 'color 0.15s',
-  },
   tableCell: { padding: '12px 16px' },
 };
-
-const SortableHeader = ({ field, label, style: headerStyle = {}, sortField, sortDirection, handleSort }) => (
-  <th
-    onClick={() => handleSort(field)}
-    style={{ ...STYLES.headerCell, ...headerStyle }}
-  >
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-      {label}
-      {sortField === field && (
-        sortDirection === 'asc' ? <SortAsc size={12} /> : <SortDesc size={12} />
-      )}
-    </span>
-  </th>
-);
-
-const SummaryCard = ({ label, value, subtitle, icon: Icon, color, bgColor }) => (
-  <div style={{
-    background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
-    padding: '20px', position: 'relative', overflow: 'hidden',
-  }}>
-    <div style={{
-      position: 'absolute', top: '16px', right: '16px',
-      width: '40px', height: '40px', borderRadius: '10px',
-      background: bgColor, display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }}>
-      <Icon size={20} color={color} />
-    </div>
-    <div style={{ fontSize: '13px', fontWeight: '500', color: '#64748b', marginBottom: '8px' }}>
-      {label}
-    </div>
-    <div style={{ fontSize: '24px', fontWeight: '800', color: color, marginBottom: '4px' }}>
-      {value}
-    </div>
-    <div style={{ fontSize: '13px', color: '#94a3b8' }}>{subtitle}</div>
-  </div>
-);
 
 const PriceList = () => {
   const [products, setProducts] = useState([]);

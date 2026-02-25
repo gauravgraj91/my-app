@@ -342,36 +342,36 @@ export const BillsProvider = ({ children }) => {
         });
         const netAdjustment = -charges.discountAmount + charges.surchargeAmount + charges.transportCost;
 
-        for (const p of productsToAdd) {
-          const qty = parseFloat(p.quantity) || 0;
-          const amount = parseFloat(p.totalAmount) || 0;
-          const mrp = parseFloat(p.mrp) || 0;
+        const productPromises = productsToAdd
+          .filter(p => p.productName || (parseFloat(p.quantity) || 0) > 0 || (parseFloat(p.totalAmount) || 0) > 0)
+          .map(p => {
+            const qty = parseFloat(p.quantity) || 0;
+            const amount = parseFloat(p.totalAmount) || 0;
+            const mrp = parseFloat(p.mrp) || 0;
 
-          if (!p.productName && qty === 0 && amount === 0) continue;
+            // Distribute bill charges proportionally
+            const share = baseTotalAmount > 0 ? netAdjustment * (amount / baseTotalAmount) : 0;
+            const effectiveAmount = amount + share;
+            const costPerUnit = qty > 0 ? Math.round((effectiveAmount / qty + Number.EPSILON) * 100) / 100 : 0;
+            const profitPerPiece = Math.round((mrp - costPerUnit + Number.EPSILON) * 100) / 100;
 
-          // Distribute bill charges proportionally
-          const share = baseTotalAmount > 0 ? netAdjustment * (amount / baseTotalAmount) : 0;
-          const effectiveAmount = amount + share;
-          const costPerUnit = qty > 0 ? Math.round((effectiveAmount / qty + Number.EPSILON) * 100) / 100 : 0;
-          const profitPerPiece = Math.round((mrp - costPerUnit + Number.EPSILON) * 100) / 100;
+            return addShopProduct({
+              productName: p.productName || '',
+              mrp: mrp,
+              totalQuantity: qty,
+              quantity: qty,
+              totalAmount: amount,
+              vendor: billData.vendor,
+              category: 'Uncategorized',
+              status: 'in_stock',
+              costPerUnit: costPerUnit,
+              pricePerPiece: costPerUnit,
+              profitPerPiece: profitPerPiece,
+              totalProfit: Math.round((profitPerPiece * qty + Number.EPSILON) * 100) / 100
+            }, bill.id);
+          });
 
-          const newProductData = {
-            productName: p.productName || '',
-            mrp: mrp,
-            totalQuantity: qty,
-            quantity: qty,
-            totalAmount: amount,
-            vendor: billData.vendor,
-            category: 'Uncategorized',
-            status: 'in_stock',
-            costPerUnit: costPerUnit,
-            pricePerPiece: costPerUnit,
-            profitPerPiece: profitPerPiece,
-            totalProfit: Math.round((profitPerPiece * qty + Number.EPSILON) * 100) / 100
-          };
-
-          await addShopProduct(newProductData, bill.id);
-        }
+        await Promise.all(productPromises);
 
         return bill;
       }, { context: 'create_bill', billNumber: billData.billNumber });
@@ -459,32 +459,29 @@ export const BillsProvider = ({ children }) => {
         if (updatedProducts) {
           const existingProducts = await getProductsByBill(billId);
 
-          // Delete all existing products for this bill
-          for (const oldProduct of existingProducts) {
-            try {
-              await deleteShopProduct(oldProduct.id);
-            } catch (err) {
-              console.error(`Error deleting old product ${oldProduct.id}:`, err);
-            }
-          }
+          // Delete all existing products in parallel
+          await Promise.all(
+            existingProducts.map(p => deleteShopProduct(p.id).catch(err =>
+              console.error(`Error deleting old product ${p.id}:`, err)
+            ))
+          );
 
-          // Add updated products with distributed charges
+          // Add updated products in parallel with distributed charges
           const validProducts = updatedProducts.filter(p => p.productName || p.quantity || p.totalAmount);
           const editNetAdjustment = -extraCharges.discountAmount + extraCharges.surchargeAmount + extraCharges.transportCost;
           const editBaseTotalAmount = totals.totalAmount || 0;
 
-          for (const p of validProducts) {
+          await Promise.all(validProducts.map(p => {
             const qty = parseFloat(p.quantity) || 0;
             const amount = parseFloat(p.totalAmount) || 0;
             const mrp = parseFloat(p.mrp) || 0;
 
-            // Distribute bill charges proportionally
             const share = editBaseTotalAmount > 0 ? editNetAdjustment * (amount / editBaseTotalAmount) : 0;
             const effectiveAmount = amount + share;
             const costPerUnit = qty > 0 ? Math.round((effectiveAmount / qty + Number.EPSILON) * 100) / 100 : 0;
             const profitPerPiece = Math.round((mrp - costPerUnit + Number.EPSILON) * 100) / 100;
 
-            const newProductData = {
+            return addShopProduct({
               productName: p.productName || '',
               mrp: mrp,
               totalQuantity: qty,
@@ -497,14 +494,10 @@ export const BillsProvider = ({ children }) => {
               pricePerPiece: costPerUnit,
               profitPerPiece: profitPerPiece,
               totalProfit: Math.round((profitPerPiece * qty + Number.EPSILON) * 100) / 100
-            };
-
-            try {
-              await addShopProduct(newProductData, billId);
-            } catch (err) {
-              console.error(`Error adding updated product:`, err);
-            }
-          }
+            }, billId).catch(err =>
+              console.error(`Error adding updated product:`, err)
+            );
+          }));
 
           // Refresh billProducts for this bill
           try {

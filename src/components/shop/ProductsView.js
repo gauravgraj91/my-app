@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Search, X, Download, Plus, Trash2, Pencil,
   Link2, Unlink, CheckSquare, Square, Filter,
-  Package, TrendingUp, IndianRupee, SortAsc, SortDesc, Tag
+  Package, TrendingUp, IndianRupee, Tag
 } from 'lucide-react';
 import ProductModal from './ProductModal';
 import AssignBillModal from './AssignBillModal';
+import SummaryCard from '../ui/SummaryCard';
+import SortableHeader from '../ui/SortableHeader';
 import ConfirmDialog from '../ui/ConfirmDialog';
 import { useNotifications } from '../ui/NotificationSystem';
 import {
@@ -17,6 +20,7 @@ import {
   removeProductFromBill
 } from '../../firebase/shopProductService';
 import { formatCurrency, formatDate } from '../../utils/formatters';
+import { addLog } from '../../utils/activityLog';
 
 const defaultCategories = ['Clothing', 'Electronics', 'Groceries', 'Accessories', 'Other'];
 const defaultVendors = ['ABC Suppliers', 'XYZ Distributors', 'Local Market', 'Online Store', 'Direct Import', 'Other'];
@@ -33,49 +37,6 @@ function getDefaultVendor() {
   const saved = localStorage.getItem('shopDefaultVendor');
   return saved ? saved : defaultVendors[0];
 }
-
-const SummaryCard = ({ label, amount, value, count, subtitle, icon: Icon, color, bgColor }) => (
-  <div style={{
-    background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
-    padding: '24px', minHeight: '120px', position: 'relative', overflow: 'hidden',
-  }}>
-    <div style={{
-      position: 'absolute', top: '16px', right: '16px',
-      width: '40px', height: '40px', borderRadius: '10px',
-      background: bgColor, display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }}>
-      <Icon size={20} color={color} />
-    </div>
-    <div style={{ fontSize: '13px', fontWeight: '500', color: '#64748b', marginBottom: '8px' }}>
-      {label}
-    </div>
-    <div style={{ fontSize: '24px', fontWeight: '800', color: color, marginBottom: '4px' }}>
-      {value !== undefined ? value : formatCurrency(amount)}
-    </div>
-    <div style={{ fontSize: '13px', color: '#94a3b8' }}>
-      {subtitle || `${count} product${count !== 1 ? 's' : ''}`}
-    </div>
-  </div>
-);
-
-const SortableHeader = ({ field, label, style: headerStyle = {}, onSort, sortColumn, sortDirection }) => (
-  <th
-    onClick={() => onSort(field)}
-    style={{
-      padding: '12px 16px', textAlign: 'left', fontSize: '12px',
-      fontWeight: '600', color: '#64748b', textTransform: 'uppercase',
-      letterSpacing: '0.05em', cursor: 'pointer', userSelect: 'none',
-      whiteSpace: 'nowrap', borderBottom: '1px solid #e2e8f0',
-      background: '#f8fafc', transition: 'color 0.15s',
-      ...headerStyle
-    }}
-  >
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-      {label}
-      {sortColumn === field && (sortDirection === 'asc' ? <SortAsc size={12} /> : <SortDesc size={12} />)}
-    </span>
-  </th>
-);
 
 const getCategoryBadge = (cat) => {
   let bgColor = '#f1f5f9';
@@ -97,7 +58,9 @@ const getCategoryBadge = (cat) => {
   );
 };
 
-const ProductsView = ({ onNavigateToBill }) => {
+const ProductsView = () => {
+  const navigate = useNavigate();
+  const onNavigateToBill = (billNumber) => navigate('/shop/bills', { state: { search: billNumber } });
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingCell, setEditingCell] = useState(null);
@@ -187,6 +150,7 @@ const ProductsView = ({ onNavigateToBill }) => {
         mrp: 0, totalQuantity: 0, totalAmount: 0, pricePerPiece: 0, profitPerPiece: 0,
       });
       showSuccess('Product added successfully!');
+      addLog('created', 'Product', 'product', 'Products');
     } catch (error) {
       showError('Failed to add product. Please try again.');
     }
@@ -201,6 +165,7 @@ const ProductsView = ({ onNavigateToBill }) => {
         try {
           await deleteShopProduct(id);
           showError('Product deleted.', { duration: 5000 });
+          addLog('deleted', 'Product', 'product', 'Products');
         } catch (error) {
           showError('Failed to delete product. Please try again.');
         }
@@ -214,6 +179,7 @@ const ProductsView = ({ onNavigateToBill }) => {
     try {
       await updateShopProduct(updatedProduct.id, updatedProduct);
       showSuccess('Product updated successfully!');
+      addLog('updated', 'Product', 'product', 'Products');
       setModalOpen(false);
       setSelectedProduct(null);
     } catch (error) {
@@ -245,6 +211,7 @@ const ProductsView = ({ onNavigateToBill }) => {
           ? `Product assigned to ${bill.billNumber}!`
           : `${productsToAssign.length} products assigned to ${bill.billNumber}!`
       );
+      addLog('assigned', (productsToAssign.length === 1 ? 'Product' : productsToAssign.length + ' products') + ' \u2192 ' + bill.billNumber, 'product', 'Products');
       setSelectedProducts(new Set());
       setShowBulkActions(false);
     } catch (error) {
@@ -262,6 +229,7 @@ const ProductsView = ({ onNavigateToBill }) => {
         try {
           await removeProductFromBill(product.id);
           showError(`Product removed from ${product.billNumber}.`, { duration: 5000 });
+          addLog('removed', 'Product from ' + product.billNumber, 'product', 'Products');
         } catch (error) {
           console.error('Error removing from bill:', error);
           showError('Failed to remove product from bill');
@@ -300,6 +268,7 @@ const ProductsView = ({ onNavigateToBill }) => {
         try {
           for (const productId of selectedProducts) await deleteShopProduct(productId);
           showError(`${count} product${count !== 1 ? 's' : ''} deleted.`, { duration: 5000 });
+          addLog('deleted', count + ' products', 'product', 'Products');
           setSelectedProducts(new Set());
           setShowBulkActions(false);
         } catch (error) {
@@ -377,8 +346,8 @@ const ProductsView = ({ onNavigateToBill }) => {
       headers.join(','),
       ...processedData.map(row =>
         [row.billNumber, formatDate(row.date), row.productName, row.category,
-          row.mrp, row.totalQuantity, row.totalAmount, row.pricePerPiece,
-          row.profitPerPiece, (row.profitPerPiece * row.totalQuantity),
+        row.mrp, row.totalQuantity, row.totalAmount, row.pricePerPiece,
+        row.profitPerPiece, (row.profitPerPiece * row.totalQuantity),
         ].map(val => `"${val ?? ''}"`).join(',')
       )
     ].join('\n');
@@ -424,11 +393,11 @@ const ProductsView = ({ onNavigateToBill }) => {
   }
 
   return (
-    <>
+    <div style={{ padding: '24px' }}>
       {/* ===== HEADER ===== */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-        marginBottom: '24px', flexWrap: 'wrap', gap: '12px', padding: '0 4px',
+        marginBottom: '24px', flexWrap: 'wrap', gap: '12px',
       }}>
         <div>
           <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: '0 0 4px 0', letterSpacing: '-0.02em' }}>
@@ -634,14 +603,14 @@ const ProductsView = ({ onNavigateToBill }) => {
                         : <Square size={16} color="#94a3b8" />}
                     </button>
                   </th>
-                  <SortableHeader field="billNumber" label="Bill #" onSort={handleSort} sortColumn={sortColumn} sortDirection={sortDirection} />
-                  <SortableHeader field="date" label="Date" onSort={handleSort} sortColumn={sortColumn} sortDirection={sortDirection} />
-                  <SortableHeader field="productName" label="Product Name" onSort={handleSort} sortColumn={sortColumn} sortDirection={sortDirection} />
-                  <SortableHeader field="category" label="Category" onSort={handleSort} sortColumn={sortColumn} sortDirection={sortDirection} />
-                  <SortableHeader field="vendor" label="Vendor" onSort={handleSort} sortColumn={sortColumn} sortDirection={sortDirection} />
-                  <SortableHeader field="mrp" label="MRP" style={{ textAlign: 'right' }} onSort={handleSort} sortColumn={sortColumn} sortDirection={sortDirection} />
-                  <SortableHeader field="totalQuantity" label="Qty" style={{ textAlign: 'right' }} onSort={handleSort} sortColumn={sortColumn} sortDirection={sortDirection} />
-                  <SortableHeader field="totalAmount" label="Nett Amount" style={{ textAlign: 'right' }} onSort={handleSort} sortColumn={sortColumn} sortDirection={sortDirection} />
+                  <SortableHeader field="billNumber" label="Bill #" handleSort={handleSort} sortField={sortColumn} sortDirection={sortDirection} />
+                  <SortableHeader field="date" label="Date" handleSort={handleSort} sortField={sortColumn} sortDirection={sortDirection} />
+                  <SortableHeader field="productName" label="Product Name" handleSort={handleSort} sortField={sortColumn} sortDirection={sortDirection} />
+                  <SortableHeader field="category" label="Category" handleSort={handleSort} sortField={sortColumn} sortDirection={sortDirection} />
+                  <SortableHeader field="vendor" label="Vendor" handleSort={handleSort} sortField={sortColumn} sortDirection={sortDirection} />
+                  <SortableHeader field="mrp" label="MRP" style={{ textAlign: 'right' }} handleSort={handleSort} sortField={sortColumn} sortDirection={sortDirection} />
+                  <SortableHeader field="totalQuantity" label="Qty" style={{ textAlign: 'right' }} handleSort={handleSort} sortField={sortColumn} sortDirection={sortDirection} />
+                  <SortableHeader field="totalAmount" label="Nett Amount" style={{ textAlign: 'right' }} handleSort={handleSort} sortField={sortColumn} sortDirection={sortDirection} />
                   <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
                     Total Profit
                   </th>
@@ -885,7 +854,7 @@ const ProductsView = ({ onNavigateToBill }) => {
         onConfirm={confirmDialog.onConfirm}
         onCancel={closeConfirm}
       />
-    </>
+    </div>
   );
 };
 

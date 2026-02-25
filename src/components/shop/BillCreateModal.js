@@ -26,7 +26,10 @@ const BillCreateModal = ({
     date: new Date().toISOString().split('T')[0],
     vendor: '',
     notes: '',
-    status: 'active'
+    status: 'active',
+    discountPercent: '',
+    surchargePercent: '',
+    transportCost: ''
   });
 
   const [formData, setFormData] = useState(getInitialFormData());
@@ -48,7 +51,10 @@ const BillCreateModal = ({
         date: dateStr,
         vendor: bill.vendor || '',
         notes: bill.notes || '',
-        status: bill.status || 'active'
+        status: bill.status || 'active',
+        discountPercent: bill.discountPercent ? String(bill.discountPercent) : '',
+        surchargePercent: bill.surchargePercent ? String(bill.surchargePercent) : '',
+        transportCost: bill.transportCost ? String(bill.transportCost) : ''
       });
 
       // Load existing products into the products array
@@ -72,9 +78,10 @@ const BillCreateModal = ({
     }
   }, [isOpen, isEditMode, bill, existingBills]);
 
-  // Calculate per-product derived values and grand totals
-  const { productCalcs, grandTotals } = React.useMemo(() => {
-    const calcs = products.map(p => {
+  // Calculate per-product derived values and grand totals (with extra charges)
+  const { productCalcs, grandTotals, extraCharges } = React.useMemo(() => {
+    // Base per-product calcs (before charges)
+    const baseCalcs = products.map(p => {
       const qty = parseFloat(p.quantity) || 0;
       const amount = parseFloat(p.totalAmount) || 0;
       const mrp = parseFloat(p.mrp) || 0;
@@ -85,18 +92,48 @@ const BillCreateModal = ({
       return { costPerUnit, profitPerPiece, totalProfit };
     });
 
-    const totals = products.reduce((acc, p, i) => {
+    const baseTotals = products.reduce((acc, p, i) => {
       const qty = parseFloat(p.quantity) || 0;
       const amount = parseFloat(p.totalAmount) || 0;
       return {
         totalItems: acc.totalItems + qty,
         totalAmount: acc.totalAmount + amount,
-        totalProfit: acc.totalProfit + calcs[i].totalProfit
+        totalProfit: acc.totalProfit + baseCalcs[i].totalProfit
       };
     }, { totalItems: 0, totalAmount: 0, totalProfit: 0 });
 
-    return { productCalcs: calcs, grandTotals: totals };
-  }, [products]);
+    // Extra charges
+    const charges = BillModel.computeExtraCharges(baseTotals.totalAmount, {
+      discountPercent: formData.discountPercent,
+      surchargePercent: formData.surchargePercent,
+      transportCost: formData.transportCost,
+    });
+    const netAdjustment = -charges.discountAmount + charges.surchargeAmount + charges.transportCost;
+    const hasCharges = netAdjustment !== 0;
+
+    // Effective per-product calcs (with proportional charge distribution)
+    const calcs = products.map((p, i) => {
+      if (!hasCharges) return baseCalcs[i];
+      const qty = parseFloat(p.quantity) || 0;
+      const amount = parseFloat(p.totalAmount) || 0;
+      const mrp = parseFloat(p.mrp) || 0;
+      if (qty <= 0 || baseTotals.totalAmount === 0) return baseCalcs[i];
+      const share = netAdjustment * (amount / baseTotals.totalAmount);
+      const effectiveAmount = amount + share;
+      const costPerUnit = Math.round((effectiveAmount / qty + Number.EPSILON) * 100) / 100;
+      const profitPerPiece = Math.round((mrp - costPerUnit + Number.EPSILON) * 100) / 100;
+      const totalProfit = Math.round((profitPerPiece * qty + Number.EPSILON) * 100) / 100;
+      return { costPerUnit, profitPerPiece, totalProfit };
+    });
+
+    const effectiveTotalProfit = calcs.reduce((s, c) => s + c.totalProfit, 0);
+
+    return {
+      productCalcs: calcs,
+      grandTotals: { ...baseTotals, totalProfit: effectiveTotalProfit, finalAmount: charges.finalAmount },
+      extraCharges: charges,
+    };
+  }, [products, formData.discountPercent, formData.surchargePercent, formData.transportCost]);
 
   // Reset form when modal closes
   useEffect(() => {
@@ -536,6 +573,117 @@ const BillCreateModal = ({
                   <div style={{ fontSize: '16px', fontWeight: 600, color: grandTotals.totalProfit >= 0 ? '#166534' : '#dc2626', fontVariantNumeric: 'tabular-nums' }}>
                     ₹{grandTotals.totalProfit.toFixed(2)}
                   </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── Extra Charges Section ── */}
+          <div style={{
+            background: '#fafbfc',
+            border: '1px solid #e5e7eb',
+            borderRadius: '10px',
+            padding: '16px'
+          }}>
+            <div style={{
+              fontSize: '11px',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              color: '#6b7280',
+              marginBottom: '12px'
+            }}>
+              Extra Charges
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{ flex: 1 }}>
+                <Input
+                  label="Discount %"
+                  type="number"
+                  value={formData.discountPercent}
+                  onChange={(e) => handleChange('discountPercent', e.target.value)}
+                  placeholder="0"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  disabled={loading}
+                  containerStyle={{ marginBottom: 0 }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <Input
+                  label="Surcharge %"
+                  type="number"
+                  value={formData.surchargePercent}
+                  onChange={(e) => handleChange('surchargePercent', e.target.value)}
+                  placeholder="0"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  disabled={loading}
+                  containerStyle={{ marginBottom: 0 }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <Input
+                  label={
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <IndianRupee size={14} /> Transport
+                    </span>
+                  }
+                  type="number"
+                  value={formData.transportCost}
+                  onChange={(e) => handleChange('transportCost', e.target.value)}
+                  placeholder="0"
+                  min="0"
+                  step="1"
+                  disabled={loading}
+                  containerStyle={{ marginBottom: 0 }}
+                />
+              </div>
+            </div>
+
+            {/* Final amount bar — only show when charges exist */}
+            {(extraCharges.discountAmount > 0 || extraCharges.surchargeAmount > 0 || extraCharges.transportCost > 0) && (
+              <div style={{
+                display: 'flex',
+                gap: '0',
+                padding: '10px',
+                marginTop: '12px',
+                background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+                border: '1px solid #fde68a',
+                borderRadius: '6px'
+              }}>
+                {extraCharges.discountAmount > 0 && (
+                  <>
+                    <div style={{ flex: 1, textAlign: 'center' }}>
+                      <div style={{ fontSize: '9px', color: '#92400e', fontWeight: 500, marginBottom: '2px' }}>Discount</div>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#166534' }}>-₹{extraCharges.discountAmount.toFixed(2)}</div>
+                    </div>
+                    <div style={{ width: '1px', background: '#fde68a', alignSelf: 'stretch' }} />
+                  </>
+                )}
+                {extraCharges.surchargeAmount > 0 && (
+                  <>
+                    <div style={{ flex: 1, textAlign: 'center' }}>
+                      <div style={{ fontSize: '9px', color: '#92400e', fontWeight: 500, marginBottom: '2px' }}>Surcharge</div>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#dc2626' }}>+₹{extraCharges.surchargeAmount.toFixed(2)}</div>
+                    </div>
+                    <div style={{ width: '1px', background: '#fde68a', alignSelf: 'stretch' }} />
+                  </>
+                )}
+                {extraCharges.transportCost > 0 && (
+                  <>
+                    <div style={{ flex: 1, textAlign: 'center' }}>
+                      <div style={{ fontSize: '9px', color: '#92400e', fontWeight: 500, marginBottom: '2px' }}>Transport</div>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#dc2626' }}>+₹{extraCharges.transportCost.toFixed(2)}</div>
+                    </div>
+                    <div style={{ width: '1px', background: '#fde68a', alignSelf: 'stretch' }} />
+                  </>
+                )}
+                <div style={{ flex: 1, textAlign: 'center' }}>
+                  <div style={{ fontSize: '9px', color: '#92400e', fontWeight: 500, marginBottom: '2px' }}>Final Amount</div>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#92400e' }}>₹{grandTotals.finalAmount.toFixed(2)}</div>
                 </div>
               </div>
             )}

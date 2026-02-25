@@ -1,6 +1,32 @@
 import React, { useState, useEffect } from "react";
-import { Settings as SettingsIcon, Moon, Sun, Bell, Shield } from "lucide-react";
+import { Settings as SettingsIcon, Moon, Sun, Bell, Shield, Clock, Trash2, FileText } from "lucide-react";
+import { getLogs, clearLogs } from '../../utils/activityLog';
+import ConfirmDialog from '../ui/ConfirmDialog';
 import "./Settings.css";
+
+const ACTION_BADGE = {
+  created:    { bg: '#ecfdf5', color: '#059669' },
+  duplicated: { bg: '#ecfdf5', color: '#059669' },
+  updated:    { bg: '#eff6ff', color: '#2563eb' },
+  assigned:   { bg: '#eff6ff', color: '#2563eb' },
+  archived:   { bg: '#eff6ff', color: '#2563eb' },
+  deleted:    { bg: '#fef2f2', color: '#dc2626' },
+  removed:    { bg: '#fef2f2', color: '#dc2626' },
+  exported:   { bg: '#f1f5f9', color: '#64748b' },
+};
+
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  const seconds = Math.floor(diff / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return minutes + ' min ago';
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return hours + 'h ago';
+  const days = Math.floor(hours / 24);
+  if (days < 7) return days + 'd ago';
+  return new Date(ts).toLocaleDateString();
+}
 
 const Settings = () => {
   const [theme, setTheme] = useState("light");
@@ -63,65 +89,61 @@ const Settings = () => {
     localStorage.setItem("autoSave", enabled);
   };
 
-  // Shop Dashboard Vendors & Categories State
-  const defaultVendors = ["ABC Suppliers", "XYZ Distributors", "Local Market", "Online Store", "Direct Import", "Other"];
+  // Shop Dashboard Categories State
   const defaultCategories = ["Clothing", "Electronics", "Groceries", "Accessories", "Other"];
 
-  const [vendors, setVendors] = useState(() => {
-    const saved = localStorage.getItem('shopVendors');
-    return saved ? JSON.parse(saved) : defaultVendors;
-  });
   const [categories, setCategories] = useState(() => {
     const saved = localStorage.getItem('shopCategories');
     return saved ? JSON.parse(saved) : defaultCategories;
-  });
-  const [defaultVendor, setDefaultVendor] = useState(() => {
-    const saved = localStorage.getItem('shopDefaultVendor');
-    return saved ? saved : defaultVendors[0];
   });
   const [defaultCategory, setDefaultCategory] = useState(() => {
     const saved = localStorage.getItem('shopDefaultCategory');
     return saved ? saved : defaultCategories[0];
   });
-  // Inputs for adding
-  const [newVendor, setNewVendor] = useState("");
   const [newCategory, setNewCategory] = useState("");
 
-  // Persist to localStorage
-  useEffect(() => {
-    localStorage.setItem('shopVendors', JSON.stringify(vendors));
-  }, [vendors]);
   useEffect(() => {
     localStorage.setItem('shopCategories', JSON.stringify(categories));
   }, [categories]);
   useEffect(() => {
-    localStorage.setItem('shopDefaultVendor', defaultVendor);
-  }, [defaultVendor]);
-  useEffect(() => {
     localStorage.setItem('shopDefaultCategory', defaultCategory);
   }, [defaultCategory]);
 
-  // Add vendor/category handlers
-  const handleAddVendor = () => {
-    const name = newVendor.trim();
-    if (!name || vendors.includes(name)) return;
-    setVendors([...vendors, name]);
-    setNewVendor("");
-  };
   const handleAddCategory = () => {
     const name = newCategory.trim();
     if (!name || categories.includes(name)) return;
     setCategories([...categories, name]);
     setNewCategory("");
   };
-  // Remove vendor/category handlers
-  const handleRemoveVendor = (name) => {
-    if (name === defaultVendor) return;
-    setVendors(vendors.filter(v => v !== name));
-  };
   const handleRemoveCategory = (name) => {
     if (name === defaultCategory) return;
     setCategories(categories.filter(c => c !== name));
+  };
+
+  // Activity Log state
+  const [logFilter, setLogFilter] = useState('All');
+  const [logs, setLogs] = useState(() => getLogs());
+  const [confirmDialog, setConfirmDialog] = useState({ open: false, title: '', message: '', onConfirm: null });
+
+  useEffect(() => {
+    const refresh = () => setLogs(getLogs());
+    window.addEventListener('storage', refresh);
+    return () => window.removeEventListener('storage', refresh);
+  }, []);
+
+  const filteredLogs = logFilter === 'All' ? logs : logs.filter(l => l.tab === logFilter);
+
+  const handleClearLogs = () => {
+    setConfirmDialog({
+      open: true,
+      title: 'Clear Activity Log',
+      message: 'Clear all activity log entries? This cannot be undone.',
+      onConfirm: () => {
+        clearLogs();
+        setLogs([]);
+        setConfirmDialog(s => ({ ...s, open: false }));
+      },
+    });
   };
 
   return (
@@ -248,62 +270,6 @@ const Settings = () => {
             </div>
           </div>
 
-          {/* Vendors Card */}
-          <div className="settings-card" style={{ padding: '24px' }}>
-            <h4 className="subsection-title">Vendors</h4>
-            <div className="tags-container">
-              {vendors.map(vendor => (
-                <span key={vendor} className="tag-item">
-                  {vendor}
-                  {vendor !== defaultVendor && (
-                    <button
-                      className="tag-remove"
-                      onClick={() => handleRemoveVendor(vendor)}
-                      title="Remove vendor"
-                    >
-                      &times;
-                    </button>
-                  )}
-                </span>
-              ))}
-            </div>
-
-            <div className="add-item-row">
-              <input
-                type="text"
-                value={newVendor}
-                onChange={e => setNewVendor(e.target.value)}
-                placeholder="Add vendor..."
-                className="setting-select"
-                style={{ flex: 1, minWidth: 0 }}
-                onKeyDown={e => { if (e.key === 'Enter') handleAddVendor(); }}
-              />
-              <button
-                className="dashboard-btn-secondary"
-                onClick={handleAddVendor}
-                style={{ padding: '8px 16px', fontSize: '0.875rem' }}
-              >
-                Add
-              </button>
-            </div>
-
-            <div style={{ marginTop: '16px' }}>
-              <label className="subsection-title" style={{ fontSize: '0.875rem', marginBottom: '8px' }}>
-                Default Vendor
-              </label>
-              <select
-                value={defaultVendor}
-                onChange={e => setDefaultVendor(e.target.value)}
-                className="setting-select"
-                style={{ width: '100%' }}
-              >
-                {vendors.map(vendor => (
-                  <option key={vendor} value={vendor}>{vendor}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
           {/* Categories Card */}
           <div className="settings-card" style={{ padding: '24px' }}>
             <h4 className="subsection-title">Categories</h4>
@@ -361,8 +327,152 @@ const Settings = () => {
           </div>
         </div>
       </div>
+
+      {/* Activity Log Section */}
+      <div className="settings-section">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3 className="section-title" style={{ margin: 0 }}>Activity Log</h3>
+          {logs.length > 0 && (
+            <button
+              onClick={handleClearLogs}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: '6px 14px', borderRadius: '8px',
+                border: '1px solid #fecaca', background: '#fef2f2',
+                fontSize: '13px', fontWeight: '500', color: '#dc2626',
+                cursor: 'pointer', transition: 'all 0.15s',
+              }}
+            >
+              <Trash2 size={14} />
+              Clear Log
+            </button>
+          )}
+        </div>
+
+        {/* Filter Pills */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '4px',
+          background: '#f1f5f9', borderRadius: '8px', padding: '3px',
+          marginBottom: '16px', width: 'fit-content',
+        }}>
+          {['All', 'Bills', 'Products', 'Vendors'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setLogFilter(tab)}
+              style={{
+                padding: '6px 16px', border: 'none', borderRadius: '6px',
+                fontSize: '13px', fontWeight: '600', cursor: 'pointer',
+                transition: 'all 0.15s',
+                background: logFilter === tab ? '#1e293b' : 'transparent',
+                color: logFilter === tab ? '#fff' : '#64748b',
+              }}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {/* Log Table */}
+        <div className="settings-card" style={{ overflow: 'hidden' }}>
+          {filteredLogs.length > 0 ? (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  <th style={{
+                    padding: '12px 16px', textAlign: 'left', fontSize: '12px',
+                    fontWeight: '600', color: '#64748b', textTransform: 'uppercase',
+                    letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0',
+                    background: '#f8fafc', width: '120px',
+                  }}>
+                    Time
+                  </th>
+                  <th style={{
+                    padding: '12px 16px', textAlign: 'left', fontSize: '12px',
+                    fontWeight: '600', color: '#64748b', textTransform: 'uppercase',
+                    letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0',
+                    background: '#f8fafc', width: '100px',
+                  }}>
+                    Action
+                  </th>
+                  <th style={{
+                    padding: '12px 16px', textAlign: 'left', fontSize: '12px',
+                    fontWeight: '600', color: '#64748b', textTransform: 'uppercase',
+                    letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0',
+                    background: '#f8fafc',
+                  }}>
+                    Entity
+                  </th>
+                  <th style={{
+                    padding: '12px 16px', textAlign: 'left', fontSize: '12px',
+                    fontWeight: '600', color: '#64748b', textTransform: 'uppercase',
+                    letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0',
+                    background: '#f8fafc',
+                  }}>
+                    Details
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredLogs.map((log, idx) => {
+                  const badge = ACTION_BADGE[log.action] || ACTION_BADGE.exported;
+                  return (
+                    <tr key={log.id} style={{
+                      borderBottom: '1px solid #f1f5f9',
+                      background: idx % 2 === 0 ? '#fff' : '#fafbfc',
+                    }}>
+                      <td style={{ padding: '10px 16px' }}>
+                        <span style={{ fontSize: '13px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Clock size={12} />
+                          {timeAgo(log.timestamp)}
+                        </span>
+                      </td>
+                      <td style={{ padding: '10px 16px' }}>
+                        <span style={{
+                          display: 'inline-block', padding: '2px 10px', borderRadius: '12px',
+                          fontSize: '12px', fontWeight: '600',
+                          background: badge.bg, color: badge.color,
+                        }}>
+                          {log.action}
+                        </span>
+                      </td>
+                      <td style={{ padding: '10px 16px' }}>
+                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#1e293b' }}>
+                          {log.entity}
+                        </span>
+                      </td>
+                      <td style={{ padding: '10px 16px' }}>
+                        <span style={{ fontSize: '13px', color: '#64748b' }}>
+                          {log.details || '\u2014'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : (
+            <div style={{ padding: '48px 20px', textAlign: 'center' }}>
+              <FileText size={40} style={{ margin: '0 auto 12px', color: '#cbd5e1' }} />
+              <div style={{ fontSize: '15px', fontWeight: '600', color: '#64748b', marginBottom: '4px' }}>
+                No activity recorded yet
+              </div>
+              <div style={{ fontSize: '13px', color: '#94a3b8' }}>
+                Actions on bills, products, and vendors will appear here
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.open}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog(s => ({ ...s, open: false }))}
+      />
     </div>
   );
 };
 
-export default Settings; 
+export default Settings;

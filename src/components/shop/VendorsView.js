@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Search, Plus, X, ChevronDown, ChevronUp,
   Package, AlertTriangle, CheckCircle, Clock,
@@ -10,11 +11,13 @@ import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Badge from '../ui/Badge';
 import ErrorBoundary from '../ui/ErrorBoundary';
+import SummaryCard from '../ui/SummaryCard';
 import { useVendors } from '../../context/VendorsContext';
 import { useBills } from '../../context/BillsContext';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import ConfirmDialog from '../ui/ConfirmDialog';
 import { useNotifications } from '../ui/NotificationSystem';
+import { addLog } from '../../utils/activityLog';
 
 // --- Styles ---
 const STYLES = {
@@ -35,28 +38,6 @@ const STYLES = {
 };
 
 // --- Extracted components ---
-const SummaryCard = ({ label, value, subtitle, icon: Icon, color, bgColor }) => (
-  <div style={{
-    background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
-    padding: '20px', position: 'relative', overflow: 'hidden',
-  }}>
-    <div style={{
-      position: 'absolute', top: '16px', right: '16px',
-      width: '40px', height: '40px', borderRadius: '10px',
-      background: bgColor, display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }}>
-      <Icon size={20} color={color} />
-    </div>
-    <div style={{ fontSize: '13px', fontWeight: '500', color: '#64748b', marginBottom: '8px' }}>
-      {label}
-    </div>
-    <div style={{ fontSize: '24px', fontWeight: '800', color: color, marginBottom: '4px' }}>
-      {value}
-    </div>
-    <div style={{ fontSize: '13px', color: '#94a3b8' }}>{subtitle}</div>
-  </div>
-);
-
 const PriceTrend = ({ lastPrice, offeredPrice }) => {
   if (!lastPrice || !offeredPrice) return <Minus size={14} color="#94a3b8" />;
   if (offeredPrice < lastPrice) return <TrendingDown size={14} color="#10b981" />;
@@ -65,7 +46,9 @@ const PriceTrend = ({ lastPrice, offeredPrice }) => {
 };
 
 // --- Main component ---
-const VendorsView = ({ onNavigateToBill }) => {
+const VendorsView = () => {
+  const navigate = useNavigate();
+  const onNavigateToBill = (billNumber) => navigate('/shop/bills', { state: { search: billNumber } });
   const {
     vendors, vendorProducts, loading,
     loadVendorProducts,
@@ -313,9 +296,11 @@ const VendorsView = ({ onNavigateToBill }) => {
       if (editingVendor && !editingVendor.isUnregistered) {
         await handleUpdateVendor(editingVendor.id, vendorForm);
         showSuccess('Vendor updated successfully!');
+        addLog('updated', 'Vendor "' + vendorForm.name + '"', 'vendor', 'Vendors');
       } else {
         await handleAddVendor(vendorForm);
         showSuccess('Vendor added successfully!');
+        addLog('created', 'Vendor "' + vendorForm.name + '"', 'vendor', 'Vendors');
       }
       setShowAddModal(false);
       setEditingVendor(null);
@@ -335,6 +320,7 @@ const VendorsView = ({ onNavigateToBill }) => {
         try {
           await handleDeleteVendor(vendor.id);
           showError(`Vendor "${vendor.name}" deleted.`, { duration: 5000 });
+          addLog('deleted', 'Vendor "' + vendor.name + '"', 'vendor', 'Vendors');
         } catch (err) {
           console.error('Error deleting vendor:', err);
           showError('Failed to delete vendor. Please try again.');
@@ -370,6 +356,7 @@ const VendorsView = ({ onNavigateToBill }) => {
       setShowAddProductModal(false);
       setSelectedVendorForProduct(null);
       showSuccess('Product added to vendor catalog!');
+      addLog('created', 'Product in vendor catalog', 'vendor', 'Vendors');
     } catch (err) {
       console.error('Error saving vendor product:', err);
       showError('Failed to add product. Please try again.');

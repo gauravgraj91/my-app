@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Package, TrendingUp, IndianRupee, Users,
   FileText, Clock,
@@ -9,30 +10,13 @@ import { useBills } from '../../context/BillsContext';
 import { useVendors } from '../../context/VendorsContext';
 import { subscribeToShopProducts } from '../../firebase/shopProductService';
 import { formatCurrency, formatDate } from '../../utils/formatters';
+import SummaryCard from '../ui/SummaryCard';
 
 // --- Styles ---
 const STYLES = {
   sectionTitle: {
     fontSize: '15px', fontWeight: '700', color: '#1e293b',
     marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px',
-  },
-  card: {
-    background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
-    padding: '20px', position: 'relative', overflow: 'hidden',
-  },
-  cardLabel: {
-    fontSize: '13px', fontWeight: '500', color: '#64748b', marginBottom: '8px',
-  },
-  cardValue: {
-    fontSize: '24px', fontWeight: '800', marginBottom: '4px',
-  },
-  cardSubtitle: {
-    fontSize: '13px', color: '#94a3b8',
-  },
-  iconBadge: {
-    position: 'absolute', top: '16px', right: '16px',
-    width: '40px', height: '40px', borderRadius: '10px',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
   },
   sectionCard: {
     background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
@@ -50,17 +34,6 @@ const STYLES = {
     display: 'inline-block', marginRight: '8px',
   },
 };
-
-const SummaryCard = ({ label, value, subtitle, icon: Icon, color, bgColor }) => (
-  <div style={STYLES.card}>
-    <div style={{ ...STYLES.iconBadge, background: bgColor }}>
-      <Icon size={20} color={color} />
-    </div>
-    <div style={STYLES.cardLabel}>{label}</div>
-    <div style={{ ...STYLES.cardValue, color }}>{value}</div>
-    <div style={STYLES.cardSubtitle}>{subtitle}</div>
-  </div>
-);
 
 const StatusRow = ({ label, count, amount, color, dotColor }) => (
   <div style={{
@@ -85,7 +58,11 @@ const StatusRow = ({ label, count, amount, color, dotColor }) => (
   </div>
 );
 
-const HomeView = ({ onNavigate }) => {
+const TAB_ROUTES = { home: '/shop', bills: '/shop/bills', products: '/shop/products', pricelist: '/shop/price-list', vendors: '/shop/vendors' };
+
+const HomeView = () => {
+  const navigate = useNavigate();
+  const onNavigate = (tab) => navigate(TAB_ROUTES[tab] || '/shop');
   const { bills } = useBills();
   const { vendors } = useVendors();
   const [products, setProducts] = useState([]);
@@ -102,25 +79,20 @@ const HomeView = ({ onNavigate }) => {
 
   // --- Computed stats ---
   const billStats = useMemo(() => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    let paid = 0, paidAmt = 0, pending = 0, pendingAmt = 0, overdue = 0, overdueAmt = 0;
+    let paid = 0, paidAmt = 0, pending = 0, pendingAmt = 0;
     let totalAmount = 0;
 
     (bills || []).forEach(b => {
-      const amt = b.totalAmount || 0;
+      const amt = b.finalAmount || b.totalAmount || 0;
       totalAmount += amt;
-      const dueDate = b.dueDate ? new Date(b.dueDate) : null;
-      const isOverdue = b.status === 'returned' || (b.status === 'active' && dueDate && dueDate < today);
 
       if (b.status === 'paid') { paid++; paidAmt += amt; }
-      else if (isOverdue) { overdue++; overdueAmt += amt; }
       else { pending++; pendingAmt += amt; }
     });
 
     return {
       total: (bills || []).length, totalAmount,
-      paid, paidAmt, pending, pendingAmt, overdue, overdueAmt,
+      paid, paidAmt, pending, pendingAmt,
     };
   }, [bills]);
 
@@ -158,7 +130,7 @@ const HomeView = ({ onNavigate }) => {
     Object.values(vendorBillMap).forEach(({ bills: vBills, lastDate }) => {
       if (lastDate && lastDate >= thirtyDaysAgo) activeCount++;
       vBills.forEach(b => {
-        const amt = b.totalAmount || 0;
+        const amt = b.finalAmount || b.totalAmount || 0;
         const dueDate = b.dueDate ? new Date(b.dueDate) : null;
         const isOverdue = b.status === 'returned' || (b.status === 'active' && dueDate && dueDate < today);
         if (b.status === 'active') {
@@ -221,7 +193,7 @@ const HomeView = ({ onNavigate }) => {
         <SummaryCard
           label="Total Profit"
           value={formatCurrency(productStats.totalProfit)}
-          subtitle="Across all products"
+          subtitle={`${billStats.totalAmount > 0 ? ((productStats.totalProfit / billStats.totalAmount) * 100).toFixed(1) : '0.0'}% margin`}
           icon={TrendingUp} color="#f59e0b" bgColor="#fff7ed"
         />
         <SummaryCard
@@ -254,9 +226,9 @@ const HomeView = ({ onNavigate }) => {
               View All <ChevronRight size={14} />
             </button>
           </div>
+          <StatusRow label="Total Bills" count={billStats.total} amount={billStats.totalAmount} color="#3b82f6" dotColor="#3b82f6" />
           <StatusRow label="Paid" count={billStats.paid} amount={billStats.paidAmt} color="#10b981" dotColor="#10b981" />
           <StatusRow label="Pending" count={billStats.pending} amount={billStats.pendingAmt} color="#f59e0b" dotColor="#f59e0b" />
-          <StatusRow label="Overdue" count={billStats.overdue} amount={billStats.overdueAmt} color="#ef4444" dotColor="#ef4444" />
         </div>
 
         {/* Vendors Overview */}
@@ -350,7 +322,7 @@ const HomeView = ({ onNavigate }) => {
                           {bill.vendor || '-'}
                         </td>
                         <td style={{ padding: '10px 12px', fontSize: '13px', fontWeight: '600', color: '#1e293b', textAlign: 'right' }}>
-                          {formatCurrency(bill.totalAmount || 0)}
+                          {formatCurrency(bill.finalAmount || bill.totalAmount || 0)}
                         </td>
                         <td style={{ padding: '10px 12px' }}>
                           <span style={{

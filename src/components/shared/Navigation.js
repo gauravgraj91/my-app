@@ -11,7 +11,9 @@ import {
   FileText,
   CreditCard,
   DollarSign,
-  ChevronDown
+  ChevronDown,
+  Package,
+  Users2
 } from 'lucide-react';
 import './Navigation.css';
 
@@ -44,7 +46,7 @@ const Navigation = () => {
   }, [location.pathname]);
 
   const isActive = (path) => {
-    if (path === '/') return location.pathname === '/';
+    if (path === '/' || path === '/shop') return location.pathname === path;
     return location.pathname.startsWith(path);
   };
 
@@ -59,9 +61,12 @@ const Navigation = () => {
   ];
 
   const shopItems = [
+    { path: '/shop', label: 'Overview', icon: ShoppingCart },
     { path: '/shop/bills', label: 'Bills', icon: FileText },
-    { path: '/shop/transactions', label: 'Transactions', icon: CreditCard },
+    { path: '/shop/products', label: 'Products', icon: Package },
     { path: '/shop/price-list', label: 'Price List', icon: DollarSign },
+    { path: '/shop/vendors', label: 'Vendors', icon: Users2 },
+    { path: '/shop/transactions', label: 'Transactions', icon: CreditCard },
   ];
 
   const moreItems = [

@@ -18,152 +18,15 @@ import {
 } from 'firebase/firestore';
 import { db } from './config';
 
+import { BillModel } from './billModel';
+import { exportMultipleBillsToCSV } from './billExport';
+
+// Re-export from extracted modules for backwards compatibility
+export { BillModel } from './billModel';
+export { getBillAnalytics } from './billAnalytics';
+export { exportBillToCSV, exportMultipleBillsToCSV } from './billExport';
+
 const COLLECTION_NAME = 'bills';
-
-// Bill data model and validation utilities
-export const BillModel = {
-  // Generate a new bill number
-  generateBillNumber: (existingBills = []) => {
-    const billNumbers = existingBills
-      .map(bill => bill.billNumber)
-      .filter(num => num && num.startsWith('B'))
-      .map(num => parseInt(num.substring(1)))
-      .filter(num => !isNaN(num));
-
-    const maxNumber = billNumbers.length > 0 ? Math.max(...billNumbers) : 0;
-    return `B${String(maxNumber + 1).padStart(3, '0')}`;
-  },
-
-  // Calculate bill totals from products
-  calculateTotals: (products = []) => {
-    return products.reduce((totals, product) => {
-      const quantity = parseFloat(product.totalQuantity) || parseFloat(product.quantity) || 0;
-      const amount = parseFloat(product.totalAmount) || 0;
-      const mrp = parseFloat(product.mrp) || parseFloat(product.pricePerPiece) || 0;
-      const costPerUnit = quantity > 0 ? amount / quantity : 0;
-      const profitPerPiece = mrp - costPerUnit;
-
-      return {
-        totalQuantity: totals.totalQuantity + quantity,
-        totalAmount: totals.totalAmount + amount,
-        totalProfit: totals.totalProfit + (profitPerPiece * quantity),
-        productCount: totals.productCount + 1
-      };
-    }, {
-      totalQuantity: 0,
-      totalAmount: 0,
-      totalProfit: 0,
-      productCount: 0
-    });
-  },
-
-  // Create a new bill object with defaults
-  createBillData: (billData, products = []) => {
-    let totals;
-    if (products.length > 0) {
-      totals = BillModel.calculateTotals(products);
-    } else if (billData.products && billData.products.length > 0) {
-      // Compute totals from inline products array
-      totals = billData.products.reduce((acc, p) => {
-        const qty = parseFloat(p.quantity) || 0;
-        const amount = parseFloat(p.totalAmount) || 0;
-        const mrp = parseFloat(p.mrp) || 0;
-        const costPerUnit = qty > 0 ? amount / qty : 0;
-        const profitPerPiece = mrp - costPerUnit;
-        return {
-          totalQuantity: acc.totalQuantity + qty,
-          totalAmount: acc.totalAmount + amount,
-          totalProfit: acc.totalProfit + (profitPerPiece * qty),
-          productCount: acc.productCount + 1
-        };
-      }, { totalQuantity: 0, totalAmount: 0, totalProfit: 0, productCount: 0 });
-    } else {
-      const qty = parseFloat(billData.totalQuantity) || parseFloat(billData.quantity) || 0;
-      const amount = parseFloat(billData.totalAmount) || 0;
-      const mrp = parseFloat(billData.mrp) || 0;
-      const costPerUnit = qty > 0 ? amount / qty : 0;
-      const profitPerPiece = mrp - costPerUnit;
-
-      totals = {
-        totalQuantity: qty,
-        totalAmount: amount,
-        totalProfit: parseFloat(billData.totalProfit) || (profitPerPiece * qty),
-        productCount: parseFloat(billData.productCount) || (billData.productName ? 1 : 0)
-      };
-    }
-    const now = new Date();
-
-    return {
-      billNumber: billData.billNumber || '',
-      date: billData.date || now,
-      vendor: billData.vendor || '',
-      notes: billData.notes || '',
-      status: billData.status || 'active',
-      ...totals,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    };
-  },
-
-  // Validate bill data
-  validate: (billData) => {
-    const errors = {};
-
-    // Bill number validation
-    if (!billData.billNumber || billData.billNumber.trim() === '') {
-      errors.billNumber = 'Bill number is required';
-    } else if (billData.billNumber.length > 20) {
-      errors.billNumber = 'Bill number must be less than 20 characters';
-    }
-
-    // Date validation
-    if (!billData.date) {
-      errors.date = 'Bill date is required';
-    } else {
-      const date = new Date(billData.date);
-      if (isNaN(date.getTime())) {
-        errors.date = 'Invalid date format';
-      }
-    }
-
-    // Vendor validation
-    if (!billData.vendor || billData.vendor.trim() === '') {
-      errors.vendor = 'Vendor is required';
-    } else if (billData.vendor.length > 100) {
-      errors.vendor = 'Vendor name must be less than 100 characters';
-    }
-
-    // Notes validation (optional)
-    if (billData.notes && billData.notes.length > 500) {
-      errors.notes = 'Notes must be less than 500 characters';
-    }
-
-    // Status validation
-    const validStatuses = ['active', 'archived', 'returned', 'paid'];
-    if (billData.status && !validStatuses.includes(billData.status)) {
-      errors.status = 'Invalid status. Must be active, archived, returned, or paid';
-    }
-
-    // Numeric field validations
-    if (billData.totalAmount !== undefined && (isNaN(billData.totalAmount) || billData.totalAmount < 0)) {
-      errors.totalAmount = 'Total amount must be a valid positive number';
-    }
-
-    if (billData.totalQuantity !== undefined && (isNaN(billData.totalQuantity) || billData.totalQuantity < 0)) {
-      errors.totalQuantity = 'Total quantity must be a valid positive number';
-    }
-
-    if (billData.totalProfit !== undefined && isNaN(billData.totalProfit)) {
-      errors.totalProfit = 'Total profit must be a valid number';
-    }
-
-    if (billData.productCount !== undefined && (isNaN(billData.productCount) || billData.productCount < 0)) {
-      errors.productCount = 'Product count must be a valid positive number';
-    }
-
-    return Object.keys(errors).length > 0 ? errors : null;
-  }
-};
 
 // Core CRUD operations
 export const addBill = async (billData) => {
@@ -286,9 +149,12 @@ export const updateBill = async (billId, updateData) => {
       }
     }
 
+    // Strip out products array - products are stored in separate shopProducts collection
+    const { products: _products, ...cleanUpdateData } = updateData;
+
     const billRef = doc(db, COLLECTION_NAME, billId);
     await updateDoc(billRef, {
-      ...updateData,
+      ...cleanUpdateData,
       updatedAt: serverTimestamp()
     });
 
@@ -706,16 +572,42 @@ export const moveProductToBill = async (productId, newBillId) => {
 // Utility function to recalculate bill totals
 export const recalculateBillTotals = async (billId) => {
   try {
-    const { getProductsByBill } = await import('./shopProductService');
+    const { getProductsByBill, updateShopProduct } = await import('./shopProductService');
     const products = await getProductsByBill(billId);
     const totals = BillModel.calculateTotals(products);
 
+    // Read existing charge fields from the bill
+    const billDoc = await getDoc(doc(db, COLLECTION_NAME, billId));
+    const billData = billDoc.exists() ? billDoc.data() : {};
+    const extraCharges = BillModel.computeExtraCharges(totals.totalAmount, {
+      discountPercent: billData.discountPercent,
+      surchargePercent: billData.surchargePercent,
+      transportCost: billData.transportCost,
+    });
+
+    // Distribute charges to products if any net adjustment exists
+    const netAdjustment = -extraCharges.discountAmount + extraCharges.surchargeAmount + extraCharges.transportCost;
+    if (netAdjustment !== 0 && products.length > 0) {
+      const updatedProducts = BillModel.distributeChargesToProducts(products, netAdjustment, totals.totalAmount);
+      for (const p of updatedProducts) {
+        if (p.id) {
+          await updateShopProduct(p.id, {
+            costPerUnit: p.costPerUnit,
+            pricePerPiece: p.pricePerPiece,
+            profitPerPiece: p.profitPerPiece,
+            totalProfit: p.totalProfit,
+          });
+        }
+      }
+    }
+
     await updateDoc(doc(db, COLLECTION_NAME, billId), {
       ...totals,
+      ...extraCharges,
       updatedAt: serverTimestamp()
     });
 
-    return totals;
+    return { ...totals, ...extraCharges };
   } catch (error) {
     console.error('Error recalculating bill totals: ', error);
     throw error;
@@ -889,66 +781,6 @@ export const debouncedRecalculateBillTotals = (billId, delay = 1000) => {
   recalculationTimeouts.set(billId, timeoutId);
 };
 
-// Bill analytics functions
-export const getBillAnalytics = async () => {
-  try {
-    const bills = await getBills();
-
-    const analytics = {
-      totalBills: bills.length,
-      totalAmount: bills.reduce((sum, bill) => sum + (bill.totalAmount || 0), 0),
-      totalProfit: bills.reduce((sum, bill) => sum + (bill.totalProfit || 0), 0),
-      averageBillValue: 0,
-      topVendors: {},
-      billsByMonth: {},
-      profitMargin: 0
-    };
-
-    if (bills.length > 0) {
-      analytics.averageBillValue = analytics.totalAmount / bills.length;
-      analytics.profitMargin = analytics.totalAmount > 0 ?
-        (analytics.totalProfit / analytics.totalAmount) * 100 : 0;
-    }
-
-    // Group by vendor
-    bills.forEach(bill => {
-      const vendor = bill.vendor || 'Unknown';
-      if (!analytics.topVendors[vendor]) {
-        analytics.topVendors[vendor] = {
-          billCount: 0,
-          totalAmount: 0,
-          totalProfit: 0
-        };
-      }
-      analytics.topVendors[vendor].billCount++;
-      analytics.topVendors[vendor].totalAmount += bill.totalAmount || 0;
-      analytics.topVendors[vendor].totalProfit += bill.totalProfit || 0;
-    });
-
-    // Group by month
-    bills.forEach(bill => {
-      const date = bill.date instanceof Date ? bill.date : new Date(bill.date);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-
-      if (!analytics.billsByMonth[monthKey]) {
-        analytics.billsByMonth[monthKey] = {
-          billCount: 0,
-          totalAmount: 0,
-          totalProfit: 0
-        };
-      }
-      analytics.billsByMonth[monthKey].billCount++;
-      analytics.billsByMonth[monthKey].totalAmount += bill.totalAmount || 0;
-      analytics.billsByMonth[monthKey].totalProfit += bill.totalProfit || 0;
-    });
-
-    return analytics;
-  } catch (error) {
-    console.error('Error getting bill analytics: ', error);
-    throw error;
-  }
-};
-
 export const getBillsByVendor = async (vendor) => {
   try {
     const q = query(
@@ -1077,198 +909,6 @@ export const deleteBillWithProducts = async (billId) => {
   }
 };
 
-// CSV Export functionality
-export const exportBillToCSV = async (billId) => {
-  try {
-    const billWithProducts = await getBillWithProducts(billId);
-    if (!billWithProducts) {
-      throw new Error('Bill not found');
-    }
-
-    // Prepare CSV headers
-    const headers = [
-      'Bill Number',
-      'Date',
-      'Vendor',
-      'Product Name',
-      'Category',
-      'MRP',
-      'Quantity',
-      'Price Per Piece',
-      'Total Amount',
-      'Profit Per Piece',
-      'Total Profit'
-    ];
-
-    // Prepare CSV rows
-    const rows = [];
-
-    // Add bill header row
-    rows.push([
-      billWithProducts.billNumber,
-      billWithProducts.date instanceof Date ?
-        billWithProducts.date.toLocaleDateString() :
-        new Date(billWithProducts.date).toLocaleDateString(),
-      billWithProducts.vendor,
-      '--- BILL SUMMARY ---',
-      '',
-      '',
-      billWithProducts.totalQuantity || 0,
-      '',
-      billWithProducts.totalAmount || 0,
-      '',
-      billWithProducts.totalProfit || 0
-    ]);
-
-    // Add empty row for separation
-    rows.push(Array(headers.length).fill(''));
-
-    // Add product rows
-    billWithProducts.products.forEach(product => {
-      rows.push([
-        billWithProducts.billNumber,
-        billWithProducts.date instanceof Date ?
-          billWithProducts.date.toLocaleDateString() :
-          new Date(billWithProducts.date).toLocaleDateString(),
-        billWithProducts.vendor,
-        product.productName || '',
-        product.category || '',
-        product.mrp || 0,
-        product.totalQuantity || 0,
-        product.pricePerPiece || 0,
-        product.totalAmount || 0,
-        product.profitPerPiece || 0,
-        (product.profitPerPiece || 0) * (product.totalQuantity || 0)
-      ]);
-    });
-
-    // Convert to CSV format
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row =>
-        row.map(cell =>
-          typeof cell === 'string' && cell.includes(',') ?
-            `"${cell.replace(/"/g, '""')}"` :
-            cell
-        ).join(',')
-      )
-    ].join('\n');
-
-    return {
-      filename: `bill_${billWithProducts.billNumber}_${new Date().toISOString().split('T')[0]}.csv`,
-      content: csvContent,
-      mimeType: 'text/csv'
-    };
-  } catch (error) {
-    console.error('Error exporting bill to CSV: ', error);
-    throw error;
-  }
-};
-
-export const exportMultipleBillsToCSV = async (billIds) => {
-  try {
-    if (!Array.isArray(billIds) || billIds.length === 0) {
-      throw new Error('Bill IDs array is required and cannot be empty');
-    }
-
-    // Prepare CSV headers
-    const headers = [
-      'Bill Number',
-      'Date',
-      'Vendor',
-      'Product Name',
-      'Category',
-      'MRP',
-      'Quantity',
-      'Price Per Piece',
-      'Total Amount',
-      'Profit Per Piece',
-      'Total Profit',
-      'Bill Total Amount',
-      'Bill Total Profit'
-    ];
-
-    const rows = [];
-
-    // Process each bill
-    for (const billId of billIds) {
-      try {
-        const billWithProducts = await getBillWithProducts(billId);
-        if (!billWithProducts) {
-          console.warn(`Bill ${billId} not found, skipping`);
-          continue;
-        }
-
-        // Add bill summary row
-        rows.push([
-          billWithProducts.billNumber,
-          billWithProducts.date instanceof Date ?
-            billWithProducts.date.toLocaleDateString() :
-            new Date(billWithProducts.date).toLocaleDateString(),
-          billWithProducts.vendor,
-          '--- BILL SUMMARY ---',
-          '',
-          '',
-          billWithProducts.totalQuantity || 0,
-          '',
-          '',
-          '',
-          '',
-          billWithProducts.totalAmount || 0,
-          billWithProducts.totalProfit || 0
-        ]);
-
-        // Add product rows
-        billWithProducts.products.forEach(product => {
-          rows.push([
-            billWithProducts.billNumber,
-            billWithProducts.date instanceof Date ?
-              billWithProducts.date.toLocaleDateString() :
-              new Date(billWithProducts.date).toLocaleDateString(),
-            billWithProducts.vendor,
-            product.productName || '',
-            product.category || '',
-            product.mrp || 0,
-            product.totalQuantity || 0,
-            product.pricePerPiece || 0,
-            product.totalAmount || 0,
-            product.profitPerPiece || 0,
-            (product.profitPerPiece || 0) * (product.totalQuantity || 0),
-            billWithProducts.totalAmount || 0,
-            billWithProducts.totalProfit || 0
-          ]);
-        });
-
-        // Add empty row for separation between bills
-        rows.push(Array(headers.length).fill(''));
-      } catch (error) {
-        console.error(`Error processing bill ${billId}:`, error);
-      }
-    }
-
-    // Convert to CSV format
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row =>
-        row.map(cell =>
-          typeof cell === 'string' && cell.includes(',') ?
-            `"${cell.replace(/"/g, '""')}"` :
-            cell
-        ).join(',')
-      )
-    ].join('\n');
-
-    return {
-      filename: `bills_export_${new Date().toISOString().split('T')[0]}.csv`,
-      content: csvContent,
-      mimeType: 'text/csv'
-    };
-  } catch (error) {
-    console.error('Error exporting multiple bills to CSV: ', error);
-    throw error;
-  }
-};
-
 // Bulk operations for multiple bills
 export const bulkDeleteBills = async (billIds) => {
   try {
@@ -1335,9 +975,9 @@ export const bulkUpdateBillStatus = async (billIds, status) => {
       throw new Error('Bill IDs array is required and cannot be empty');
     }
 
-    const validStatuses = ['active', 'archived', 'returned'];
+    const validStatuses = ['active', 'archived', 'returned', 'paid'];
     if (!validStatuses.includes(status)) {
-      throw new Error('Invalid status. Must be active, archived, or returned');
+      throw new Error('Invalid status. Must be active, archived, returned, or paid');
     }
 
     const results = [];

@@ -3,23 +3,37 @@ import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
-import { Package, IndianRupee, Hash, Tag, User, Plus, Edit } from 'lucide-react';
+import { Package, IndianRupee, Hash, Tag, User, Plus, Edit, Calendar } from 'lucide-react';
 import { useBills } from '../../context/BillsContext';
+import { useVendors } from '../../context/VendorsContext';
 
 const roundTo2 = (val) => Math.round((val + Number.EPSILON) * 100) / 100;
 
 const ProductModal = ({
   isOpen,
   onClose,
+  onSave,
   product = null, // null for create, object for edit
   bill = null, // bill context for product creation
   mode = 'create' // 'create' or 'edit'
 }) => {
   const { handleAddProductToBill } = useBills();
+  const { vendors } = useVendors();
+
+  const todayStr = () => new Date().toISOString().split('T')[0];
+  const toDateStr = (date) => {
+    if (!date) return todayStr();
+    try {
+      const d = date?.toDate ? date.toDate() : date instanceof Date ? date : new Date(date);
+      return d.toISOString().split('T')[0];
+    } catch { return todayStr(); }
+  };
+
   const [formData, setFormData] = useState({
     productName: '',
     category: '',
     vendor: '',
+    date: todayStr(),
     mrp: '',
     totalQuantity: '',
     pricePerPiece: '',
@@ -38,6 +52,7 @@ const ProductModal = ({
         productName: product.productName || '',
         category: product.category || '',
         vendor: product.vendor || '',
+        date: toDateStr(product.date),
         mrp: product.mrp != null ? roundTo2(product.mrp).toString() : '',
         totalQuantity: product.totalQuantity?.toString() || '',
         pricePerPiece: product.pricePerPiece != null ? roundTo2(product.pricePerPiece).toString() : '',
@@ -63,6 +78,7 @@ const ProductModal = ({
         productName: '',
         category: '',
         vendor: '',
+        date: todayStr(),
         mrp: '',
         totalQuantity: '',
         pricePerPiece: '',
@@ -194,15 +210,17 @@ const ProductModal = ({
         totalAmount: roundTo2(parseFloat(formData.totalAmount)),
         billId: formData.billId,
         billNumber: formData.billNumber,
-        date: new Date()
+        date: new Date(formData.date)
       };
 
-      // Include the id when editing an existing product
-      if (mode === 'edit' && product?.id) {
+      if (mode === 'edit' && product?.id && onSave) {
+        // Update existing product via onSave callback
         productData.id = product.id;
+        await onSave(productData);
+      } else if (bill) {
+        // Create new product linked to a bill
+        await handleAddProductToBill(productData, bill);
       }
-
-      await handleAddProductToBill(productData, bill);
       onClose();
     } catch (error) {
       console.error('Error saving product:', error);
@@ -306,7 +324,7 @@ const ProductModal = ({
               containerStyle={{ marginBottom: 12 }}
             />
 
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
               <div style={{ flex: 1 }}>
                 <Select
                   label={
@@ -323,21 +341,38 @@ const ProductModal = ({
                 />
               </div>
               <div style={{ flex: 1 }}>
-                <Input
+                <Select
                   label={
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                       <User size={14} /> Vendor <span style={{ color: '#ef4444' }}>*</span>
                     </span>
                   }
-                  type="text"
                   value={formData.vendor}
                   onChange={(e) => handleChange('vendor', e.target.value)}
-                  placeholder="Enter vendor name"
+                  options={[
+                    { value: '', label: 'Select a vendor...' },
+                    ...vendors.map(v => ({ value: v.name, label: v.name }))
+                  ]}
                   error={errors.vendor}
                   disabled={loading}
                   containerStyle={{ marginBottom: 0 }}
                 />
               </div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <Input
+                label={
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <Calendar size={14} /> Date <span style={{ color: '#ef4444' }}>*</span>
+                  </span>
+                }
+                type="date"
+                value={formData.date}
+                onChange={(e) => handleChange('date', e.target.value)}
+                error={errors.date}
+                disabled={loading}
+                containerStyle={{ marginBottom: 0 }}
+              />
             </div>
           </div>
 

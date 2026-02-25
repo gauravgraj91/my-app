@@ -6,9 +6,13 @@ import ErrorBoundary from './components/shared/ErrorBoundary';
 import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
 import Office from './pages/Office';
-import ShopBills from './pages/ShopBills';
+import Shop from './components/shop/shop';
+import HomeView from './components/shop/HomeView';
+import BillsView from './components/shop/BillsView';
+import ProductsView from './components/shop/ProductsView';
+import PriceList from './components/shop/PriceList';
+import VendorsView from './components/shop/VendorsView';
 import ShopTransactions from './pages/ShopTransactions';
-import PriceList from './pages/PriceList';
 import Settings from './pages/Settings';
 import { NotificationProvider } from './components/ui/NotificationSystem';
 
@@ -22,9 +26,14 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/tasks" element={<Tasks />} />
               <Route path="/office" element={<Office />} />
-              <Route path="/shop/bills" element={<ShopBills />} />
+              <Route path="/shop" element={<Shop />}>
+                <Route index element={<HomeView />} />
+                <Route path="bills" element={<BillsView />} />
+                <Route path="products" element={<ProductsView />} />
+                <Route path="price-list" element={<PriceList />} />
+                <Route path="vendors" element={<VendorsView />} />
+              </Route>
               <Route path="/shop/transactions" element={<ShopTransactions />} />
-              <Route path="/shop/price-list" element={<PriceList />} />
               <Route path="/settings" element={<Settings />} />
             </Routes>
           </Layout>

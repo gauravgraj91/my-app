@@ -1,4 +1,7 @@
 {
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
   "permissions": {
     "allow": [
       "Bash(git fetch:*)",
@@ -18,10 +21,38 @@
       "Bash(tree:*)",
       "Bash(node --version:*)",
       "Bash(pkill:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(npx eslint:*)",
+      "Bash(curl:*)",
+      "WebSearch",
+      "WebFetch(domain:opencode.ai)",
+      "Bash(sudo npm i:*)",
+      "Bash(bash)",
+      "Bash(source:*)",
+      "Bash(opencode:*)",
+      "Bash(XDG_CONFIG_HOME=/Users/gauravraj/.opencode/config /Users/gauravraj/.opencode/bin/opencode:*)",
+      "Bash(git status:*)",
+      "Bash(npx vercel:*)",
+      "Bash(git stash:*)",
+      "Bash(git stash pop:*)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:my-fv0y894dy-gauravs-projects-a92d15fc.vercel.app)",
+      "Bash(brew list:*)",
+      "WebFetch(domain:vercel.com)",
+      "WebFetch(domain:my-pdghtina7-gauravs-projects-a92d15fc.vercel.app)",
+      "WebFetch(domain:my-app-gamma-azure-24.vercel.app)",
+      "Bash(npx react-scripts test:*)",
+      "WebFetch(domain:www.humanlayer.dev)",
+      "WebFetch(domain:www.builder.io)",
+      "WebFetch(domain:arize.com)",
+      "Bash(/tmp/notification_analysis.txt:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs:*)",
+      "Bash(vercel --prod:*)",
+      "Bash(sudo npm cache clean:*)",
+      "Bash(git:*)",
+      "Bash(echo === $icon ===:*)"
     ]
-  },
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   }
 }
