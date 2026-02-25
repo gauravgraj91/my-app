@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNotifications } from '../components/ui/NotificationSystem';
 import {
   subscribeToBills,
@@ -11,7 +11,8 @@ import {
   bulkDeleteBills,
   bulkDuplicateBills,
   bulkUpdateBillStatus,
-  bulkExportBillsToCSV
+  bulkExportBillsToCSV,
+  BillModel
 } from '../firebase/billService';
 import { addShopProduct, getProductsByBill, deleteShopProduct } from '../firebase/shopProductService';
 import {
@@ -21,6 +22,7 @@ import {
   createRetryHandler,
   reportError
 } from '../utils/errorHandling';
+import { addLog } from '../utils/activityLog';
 import { analyticsCacheUtils } from '../utils/cacheUtils';
 import { performanceMonitor } from '../utils/performanceUtils';
 import realtimeSyncManager from '../firebase/realtimeSync';
@@ -65,6 +67,7 @@ export const BillsProvider = ({ children }) => {
   const recentlyEditedBills = useRef(new Set());
   const knownBillIds = useRef(new Set());
   const modifiedNotificationTimeouts = useRef(new Map());
+  const suppressAllNotificationsUntil = useRef(0);
 
   // Monitor conflicts
   useEffect(() => {
@@ -111,19 +114,20 @@ export const BillsProvider = ({ children }) => {
                 }
               });
             } else {
+              // Skip all real-time notifications during active CRUD operations
+              const isSuppressed = Date.now() < suppressAllNotificationsUntil.current;
+
               metadata.changes.forEach(change => {
-                if (change.type === 'added' && !change.optimistic) {
-                  if (!recentlyCreatedBills.current.has(change.bill.id) &&
+                if (change.type === 'added') {
+                  if (!isSuppressed &&
+                    !recentlyCreatedBills.current.has(change.bill.id) &&
                     !knownBillIds.current.has(change.bill.id)) {
                     showSuccess(`New bill ${change.bill.billNumber} added!`);
-                  } else if (recentlyCreatedBills.current.has(change.bill.id)) {
-                    setTimeout(() => {
-                      recentlyCreatedBills.current.delete(change.bill.id);
-                    }, 2000);
                   }
                   knownBillIds.current.add(change.bill.id);
-                } else if (change.type === 'modified' && !change.optimistic) {
-                  if (!recentlyCreatedBills.current.has(change.bill.id) &&
+                } else if (change.type === 'modified') {
+                  if (!isSuppressed &&
+                    !recentlyCreatedBills.current.has(change.bill.id) &&
                     !recentlyEditedBills.current.has(change.bill.id)) {
                     const billId = change.bill.id;
                     const billNumber = change.bill.billNumber;
@@ -133,9 +137,13 @@ export const BillsProvider = ({ children }) => {
                     }
 
                     const timeoutId = setTimeout(() => {
-                      showInfo(`Bill ${billNumber} updated!`);
+                      if (Date.now() >= suppressAllNotificationsUntil.current &&
+                        !recentlyCreatedBills.current.has(billId) &&
+                        !recentlyEditedBills.current.has(billId)) {
+                        showInfo(`Bill ${billNumber} updated!`);
+                      }
                       modifiedNotificationTimeouts.current.delete(billId);
-                    }, 1000);
+                    }, 3000);
 
                     modifiedNotificationTimeouts.current.set(billId, timeoutId);
                   }
@@ -307,25 +315,45 @@ export const BillsProvider = ({ children }) => {
 
   // CRUD handlers
   const handleCreateBill = useCallback(async (billData) => {
+    // Suppress ALL real-time notifications during bill creation (and 5s after)
+    // This prevents race conditions where onSnapshot fires before dedup refs are set
+    suppressAllNotificationsUntil.current = Date.now() + 30000; // extended, trimmed on success
+
     try {
       const retryHandler = createRetryHandler(2, 1000);
 
       const newBill = await retryHandler(async () => {
         const bill = await addBill(billData);
 
+        recentlyCreatedBills.current.add(bill.id);
+        recentlyEditedBills.current.add(bill.id);
+
         // Handle multi-product array
         const productsToAdd = billData.products && billData.products.length > 0
           ? billData.products
           : (billData.productName && billData.quantity ? [billData] : []);
 
+        // Compute base totals and extra charges for proportional distribution
+        const baseTotalAmount = productsToAdd.reduce((s, p) => s + (parseFloat(p.totalAmount) || 0), 0);
+        const charges = BillModel.computeExtraCharges(baseTotalAmount, {
+          discountPercent: billData.discountPercent,
+          surchargePercent: billData.surchargePercent,
+          transportCost: billData.transportCost,
+        });
+        const netAdjustment = -charges.discountAmount + charges.surchargeAmount + charges.transportCost;
+
         for (const p of productsToAdd) {
           const qty = parseFloat(p.quantity) || 0;
           const amount = parseFloat(p.totalAmount) || 0;
           const mrp = parseFloat(p.mrp) || 0;
-          const costPerUnit = qty > 0 ? amount / qty : 0;
-          const profitPerPiece = mrp - costPerUnit;
 
           if (!p.productName && qty === 0 && amount === 0) continue;
+
+          // Distribute bill charges proportionally
+          const share = baseTotalAmount > 0 ? netAdjustment * (amount / baseTotalAmount) : 0;
+          const effectiveAmount = amount + share;
+          const costPerUnit = qty > 0 ? Math.round((effectiveAmount / qty + Number.EPSILON) * 100) / 100 : 0;
+          const profitPerPiece = Math.round((mrp - costPerUnit + Number.EPSILON) * 100) / 100;
 
           const newProductData = {
             productName: p.productName || '',
@@ -339,7 +367,7 @@ export const BillsProvider = ({ children }) => {
             costPerUnit: costPerUnit,
             pricePerPiece: costPerUnit,
             profitPerPiece: profitPerPiece,
-            totalProfit: profitPerPiece * qty
+            totalProfit: Math.round((profitPerPiece * qty + Number.EPSILON) * 100) / 100
           };
 
           await addShopProduct(newProductData, bill.id);
@@ -348,15 +376,19 @@ export const BillsProvider = ({ children }) => {
         return bill;
       }, { context: 'create_bill', billNumber: billData.billNumber });
 
-      recentlyCreatedBills.current.add(newBill.id);
+      // Allow real-time notifications again after a grace period for debounced recalculations
+      suppressAllNotificationsUntil.current = Date.now() + 15000;
 
       setTimeout(() => {
         recentlyCreatedBills.current.delete(newBill.id);
-      }, 10000);
+        recentlyEditedBills.current.delete(newBill.id);
+      }, 30000);
 
       showSuccess(`Bill ${newBill.billNumber} created successfully!`);
+      addLog('created', 'Bill ' + newBill.billNumber, 'bill', 'Bills');
       return newBill;
     } catch (err) {
+      suppressAllNotificationsUntil.current = 0;
       const billError = classifyError(err);
       reportError(billError, { context: 'create_bill', billData });
 
@@ -368,6 +400,7 @@ export const BillsProvider = ({ children }) => {
   const handleEditBill = useCallback(async (billId, updatedData) => {
     const retryHandler = createRetryHandler(2, 1000);
 
+    suppressAllNotificationsUntil.current = Date.now() + 30000;
     recentlyEditedBills.current.add(billId);
 
     try {
@@ -396,7 +429,14 @@ export const BillsProvider = ({ children }) => {
         }, { totalQuantity: 0, totalAmount: 0, totalProfit: 0, productCount: 0 });
       }
 
-      const billUpdateData = { ...billFields, ...totals };
+      // Compute extra charges
+      const extraCharges = BillModel.computeExtraCharges(totals.totalAmount || 0, {
+        discountPercent: billFields.discountPercent,
+        surchargePercent: billFields.surchargePercent,
+        transportCost: billFields.transportCost,
+      });
+
+      const billUpdateData = { ...billFields, ...totals, ...extraCharges };
 
       setBills(prev => prev.map(bill =>
         bill.id === billId
@@ -428,14 +468,21 @@ export const BillsProvider = ({ children }) => {
             }
           }
 
-          // Add updated products
+          // Add updated products with distributed charges
           const validProducts = updatedProducts.filter(p => p.productName || p.quantity || p.totalAmount);
+          const editNetAdjustment = -extraCharges.discountAmount + extraCharges.surchargeAmount + extraCharges.transportCost;
+          const editBaseTotalAmount = totals.totalAmount || 0;
+
           for (const p of validProducts) {
             const qty = parseFloat(p.quantity) || 0;
             const amount = parseFloat(p.totalAmount) || 0;
             const mrp = parseFloat(p.mrp) || 0;
-            const costPerUnit = qty > 0 ? amount / qty : 0;
-            const profitPerPiece = mrp - costPerUnit;
+
+            // Distribute bill charges proportionally
+            const share = editBaseTotalAmount > 0 ? editNetAdjustment * (amount / editBaseTotalAmount) : 0;
+            const effectiveAmount = amount + share;
+            const costPerUnit = qty > 0 ? Math.round((effectiveAmount / qty + Number.EPSILON) * 100) / 100 : 0;
+            const profitPerPiece = Math.round((mrp - costPerUnit + Number.EPSILON) * 100) / 100;
 
             const newProductData = {
               productName: p.productName || '',
@@ -449,7 +496,7 @@ export const BillsProvider = ({ children }) => {
               costPerUnit: costPerUnit,
               pricePerPiece: costPerUnit,
               profitPerPiece: profitPerPiece,
-              totalProfit: profitPerPiece * qty
+              totalProfit: Math.round((profitPerPiece * qty + Number.EPSILON) * 100) / 100
             };
 
             try {
@@ -477,18 +524,22 @@ export const BillsProvider = ({ children }) => {
             : bill
         ));
 
+        suppressAllNotificationsUntil.current = Date.now() + 15000;
         showSuccess(`Bill ${billToUpdate?.billNumber || billId} updated successfully!`);
+        addLog('updated', 'Bill ' + (billToUpdate?.billNumber || billId), 'bill', 'Bills');
 
         setTimeout(() => {
           recentlyEditedBills.current.delete(billId);
-        }, 5000);
+        }, 15000);
       } catch (err) {
         setBills(originalBills);
         recentlyEditedBills.current.delete(billId);
+        suppressAllNotificationsUntil.current = 0;
         throw err;
       }
     } catch (err) {
       recentlyEditedBills.current.delete(billId);
+      suppressAllNotificationsUntil.current = 0;
       const billError = classifyError(err);
       reportError(billError, { context: 'update_bill', billId, updatedData });
 
@@ -526,6 +577,7 @@ export const BillsProvider = ({ children }) => {
         }, { context: 'delete_bill', billId, billNumber: billToDelete?.billNumber });
 
         showError(`Bill ${billToDelete?.billNumber || billId} deleted.`, { duration: 5000 });
+        addLog('deleted', 'Bill ' + (billToDelete?.billNumber || billId), 'bill', 'Bills');
 
         setSelectedBills(prev => {
           const newSelected = new Set(prev);
@@ -569,6 +621,7 @@ export const BillsProvider = ({ children }) => {
       }, { context: 'duplicate_bill', billId, billNumber: billToDuplicate?.billNumber });
 
       showSuccess(`Bill ${billToDuplicate?.billNumber || billId} duplicated successfully!`);
+      addLog('duplicated', 'Bill ' + (billToDuplicate?.billNumber || billId), 'bill', 'Bills');
     } catch (err) {
       const billError = classifyError(err);
       reportError(billError, { context: 'duplicate_bill', billId });
@@ -603,6 +656,7 @@ export const BillsProvider = ({ children }) => {
       window.URL.revokeObjectURL(url);
 
       showSuccess(`Bill ${billToExport?.billNumber || billId} exported successfully!`);
+      addLog('exported', 'Bill ' + (billToExport?.billNumber || billId), 'bill', 'Bills');
     } catch (err) {
       const billError = classifyError(err);
       reportError(billError, { context: 'export_bill', billId });
@@ -628,6 +682,7 @@ export const BillsProvider = ({ children }) => {
       }, { context: 'add_product_to_bill', billId: selectedBill?.id });
 
       showSuccess(`Product "${productData.productName}" added to ${selectedBill.billNumber}!`);
+      addLog('updated', 'Bill ' + selectedBill.billNumber, 'bill', 'Bills', 'Added product "' + productData.productName + '"');
 
       // Refresh the products for this bill
       try {
@@ -708,6 +763,7 @@ export const BillsProvider = ({ children }) => {
 
       if (failureCount === 0) {
         showError(`${successCount} bill${successCount !== 1 ? 's' : ''} deleted.`, { duration: 5000 });
+        addLog('deleted', successCount + ' bills', 'bill', 'Bills');
       } else {
         showWarning(`Deleted ${successCount} bills successfully. ${failureCount} failed.`, {
           title: 'Partial Success',
@@ -774,6 +830,7 @@ export const BillsProvider = ({ children }) => {
 
       if (failureCount === 0) {
         showSuccess(`Successfully duplicated ${successCount} bills!`);
+        addLog('duplicated', successCount + ' bills', 'bill', 'Bills');
       } else {
         showWarning(`Duplicated ${successCount} bills successfully. ${failureCount} failed.`, {
           title: 'Partial Success',
@@ -840,6 +897,7 @@ export const BillsProvider = ({ children }) => {
 
       if (failureCount === 0) {
         showSuccess(`Successfully archived ${successCount} bills!`);
+        addLog('archived', successCount + ' bills', 'bill', 'Bills');
       } else {
         showWarning(`Archived ${successCount} bills successfully. ${failureCount} failed.`, {
           title: 'Partial Success',
@@ -909,6 +967,7 @@ export const BillsProvider = ({ children }) => {
       window.URL.revokeObjectURL(url);
 
       showSuccess(`Successfully exported ${selectedBills.size} bills!`);
+      addLog('exported', selectedBills.size + ' bills', 'bill', 'Bills');
       setSelectedBills(new Set());
     } catch (err) {
       const billError = classifyError(err);
@@ -933,7 +992,7 @@ export const BillsProvider = ({ children }) => {
     setRetryCount(prev => prev + 1);
   }, []);
 
-  const value = {
+  const value = useMemo(() => ({
     // Data
     bills,
     billProducts,
@@ -975,7 +1034,18 @@ export const BillsProvider = ({ children }) => {
 
     // Retry
     retrySubscription,
-  };
+  }), [
+    bills, billProducts, loading, error, isRetrying, retryCount,
+    analytics, analyticsLoading,
+    selectedBills, handleSelectBill, handleSelectAll, clearSelection,
+    handleCreateBill, handleEditBill, handleDeleteBill,
+    handleDuplicateBill, handleExportBill, handleAddProductToBill,
+    bulkActionLoading, bulkOperationStatus,
+    handleBulkDelete, handleBulkDuplicate, handleBulkArchive, handleBulkExport,
+    conflicts, showConflictModal,
+    handleAcknowledgeConflict, handleClearAllConflicts,
+    retrySubscription,
+  ]);
 
   return (
     <BillsContext.Provider value={value}>
