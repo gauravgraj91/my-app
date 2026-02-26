@@ -9,6 +9,7 @@ import {
   deleteVendorProduct,
   subscribeToVendorProducts,
 } from '../firebase/vendorService';
+import { useAuth } from './AuthContext';
 
 const VendorsContext = createContext();
 
@@ -21,6 +22,8 @@ export const useVendors = () => {
 };
 
 export const VendorsProvider = ({ children }) => {
+  const { user } = useAuth();
+  const tenantId = user?.tenantId;
   const [vendors, setVendors] = useState([]);
   const [vendorProducts, setVendorProducts] = useState({}); // { vendorId: [products] }
   const [loading, setLoading] = useState(true);
@@ -28,12 +31,13 @@ export const VendorsProvider = ({ children }) => {
 
   // Subscribe to vendors
   useEffect(() => {
-    const unsubscribe = subscribeToVendors((data) => {
+    if (!tenantId) return;
+    const unsubscribe = subscribeToVendors(tenantId, (data) => {
       setVendors(data);
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [tenantId]);
 
   // Load products for a specific vendor (on demand)
   const loadVendorProducts = useCallback((vendorId) => {
@@ -46,13 +50,13 @@ export const VendorsProvider = ({ children }) => {
 
   const handleAddVendor = useCallback(async (vendorData) => {
     try {
-      const id = await addVendor(vendorData);
+      const id = await addVendor(vendorData, tenantId);
       return id;
     } catch (err) {
       setError(err);
       throw err;
     }
-  }, []);
+  }, [tenantId]);
 
   const handleUpdateVendor = useCallback(async (vendorId, updates) => {
     try {

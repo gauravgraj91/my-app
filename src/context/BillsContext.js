@@ -23,6 +23,7 @@ import {
   reportError
 } from '../utils/errorHandling';
 import { addLog } from '../utils/activityLog';
+import { useAuth } from './AuthContext';
 import { analyticsCacheUtils } from '../utils/cacheUtils';
 import { performanceMonitor } from '../utils/performanceUtils';
 import realtimeSyncManager from '../firebase/realtimeSync';
@@ -39,6 +40,8 @@ export const useBills = () => {
 
 export const BillsProvider = ({ children }) => {
   const { showSuccess, showError, showWarning, showInfo } = useNotifications();
+  const { user } = useAuth();
+  const tenantId = user?.tenantId;
 
   // Core data state
   const [bills, setBills] = useState([]);
@@ -101,7 +104,7 @@ export const BillsProvider = ({ children }) => {
         setError(null);
         setIsRetrying(false);
 
-        const unsubscribe = subscribeToBills((billsData, metadata) => {
+        const unsubscribe = subscribeToBills(tenantId, (billsData, metadata) => {
           setBills(billsData);
           setLoading(false);
 
@@ -252,7 +255,7 @@ export const BillsProvider = ({ children }) => {
       timeoutsRef.clear();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [retryCount]);
+  }, [retryCount, tenantId]);
 
   // Load analytics with caching
   useEffect(() => {
@@ -323,7 +326,7 @@ export const BillsProvider = ({ children }) => {
       const retryHandler = createRetryHandler(2, 1000);
 
       const newBill = await retryHandler(async () => {
-        const bill = await addBill(billData);
+        const bill = await addBill(billData, tenantId);
 
         recentlyCreatedBills.current.add(bill.id);
         recentlyEditedBills.current.add(bill.id);
@@ -368,7 +371,7 @@ export const BillsProvider = ({ children }) => {
               pricePerPiece: costPerUnit,
               profitPerPiece: profitPerPiece,
               totalProfit: Math.round((profitPerPiece * qty + Number.EPSILON) * 100) / 100
-            }, bill.id);
+            }, bill.id, {}, tenantId);
           });
 
         await Promise.all(productPromises);
@@ -385,7 +388,7 @@ export const BillsProvider = ({ children }) => {
       }, 30000);
 
       showSuccess(`Bill ${newBill.billNumber} created successfully!`);
-      addLog('created', 'Bill ' + newBill.billNumber, 'bill', 'Bills');
+      addLog('created', 'Bill ' + newBill.billNumber, 'bill', 'Bills', undefined, tenantId);
       return newBill;
     } catch (err) {
       suppressAllNotificationsUntil.current = 0;
@@ -494,7 +497,7 @@ export const BillsProvider = ({ children }) => {
               pricePerPiece: costPerUnit,
               profitPerPiece: profitPerPiece,
               totalProfit: Math.round((profitPerPiece * qty + Number.EPSILON) * 100) / 100
-            }, billId).catch(err =>
+            }, billId, {}, tenantId).catch(err =>
               console.error(`Error adding updated product:`, err)
             );
           }));
@@ -519,7 +522,7 @@ export const BillsProvider = ({ children }) => {
 
         suppressAllNotificationsUntil.current = Date.now() + 15000;
         showSuccess(`Bill ${billToUpdate?.billNumber || billId} updated successfully!`);
-        addLog('updated', 'Bill ' + (billToUpdate?.billNumber || billId), 'bill', 'Bills');
+        addLog('updated', 'Bill ' + (billToUpdate?.billNumber || billId), 'bill', 'Bills', undefined, tenantId);
 
         setTimeout(() => {
           recentlyEditedBills.current.delete(billId);
@@ -570,7 +573,7 @@ export const BillsProvider = ({ children }) => {
         }, { context: 'delete_bill', billId, billNumber: billToDelete?.billNumber });
 
         showError(`Bill ${billToDelete?.billNumber || billId} deleted.`, { duration: 5000 });
-        addLog('deleted', 'Bill ' + (billToDelete?.billNumber || billId), 'bill', 'Bills');
+        addLog('deleted', 'Bill ' + (billToDelete?.billNumber || billId), 'bill', 'Bills', undefined, tenantId);
 
         setSelectedBills(prev => {
           const newSelected = new Set(prev);
@@ -610,11 +613,11 @@ export const BillsProvider = ({ children }) => {
       const billToDuplicate = bills.find(b => b.id === billId);
 
       await retryHandler(async () => {
-        return await duplicateBill(billId);
+        return await duplicateBill(billId, tenantId);
       }, { context: 'duplicate_bill', billId, billNumber: billToDuplicate?.billNumber });
 
       showSuccess(`Bill ${billToDuplicate?.billNumber || billId} duplicated successfully!`);
-      addLog('duplicated', 'Bill ' + (billToDuplicate?.billNumber || billId), 'bill', 'Bills');
+      addLog('duplicated', 'Bill ' + (billToDuplicate?.billNumber || billId), 'bill', 'Bills', undefined, tenantId);
     } catch (err) {
       const billError = classifyError(err);
       reportError(billError, { context: 'duplicate_bill', billId });
@@ -649,7 +652,7 @@ export const BillsProvider = ({ children }) => {
       window.URL.revokeObjectURL(url);
 
       showSuccess(`Bill ${billToExport?.billNumber || billId} exported successfully!`);
-      addLog('exported', 'Bill ' + (billToExport?.billNumber || billId), 'bill', 'Bills');
+      addLog('exported', 'Bill ' + (billToExport?.billNumber || billId), 'bill', 'Bills', undefined, tenantId);
     } catch (err) {
       const billError = classifyError(err);
       reportError(billError, { context: 'export_bill', billId });
@@ -671,11 +674,11 @@ export const BillsProvider = ({ children }) => {
 
     try {
       await retryHandler(async () => {
-        await addShopProduct(productData, selectedBill.id);
+        await addShopProduct(productData, selectedBill.id, {}, tenantId);
       }, { context: 'add_product_to_bill', billId: selectedBill?.id });
 
       showSuccess(`Product "${productData.productName}" added to ${selectedBill.billNumber}!`);
-      addLog('updated', 'Bill ' + selectedBill.billNumber, 'bill', 'Bills', 'Added product "' + productData.productName + '"');
+      addLog('updated', 'Bill ' + selectedBill.billNumber, 'bill', 'Bills', 'Added product "' + productData.productName + '"', tenantId);
 
       // Refresh the products for this bill
       try {
@@ -756,7 +759,7 @@ export const BillsProvider = ({ children }) => {
 
       if (failureCount === 0) {
         showError(`${successCount} bill${successCount !== 1 ? 's' : ''} deleted.`, { duration: 5000 });
-        addLog('deleted', successCount + ' bills', 'bill', 'Bills');
+        addLog('deleted', successCount + ' bills', 'bill', 'Bills', undefined, tenantId);
       } else {
         showWarning(`Deleted ${successCount} bills successfully. ${failureCount} failed.`, {
           title: 'Partial Success',
@@ -806,7 +809,7 @@ export const BillsProvider = ({ children }) => {
       const billIds = Array.from(selectedBills);
 
       const results = await retryHandler(async () => {
-        return await bulkDuplicateBills(billIds, {
+        return await bulkDuplicateBills(billIds, tenantId, {
           onProgress: (completed, current) => {
             setBulkOperationStatus(prev => ({
               ...prev,
@@ -823,7 +826,7 @@ export const BillsProvider = ({ children }) => {
 
       if (failureCount === 0) {
         showSuccess(`Successfully duplicated ${successCount} bills!`);
-        addLog('duplicated', successCount + ' bills', 'bill', 'Bills');
+        addLog('duplicated', successCount + ' bills', 'bill', 'Bills', undefined, tenantId);
       } else {
         showWarning(`Duplicated ${successCount} bills successfully. ${failureCount} failed.`, {
           title: 'Partial Success',
@@ -890,7 +893,7 @@ export const BillsProvider = ({ children }) => {
 
       if (failureCount === 0) {
         showSuccess(`Successfully archived ${successCount} bills!`);
-        addLog('archived', successCount + ' bills', 'bill', 'Bills');
+        addLog('archived', successCount + ' bills', 'bill', 'Bills', undefined, tenantId);
       } else {
         showWarning(`Archived ${successCount} bills successfully. ${failureCount} failed.`, {
           title: 'Partial Success',
@@ -960,7 +963,7 @@ export const BillsProvider = ({ children }) => {
       window.URL.revokeObjectURL(url);
 
       showSuccess(`Successfully exported ${selectedBills.size} bills!`);
-      addLog('exported', selectedBills.size + ' bills', 'bill', 'Bills');
+      addLog('exported', selectedBills.size + ' bills', 'bill', 'Bills', undefined, tenantId);
       setSelectedBills(new Set());
     } catch (err) {
       const billError = classifyError(err);

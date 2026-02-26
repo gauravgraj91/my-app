@@ -8,6 +8,7 @@ import {
     onSnapshot,
     query,
     orderBy,
+    where,
     serverTimestamp
 } from 'firebase/firestore';
 import { db } from './config';
@@ -15,10 +16,11 @@ import { db } from './config';
 const COLLECTION_NAME = 'priceList';
 
 // Add a new price list item
-export const addPriceListItem = async (itemData) => {
+export const addPriceListItem = async (itemData, tenantId) => {
     try {
         const docRef = await addDoc(collection(db, COLLECTION_NAME), {
             ...itemData,
+            tenantId,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
         });
@@ -30,9 +32,9 @@ export const addPriceListItem = async (itemData) => {
 };
 
 // Get all price list items
-export const getPriceListItems = async () => {
+export const getPriceListItems = async (tenantId) => {
     try {
-        const q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
+        const q = query(collection(db, COLLECTION_NAME), where('tenantId', '==', tenantId), orderBy('createdAt', 'desc'));
         const querySnapshot = await getDocs(q);
         const items = [];
         querySnapshot.forEach((doc) => {
@@ -49,8 +51,8 @@ export const getPriceListItems = async () => {
 };
 
 // Subscribe to price list items
-export const subscribeToPriceList = (callback) => {
-    const q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
+export const subscribeToPriceList = (tenantId, callback) => {
+    const q = query(collection(db, COLLECTION_NAME), where('tenantId', '==', tenantId), orderBy('createdAt', 'desc'));
     return onSnapshot(q, (querySnapshot) => {
         const items = [];
         querySnapshot.forEach((doc) => {

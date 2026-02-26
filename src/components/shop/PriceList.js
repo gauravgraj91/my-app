@@ -6,6 +6,7 @@ import { subscribeToShopProducts } from '../../firebase/shopProductService';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import SummaryCard from '../ui/SummaryCard';
 import SortableHeader from '../ui/SortableHeader';
+import { useAuth } from '../../context/AuthContext';
 
 // --- Styles ---
 const STYLES = {
@@ -13,6 +14,8 @@ const STYLES = {
 };
 
 const PriceList = () => {
+  const { user } = useAuth();
+  const tenantId = user?.tenantId;
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -21,12 +24,13 @@ const PriceList = () => {
   const [sortDirection, setSortDirection] = useState('asc');
 
   useEffect(() => {
-    const unsubscribe = subscribeToShopProducts((items) => {
+    if (!tenantId) return;
+    const unsubscribe = subscribeToShopProducts(tenantId, (items) => {
       setProducts(items || []);
       setLoading(false);
     });
     return () => { if (typeof unsubscribe === 'function') unsubscribe(); };
-  }, []);
+  }, [tenantId]);
 
   // Group products by name (case-insensitive) and pick latest entry
   const priceListData = useMemo(() => {

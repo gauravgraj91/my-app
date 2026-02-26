@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Settings as SettingsIcon, Moon, Sun, Bell, Shield, Clock, Trash2, FileText } from "lucide-react";
-import { getLogs, clearLogs } from '../../utils/activityLog';
+import { subscribeActivityLogs, clearActivityLogs, migrateLocalStorageLogs } from '../../firebase/activityLogService';
+import { useAuth } from '../../context/AuthContext';
 import ConfirmDialog from '../ui/ConfirmDialog';
 import "./Settings.css";
 
@@ -29,6 +30,8 @@ function timeAgo(ts) {
 }
 
 const Settings = () => {
+  const { user } = useAuth();
+  const tenantId = user?.tenantId;
   const [theme, setTheme] = useState("light");
   const [notifications, setNotifications] = useState(true);
   const [autoSave, setAutoSave] = useState(true);
@@ -122,25 +125,31 @@ const Settings = () => {
 
   // Activity Log state
   const [logFilter, setLogFilter] = useState('All');
-  const [logs, setLogs] = useState(() => getLogs());
+  const [logs, setLogs] = useState([]);
+  const [logsLoading, setLogsLoading] = useState(true);
   const [confirmDialog, setConfirmDialog] = useState({ open: false, title: '', message: '', onConfirm: null });
 
   useEffect(() => {
-    const refresh = () => setLogs(getLogs());
-    window.addEventListener('storage', refresh);
-    return () => window.removeEventListener('storage', refresh);
+    migrateLocalStorageLogs();
   }, []);
 
-  const filteredLogs = logFilter === 'All' ? logs : logs.filter(l => l.tab === logFilter);
+  useEffect(() => {
+    if (!tenantId) return;
+    setLogsLoading(true);
+    const unsub = subscribeActivityLogs(tenantId, logFilter, (newLogs) => {
+      setLogs(newLogs);
+      setLogsLoading(false);
+    });
+    return unsub;
+  }, [logFilter, tenantId]);
 
   const handleClearLogs = () => {
     setConfirmDialog({
       open: true,
       title: 'Clear Activity Log',
       message: 'Clear all activity log entries? This cannot be undone.',
-      onConfirm: () => {
-        clearLogs();
-        setLogs([]);
+      onConfirm: async () => {
+        await clearActivityLogs(tenantId);
         setConfirmDialog(s => ({ ...s, open: false }));
       },
     });
@@ -374,7 +383,11 @@ const Settings = () => {
 
         {/* Log Table */}
         <div className="settings-card" style={{ overflow: 'hidden' }}>
-          {filteredLogs.length > 0 ? (
+          {logsLoading ? (
+            <div style={{ padding: '48px 20px', textAlign: 'center' }}>
+              <div style={{ fontSize: '14px', color: '#94a3b8' }}>Loading activity logs...</div>
+            </div>
+          ) : logs.length > 0 ? (
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
@@ -413,7 +426,7 @@ const Settings = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredLogs.map((log, idx) => {
+                {logs.map((log, idx) => {
                   const badge = ACTION_BADGE[log.action] || ACTION_BADGE.exported;
                   return (
                     <tr key={log.id} style={{

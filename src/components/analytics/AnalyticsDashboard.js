@@ -10,10 +10,13 @@ import {
   DollarSign, ShoppingCart, Settings, Plus,
   ArrowUpRight, CreditCard
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import './analytics_theme_1.css';
 
 const AnalyticsDashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const tenantId = user?.tenantId;
   const { stats: taskStats } = useTasks();
   const [shopData, setShopData] = useState([]);
   const [transactions, setTransactions] = useState([]);
@@ -22,19 +25,21 @@ const AnalyticsDashboard = () => {
 
   // Subscribe to shop data
   useEffect(() => {
-    const unsubscribeShop = subscribeToShopProducts((products) => {
+    if (!tenantId) return;
+    const unsubscribeShop = subscribeToShopProducts(tenantId, (products) => {
       setShopData(products);
     });
     return () => unsubscribeShop();
-  }, []);
+  }, [tenantId]);
 
   // Subscribe to transactions
   useEffect(() => {
-    const unsubscribeTransactions = subscribeToTransactions((transactions) => {
+    if (!tenantId) return;
+    const unsubscribeTransactions = subscribeToTransactions(tenantId, (transactions) => {
       setTransactions(transactions);
     });
     return () => unsubscribeTransactions();
-  }, []);
+  }, [tenantId]);
 
   // Subscribe to enhanced analytics
   useEffect(() => {

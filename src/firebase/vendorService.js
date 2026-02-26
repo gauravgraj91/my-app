@@ -7,6 +7,7 @@ import {
   onSnapshot,
   query,
   orderBy,
+  where,
   serverTimestamp,
   getDoc,
   getDocs
@@ -16,8 +17,8 @@ import { db } from './config';
 const COLLECTION_NAME = 'shopVendors';
 
 // Subscribe to real-time vendor updates
-export const subscribeToVendors = (callback) => {
-  const q = query(collection(db, COLLECTION_NAME), orderBy('name', 'asc'));
+export const subscribeToVendors = (tenantId, callback) => {
+  const q = query(collection(db, COLLECTION_NAME), where('tenantId', '==', tenantId), orderBy('name', 'asc'));
   return onSnapshot(q, (snapshot) => {
     const vendors = snapshot.docs.map(doc => ({
       id: doc.id,
@@ -31,9 +32,10 @@ export const subscribeToVendors = (callback) => {
 };
 
 // Add a new vendor
-export const addVendor = async (vendorData) => {
+export const addVendor = async (vendorData, tenantId) => {
   const docRef = await addDoc(collection(db, COLLECTION_NAME), {
     ...vendorData,
+    tenantId,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });

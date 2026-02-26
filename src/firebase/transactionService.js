@@ -1,24 +1,26 @@
-import { 
-  collection, 
-  addDoc, 
-  getDocs, 
-  deleteDoc, 
-  doc, 
+import {
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc,
   updateDoc,
   onSnapshot,
   query,
   orderBy,
-  serverTimestamp 
+  where,
+  serverTimestamp
 } from 'firebase/firestore';
 import { db } from './config';
 
 const COLLECTION_NAME = 'transactions';
 
 // Add a new transaction
-export const addTransaction = async (transactionData) => {
+export const addTransaction = async (transactionData, tenantId) => {
   try {
     const docRef = await addDoc(collection(db, COLLECTION_NAME), {
       ...transactionData,
+      tenantId,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
@@ -30,9 +32,9 @@ export const addTransaction = async (transactionData) => {
 };
 
 // Get all transactions
-export const getTransactions = async () => {
+export const getTransactions = async (tenantId) => {
   try {
-    const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
+    const querySnapshot = await getDocs(query(collection(db, COLLECTION_NAME), where('tenantId', '==', tenantId)));
     const transactions = [];
     querySnapshot.forEach((doc) => {
       transactions.push({
@@ -72,8 +74,8 @@ export const updateTransaction = async (transactionId, updateData) => {
 };
 
 // Real-time listener for transactions
-export const subscribeToTransactions = (callback) => {
-  const q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
+export const subscribeToTransactions = (tenantId, callback) => {
+  const q = query(collection(db, COLLECTION_NAME), where('tenantId', '==', tenantId), orderBy('createdAt', 'desc'));
   
   return onSnapshot(q, (querySnapshot) => {
     const transactions = [];

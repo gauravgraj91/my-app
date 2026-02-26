@@ -11,6 +11,7 @@ import { useVendors } from '../../context/VendorsContext';
 import { subscribeToShopProducts } from '../../firebase/shopProductService';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import SummaryCard from '../ui/SummaryCard';
+import { useAuth } from '../../context/AuthContext';
 
 // --- Styles ---
 const STYLES = {
@@ -62,6 +63,8 @@ const TAB_ROUTES = { home: '/shop', bills: '/shop/bills', products: '/shop/produ
 
 const HomeView = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const tenantId = user?.tenantId;
   const onNavigate = (tab) => navigate(TAB_ROUTES[tab] || '/shop');
   const { bills } = useBills();
   const { vendors } = useVendors();
@@ -70,12 +73,13 @@ const HomeView = () => {
 
   // Subscribe to products
   useEffect(() => {
-    const unsubscribe = subscribeToShopProducts((items) => {
+    if (!tenantId) return;
+    const unsubscribe = subscribeToShopProducts(tenantId, (items) => {
       setProducts(items || []);
       setLoadingProducts(false);
     });
     return () => { if (typeof unsubscribe === 'function') unsubscribe(); };
-  }, []);
+  }, [tenantId]);
 
   // --- Computed stats ---
   const billStats = useMemo(() => {

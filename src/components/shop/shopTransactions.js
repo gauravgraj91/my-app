@@ -2,8 +2,11 @@ import React, { useState, useEffect } from "react"
 import { addTransaction, subscribeToTransactions, deleteTransaction } from '../../firebase/transactionService'
 import { format } from 'date-fns';
 import { useNotifications } from '../ui/NotificationSystem';
+import { useAuth } from '../../context/AuthContext';
 
 const ShopTransactions = () => {
+  const { user } = useAuth();
+  const tenantId = user?.tenantId;
   const [transactions, setTransactions] = useState([])
   const [amount, setAmount] = useState("")
   const [type, setType] = useState("cashIn")
@@ -15,13 +18,14 @@ const ShopTransactions = () => {
 
   // Subscribe to real-time updates
   useEffect(() => {
-    const unsubscribe = subscribeToTransactions((transactions) => {
+    if (!tenantId) return;
+    const unsubscribe = subscribeToTransactions(tenantId, (transactions) => {
       setTransactions(transactions)
       setLoading(false)
     })
 
     return () => unsubscribe()
-  }, [])
+  }, [tenantId])
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
@@ -57,7 +61,7 @@ const ShopTransactions = () => {
         comment: comment.trim()
       }
 
-      await addTransaction(newTransaction)
+      await addTransaction(newTransaction, tenantId)
       setAmount("")
       setComment("")
       showSuccess("Transaction added successfully!")

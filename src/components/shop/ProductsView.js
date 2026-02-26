@@ -21,6 +21,7 @@ import {
 } from '../../firebase/shopProductService';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { addLog } from '../../utils/activityLog';
+import { useAuth } from '../../context/AuthContext';
 
 const defaultCategories = ['Clothing', 'Electronics', 'Groceries', 'Accessories', 'Other'];
 const defaultVendors = ['ABC Suppliers', 'XYZ Distributors', 'Local Market', 'Online Store', 'Direct Import', 'Other'];
@@ -60,6 +61,8 @@ const getCategoryBadge = (cat) => {
 
 const ProductsView = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const tenantId = user?.tenantId;
   const onNavigateToBill = (billNumber) => navigate('/shop/bills', { state: { search: billNumber } });
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -91,12 +94,13 @@ const ProductsView = () => {
   const closeConfirm = () => setConfirmDialog(s => ({ ...s, open: false }));
 
   useEffect(() => {
-    const unsubscribe = subscribeToShopProducts((products) => {
+    if (!tenantId) return;
+    const unsubscribe = subscribeToShopProducts(tenantId, (products) => {
       setData(products || []);
       setLoading(false);
     });
     return () => { if (typeof unsubscribe === 'function') unsubscribe(); };
-  }, []);
+  }, [tenantId]);
 
   useEffect(() => {
     const sync = () => {
@@ -148,9 +152,9 @@ const ProductsView = () => {
         category: defaultCategory,
         vendor: defaultVendor,
         mrp: 0, totalQuantity: 0, totalAmount: 0, pricePerPiece: 0, profitPerPiece: 0,
-      });
+      }, null, {}, tenantId);
       showSuccess('Product added successfully!');
-      addLog('created', 'Product', 'product', 'Products');
+      addLog('created', 'Product', 'product', 'Products', null, tenantId);
     } catch (error) {
       showError('Failed to add product. Please try again.');
     }
@@ -165,7 +169,7 @@ const ProductsView = () => {
         try {
           await deleteShopProduct(id);
           showError('Product deleted.', { duration: 5000 });
-          addLog('deleted', 'Product', 'product', 'Products');
+          addLog('deleted', 'Product', 'product', 'Products', null, tenantId);
         } catch (error) {
           showError('Failed to delete product. Please try again.');
         }
@@ -179,7 +183,7 @@ const ProductsView = () => {
     try {
       await updateShopProduct(updatedProduct.id, updatedProduct);
       showSuccess('Product updated successfully!');
-      addLog('updated', 'Product', 'product', 'Products');
+      addLog('updated', 'Product', 'product', 'Products', null, tenantId);
       setModalOpen(false);
       setSelectedProduct(null);
     } catch (error) {
@@ -211,7 +215,7 @@ const ProductsView = () => {
           ? `Product assigned to ${bill.billNumber}!`
           : `${productsToAssign.length} products assigned to ${bill.billNumber}!`
       );
-      addLog('assigned', (productsToAssign.length === 1 ? 'Product' : productsToAssign.length + ' products') + ' \u2192 ' + bill.billNumber, 'product', 'Products');
+      addLog('assigned', (productsToAssign.length === 1 ? 'Product' : productsToAssign.length + ' products') + ' \u2192 ' + bill.billNumber, 'product', 'Products', null, tenantId);
       setSelectedProducts(new Set());
       setShowBulkActions(false);
     } catch (error) {
@@ -229,7 +233,7 @@ const ProductsView = () => {
         try {
           await removeProductFromBill(product.id);
           showError(`Product removed from ${product.billNumber}.`, { duration: 5000 });
-          addLog('removed', 'Product from ' + product.billNumber, 'product', 'Products');
+          addLog('removed', 'Product from ' + product.billNumber, 'product', 'Products', null, tenantId);
         } catch (error) {
           console.error('Error removing from bill:', error);
           showError('Failed to remove product from bill');
@@ -268,7 +272,7 @@ const ProductsView = () => {
         try {
           for (const productId of selectedProducts) await deleteShopProduct(productId);
           showError(`${count} product${count !== 1 ? 's' : ''} deleted.`, { duration: 5000 });
-          addLog('deleted', count + ' products', 'product', 'Products');
+          addLog('deleted', count + ' products', 'product', 'Products', null, tenantId);
           setSelectedProducts(new Set());
           setShowBulkActions(false);
         } catch (error) {

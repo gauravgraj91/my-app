@@ -18,6 +18,7 @@ import { formatCurrency, formatDate } from '../../utils/formatters';
 import ConfirmDialog from '../ui/ConfirmDialog';
 import { useNotifications } from '../ui/NotificationSystem';
 import { addLog } from '../../utils/activityLog';
+import { useAuth } from '../../context/AuthContext';
 
 // --- Styles ---
 const STYLES = {
@@ -48,6 +49,8 @@ const PriceTrend = ({ lastPrice, offeredPrice }) => {
 // --- Main component ---
 const VendorsView = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const tenantId = user?.tenantId;
   const onNavigateToBill = (billNumber) => navigate('/shop/bills', { state: { search: billNumber } });
   const {
     vendors, vendorProducts, loading,
@@ -296,11 +299,11 @@ const VendorsView = () => {
       if (editingVendor && !editingVendor.isUnregistered) {
         await handleUpdateVendor(editingVendor.id, vendorForm);
         showSuccess('Vendor updated successfully!');
-        addLog('updated', 'Vendor "' + vendorForm.name + '"', 'vendor', 'Vendors');
+        addLog('updated', 'Vendor "' + vendorForm.name + '"', 'vendor', 'Vendors', null, tenantId);
       } else {
         await handleAddVendor(vendorForm);
         showSuccess('Vendor added successfully!');
-        addLog('created', 'Vendor "' + vendorForm.name + '"', 'vendor', 'Vendors');
+        addLog('created', 'Vendor "' + vendorForm.name + '"', 'vendor', 'Vendors', null, tenantId);
       }
       setShowAddModal(false);
       setEditingVendor(null);
@@ -320,7 +323,7 @@ const VendorsView = () => {
         try {
           await handleDeleteVendor(vendor.id);
           showError(`Vendor "${vendor.name}" deleted.`, { duration: 5000 });
-          addLog('deleted', 'Vendor "' + vendor.name + '"', 'vendor', 'Vendors');
+          addLog('deleted', 'Vendor "' + vendor.name + '"', 'vendor', 'Vendors', null, tenantId);
         } catch (err) {
           console.error('Error deleting vendor:', err);
           showError('Failed to delete vendor. Please try again.');
@@ -356,7 +359,7 @@ const VendorsView = () => {
       setShowAddProductModal(false);
       setSelectedVendorForProduct(null);
       showSuccess('Product added to vendor catalog!');
-      addLog('created', 'Product in vendor catalog', 'vendor', 'Vendors');
+      addLog('created', 'Product in vendor catalog', 'vendor', 'Vendors', null, tenantId);
     } catch (err) {
       console.error('Error saving vendor product:', err);
       showError('Failed to add product. Please try again.');
@@ -412,579 +415,579 @@ const VendorsView = () => {
 
   return (
     <>
-    <ErrorBoundary>
-      <div style={{ padding: '24px' }}>
-        {/* Header */}
-        <div style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-          marginBottom: '24px', flexWrap: 'wrap', gap: '12px',
-        }}>
-          <div>
-            <h2 style={{
-              fontSize: '24px', fontWeight: '800', color: '#0f172a',
-              margin: '0 0 4px 0', letterSpacing: '-0.02em'
-            }}>
-              Vendors
-            </h2>
-            <p style={{ margin: 0, fontSize: '14px', color: '#64748b' }}>
-              Manage suppliers, track prices and payments
-            </p>
+      <ErrorBoundary>
+        <div style={{ padding: '24px' }}>
+          {/* Header */}
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+            marginBottom: '24px', flexWrap: 'wrap', gap: '12px',
+          }}>
+            <div>
+              <h2 style={{
+                fontSize: '24px', fontWeight: '800', color: '#0f172a',
+                margin: '0 0 4px 0', letterSpacing: '-0.02em'
+              }}>
+                Vendors
+              </h2>
+              <p style={{ margin: 0, fontSize: '14px', color: '#64748b' }}>
+                Manage suppliers, track prices and payments
+              </p>
+            </div>
+            <Button
+              variant="primary"
+              size="small"
+              icon={<Plus size={14} />}
+              onClick={openAddModal}
+              style={{ borderRadius: '8px', fontWeight: '600' }}
+            >
+              New Vendor
+            </Button>
           </div>
-          <Button
-            variant="primary"
-            size="small"
-            icon={<Plus size={14} />}
-            onClick={openAddModal}
-            style={{ borderRadius: '8px', fontWeight: '600' }}
-          >
-            New Vendor
-          </Button>
-        </div>
 
-        {/* Summary Cards */}
-        <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: '16px', marginBottom: '24px',
-        }}>
-          <SummaryCard
-            label="Total Vendors" value={summaryStats.total}
-            subtitle="vendors" icon={Users} color="#0f172a" bgColor="#f1f5f9"
-          />
-          <SummaryCard
-            label="Active Vendors" value={summaryStats.active}
-            subtitle="last 30 days" icon={CheckCircle} color="#10b981" bgColor="#ecfdf5"
-          />
-          <SummaryCard
-            label="Outstanding" value={formatCurrency(summaryStats.outstanding.amount)}
-            subtitle={`${summaryStats.outstanding.count} vendor${summaryStats.outstanding.count !== 1 ? 's' : ''}`}
-            icon={Clock} color="#f59e0b" bgColor="#fff7ed"
-          />
-          <SummaryCard
-            label="Overdue" value={formatCurrency(summaryStats.overdue.amount)}
-            subtitle={`${summaryStats.overdue.count} vendor${summaryStats.overdue.count !== 1 ? 's' : ''}`}
-            icon={AlertTriangle} color="#ef4444" bgColor="#fef2f2"
-          />
-        </div>
-
-        {/* Search + Tabs */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '12px',
-          marginBottom: '16px', flexWrap: 'wrap',
-        }}>
-          <div style={{ flex: 1, minWidth: '250px' }}>
-            <Input
-              placeholder="Search vendors by name, phone, or GSTIN..."
-              icon={<Search size={14} />}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              containerStyle={{ marginBottom: 0 }}
-              style={{ background: '#fff', border: '1px solid #e2e8f0', fontSize: '13px', padding: '10px 12px' }}
+          {/* Summary Cards */}
+          <div style={{
+            display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '16px', marginBottom: '24px',
+          }}>
+            <SummaryCard
+              label="Total Vendors" value={summaryStats.total}
+              subtitle="vendors" icon={Users} color="#0f172a" bgColor="#f1f5f9"
+            />
+            <SummaryCard
+              label="Active Vendors" value={summaryStats.active}
+              subtitle="last 30 days" icon={CheckCircle} color="#10b981" bgColor="#ecfdf5"
+            />
+            <SummaryCard
+              label="Outstanding" value={formatCurrency(summaryStats.outstanding.amount)}
+              subtitle={`${summaryStats.outstanding.count} vendor${summaryStats.outstanding.count !== 1 ? 's' : ''}`}
+              icon={Clock} color="#f59e0b" bgColor="#fff7ed"
+            />
+            <SummaryCard
+              label="Overdue" value={formatCurrency(summaryStats.overdue.amount)}
+              subtitle={`${summaryStats.overdue.count} vendor${summaryStats.overdue.count !== 1 ? 's' : ''}`}
+              icon={AlertTriangle} color="#ef4444" bgColor="#fef2f2"
             />
           </div>
+
+          {/* Search + Tabs */}
           <div style={{
-            display: 'flex', alignItems: 'center', gap: '4px',
-            background: '#f1f5f9', borderRadius: '8px', padding: '3px',
+            display: 'flex', alignItems: 'center', gap: '12px',
+            marginBottom: '16px', flexWrap: 'wrap',
           }}>
-            {[
-              { key: 'all', label: 'All' },
-              { key: 'active', label: 'Active' },
-              { key: 'outstanding', label: 'Outstanding' },
-              { key: 'inactive', label: 'Inactive' },
-            ].map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                style={{
-                  padding: '6px 16px', border: 'none', borderRadius: '6px',
-                  fontSize: '13px', fontWeight: '600', cursor: 'pointer',
-                  transition: 'all 0.15s',
-                  background: activeTab === tab.key ? '#1e293b' : 'transparent',
-                  color: activeTab === tab.key ? '#fff' : '#64748b',
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Table */}
-        <div style={{ marginBottom: '24px' }}>
-          {filteredVendors.length > 0 ? (
+            <div style={{ flex: 1, minWidth: '250px' }}>
+              <Input
+                placeholder="Search vendors by name, phone, or GSTIN..."
+                icon={<Search size={14} />}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                containerStyle={{ marginBottom: 0 }}
+                style={{ background: '#fff', border: '1px solid #e2e8f0', fontSize: '13px', padding: '10px 12px' }}
+              />
+            </div>
             <div style={{
-              background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
-              overflow: 'hidden',
+              display: 'flex', alignItems: 'center', gap: '4px',
+              background: '#f1f5f9', borderRadius: '8px', padding: '3px',
             }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr>
-                    <th style={{ ...STYLES.headerCell, width: '32px', padding: '12px 8px' }} />
-                    <th style={STYLES.headerCell}>Vendor</th>
-                    <th style={STYLES.headerCell}>Phone</th>
-                    <th style={STYLES.headerCell}>GSTIN</th>
-                    <th style={{ ...STYLES.headerCell, textAlign: 'center' }}>Products</th>
-                    <th style={{ ...STYLES.headerCell, textAlign: 'center' }}>Bills</th>
-                    <th style={{ ...STYLES.headerCell, textAlign: 'right' }}>Outstanding</th>
-                    <th style={{ ...STYLES.headerCell, textAlign: 'center', width: '80px' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredVendors.map((vendor, idx) => {
-                    const isExpanded = expandedRows.has(vendor.id);
-                    const subTab = expandedSubTab[vendor.id] || 'products';
-                    const mergedProducts = isExpanded ? getMergedProducts(vendor) : [];
-                    const recentBills = isExpanded ? getVendorBills(vendor.name) : [];
-                    const productCount = Object.keys(vendor.stats.productPrices).length;
+              {[
+                { key: 'all', label: 'All' },
+                { key: 'active', label: 'Active' },
+                { key: 'outstanding', label: 'Outstanding' },
+                { key: 'inactive', label: 'Inactive' },
+              ].map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  style={{
+                    padding: '6px 16px', border: 'none', borderRadius: '6px',
+                    fontSize: '13px', fontWeight: '600', cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    background: activeTab === tab.key ? '#1e293b' : 'transparent',
+                    color: activeTab === tab.key ? '#fff' : '#64748b',
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-                    return (
-                      <React.Fragment key={vendor.id}>
-                        <tr style={{
-                          borderBottom: isExpanded ? 'none' : '1px solid #f1f5f9',
-                          background: idx % 2 === 0 ? '#fff' : '#fafbfc',
-                          transition: 'background 0.15s',
-                        }}>
-                          <td style={{ padding: '12px 8px' }}>
-                            <button
-                              onClick={() => toggleRowExpanded(vendor.id)}
-                              style={{
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                background: 'none', border: 'none', cursor: 'pointer', padding: '2px',
-                                color: '#94a3b8', transition: 'color 0.15s',
-                              }}
-                            >
-                              {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                            </button>
-                          </td>
-                          <td style={STYLES.tableCell}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <span style={{ fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>
-                                {vendor.name}
-                              </span>
-                              {vendor.isUnregistered && (
-                                <span style={{
-                                  fontSize: '10px', fontWeight: '600', color: '#f59e0b',
-                                  background: '#fef3c7', padding: '1px 6px', borderRadius: '4px',
-                                }}>
-                                  From Bills
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td style={STYLES.tableCell}>
-                            <span style={{ fontSize: '13px', color: '#64748b' }}>
-                              {vendor.phone || '-'}
-                            </span>
-                          </td>
-                          <td style={STYLES.tableCell}>
-                            <span style={{ fontSize: '12px', color: '#94a3b8', fontFamily: 'monospace' }}>
-                              {vendor.gstin ? vendor.gstin.substring(0, 15) : '-'}
-                            </span>
-                          </td>
-                          <td style={{ ...STYLES.tableCell, textAlign: 'center' }}>
-                            <span style={{
-                              fontSize: '12px', fontWeight: '500', color: '#64748b',
-                              background: '#f1f5f9', padding: '2px 8px', borderRadius: '10px',
-                            }}>
-                              {productCount} item{productCount !== 1 ? 's' : ''}
-                            </span>
-                          </td>
-                          <td style={{ ...STYLES.tableCell, textAlign: 'center' }}>
-                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#334155' }}>
-                              {vendor.stats.totalBills}
-                            </span>
-                          </td>
-                          <td style={{ ...STYLES.tableCell, textAlign: 'right' }}>
-                            <span style={{
-                              fontSize: '14px', fontWeight: '700',
-                              color: vendor.stats.outstandingAmount > 0 ? '#ef4444' : '#10b981',
-                            }}>
-                              {vendor.stats.outstandingAmount > 0
-                                ? formatCurrency(vendor.stats.outstandingAmount)
-                                : 'Settled'}
-                            </span>
-                          </td>
-                          <td style={{ ...STYLES.tableCell, textAlign: 'center' }}>
-                            <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
+          {/* Table */}
+          <div style={{ marginBottom: '24px' }}>
+            {filteredVendors.length > 0 ? (
+              <div style={{
+                background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
+                overflow: 'hidden',
+              }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ ...STYLES.headerCell, width: '32px', padding: '12px 8px' }} />
+                      <th style={STYLES.headerCell}>Vendor</th>
+                      <th style={STYLES.headerCell}>Phone</th>
+                      <th style={STYLES.headerCell}>GSTIN</th>
+                      <th style={{ ...STYLES.headerCell, textAlign: 'center' }}>Products</th>
+                      <th style={{ ...STYLES.headerCell, textAlign: 'center' }}>Bills</th>
+                      <th style={{ ...STYLES.headerCell, textAlign: 'right' }}>Outstanding</th>
+                      <th style={{ ...STYLES.headerCell, textAlign: 'center', width: '80px' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredVendors.map((vendor, idx) => {
+                      const isExpanded = expandedRows.has(vendor.id);
+                      const subTab = expandedSubTab[vendor.id] || 'products';
+                      const mergedProducts = isExpanded ? getMergedProducts(vendor) : [];
+                      const recentBills = isExpanded ? getVendorBills(vendor.name) : [];
+                      const productCount = Object.keys(vendor.stats.productPrices).length;
+
+                      return (
+                        <React.Fragment key={vendor.id}>
+                          <tr style={{
+                            borderBottom: isExpanded ? 'none' : '1px solid #f1f5f9',
+                            background: idx % 2 === 0 ? '#fff' : '#fafbfc',
+                            transition: 'background 0.15s',
+                          }}>
+                            <td style={{ padding: '12px 8px' }}>
                               <button
-                                onClick={(e) => { e.stopPropagation(); openEditModal(vendor); }}
+                                onClick={() => toggleRowExpanded(vendor.id)}
                                 style={{
-                                  background: 'none', border: 'none', cursor: 'pointer',
-                                  padding: '4px', borderRadius: '4px', color: '#94a3b8',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  background: 'none', border: 'none', cursor: 'pointer', padding: '2px',
+                                  color: '#94a3b8', transition: 'color 0.15s',
                                 }}
-                                title="Edit vendor"
                               >
-                                <Edit size={14} />
+                                {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                               </button>
-                              {!vendor.isUnregistered && (
+                            </td>
+                            <td style={STYLES.tableCell}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>
+                                  {vendor.name}
+                                </span>
+                                {vendor.isUnregistered && (
+                                  <span style={{
+                                    fontSize: '10px', fontWeight: '600', color: '#f59e0b',
+                                    background: '#fef3c7', padding: '1px 6px', borderRadius: '4px',
+                                  }}>
+                                    From Bills
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td style={STYLES.tableCell}>
+                              <span style={{ fontSize: '13px', color: '#64748b' }}>
+                                {vendor.phone || '-'}
+                              </span>
+                            </td>
+                            <td style={STYLES.tableCell}>
+                              <span style={{ fontSize: '12px', color: '#94a3b8', fontFamily: 'monospace' }}>
+                                {vendor.gstin ? vendor.gstin.substring(0, 15) : '-'}
+                              </span>
+                            </td>
+                            <td style={{ ...STYLES.tableCell, textAlign: 'center' }}>
+                              <span style={{
+                                fontSize: '12px', fontWeight: '500', color: '#64748b',
+                                background: '#f1f5f9', padding: '2px 8px', borderRadius: '10px',
+                              }}>
+                                {productCount} item{productCount !== 1 ? 's' : ''}
+                              </span>
+                            </td>
+                            <td style={{ ...STYLES.tableCell, textAlign: 'center' }}>
+                              <span style={{ fontSize: '13px', fontWeight: '600', color: '#334155' }}>
+                                {vendor.stats.totalBills}
+                              </span>
+                            </td>
+                            <td style={{ ...STYLES.tableCell, textAlign: 'right' }}>
+                              <span style={{
+                                fontSize: '14px', fontWeight: '700',
+                                color: vendor.stats.outstandingAmount > 0 ? '#ef4444' : '#10b981',
+                              }}>
+                                {vendor.stats.outstandingAmount > 0
+                                  ? formatCurrency(vendor.stats.outstandingAmount)
+                                  : 'Settled'}
+                              </span>
+                            </td>
+                            <td style={{ ...STYLES.tableCell, textAlign: 'center' }}>
+                              <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
                                 <button
-                                  onClick={(e) => { e.stopPropagation(); handleDeleteVendorClick(vendor); }}
+                                  onClick={(e) => { e.stopPropagation(); openEditModal(vendor); }}
                                   style={{
                                     background: 'none', border: 'none', cursor: 'pointer',
                                     padding: '4px', borderRadius: '4px', color: '#94a3b8',
                                   }}
-                                  title="Delete vendor"
+                                  title="Edit vendor"
                                 >
-                                  <Trash2 size={14} />
+                                  <Edit size={14} />
                                 </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-
-                        {/* Expanded Section */}
-                        {isExpanded && (
-                          <tr>
-                            <td colSpan={8} style={{ padding: 0 }}>
-                              <div style={{
-                                background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '0',
-                              }}>
-                                {/* Sub-tabs */}
-                                <div style={{
-                                  display: 'flex', gap: '0', borderBottom: '1px solid #e2e8f0',
-                                  padding: '0 20px',
-                                }}>
-                                  {['products', 'bills'].map(tab => (
-                                    <button
-                                      key={tab}
-                                      onClick={() => setExpandedSubTab(prev => ({ ...prev, [vendor.id]: tab }))}
-                                      style={{
-                                        padding: '10px 16px', border: 'none', background: 'none',
-                                        fontSize: '13px', fontWeight: '600', cursor: 'pointer',
-                                        color: subTab === tab ? '#1e293b' : '#94a3b8',
-                                        borderBottom: subTab === tab ? '2px solid #1e293b' : '2px solid transparent',
-                                        transition: 'all 0.15s',
-                                      }}
-                                    >
-                                      {tab === 'products' ? 'Products & Prices' : 'Recent Bills'}
-                                    </button>
-                                  ))}
-                                </div>
-
-                                {/* Products Tab */}
-                                {subTab === 'products' && (
-                                  <div>
-                                    {mergedProducts.length > 0 ? (
-                                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                        <thead>
-                                          <tr>
-                                            <th style={{ ...STYLES.subHeaderCell, padding: '10px 20px 10px 40px' }}>Product</th>
-                                            <th style={STYLES.subHeaderCell}>Category</th>
-                                            <th style={{ ...STYLES.subHeaderCell, textAlign: 'right' }}>Last Price</th>
-                                            <th style={{ ...STYLES.subHeaderCell, textAlign: 'right' }}>Offered</th>
-                                            <th style={{ ...STYLES.subHeaderCell, textAlign: 'center' }}>Trend</th>
-                                            <th style={STYLES.subHeaderCell}>Last Bill</th>
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          {mergedProducts.map((product, pIdx) => (
-                                            <tr key={pIdx} style={{
-                                              borderBottom: pIdx < mergedProducts.length - 1 ? '1px solid #eef0f2' : 'none',
-                                            }}>
-                                              <td style={{ ...STYLES.subTableCell, padding: '10px 20px 10px 40px' }}>
-                                                <span style={{ fontSize: '13px', fontWeight: '600', color: '#1e293b' }}>
-                                                  {product.productName}
-                                                </span>
-                                              </td>
-                                              <td style={STYLES.subTableCell}>
-                                                <span style={{
-                                                  fontSize: '12px', color: '#94a3b8',
-                                                  background: '#eef0f2', padding: '1px 6px', borderRadius: '4px',
-                                                }}>
-                                                  {product.category || '-'}
-                                                </span>
-                                              </td>
-                                              <td style={{ ...STYLES.subTableCell, textAlign: 'right' }}>
-                                                <span style={{ fontSize: '13px', color: '#64748b' }}>
-                                                  {product.lastPrice ? formatCurrency(product.lastPrice) : '-'}
-                                                </span>
-                                              </td>
-                                              <td style={{ ...STYLES.subTableCell, textAlign: 'right' }}>
-                                                <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
-                                                  {product.offeredPrice ? formatCurrency(product.offeredPrice) : '-'}
-                                                </span>
-                                              </td>
-                                              <td style={{ ...STYLES.subTableCell, textAlign: 'center' }}>
-                                                <PriceTrend lastPrice={product.lastPrice} offeredPrice={product.offeredPrice} />
-                                              </td>
-                                              <td style={STYLES.subTableCell}>
-                                                <span style={{ fontSize: '12px', color: '#94a3b8' }}>
-                                                  {product.lastBillNumber || '-'}
-                                                </span>
-                                              </td>
-                                            </tr>
-                                          ))}
-                                        </tbody>
-                                      </table>
-                                    ) : (
-                                      <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
-                                        <Package size={24} style={{ margin: '0 auto 8px', opacity: 0.4 }} />
-                                        <div>No products tracked for this vendor</div>
-                                      </div>
-                                    )}
-                                    <div style={{ padding: '12px 20px', borderTop: '1px solid #e2e8f0' }}>
-                                      <Button
-                                        variant="outline"
-                                        size="small"
-                                        icon={<Plus size={12} />}
-                                        onClick={() => openAddProductModal(vendor)}
-                                        style={{ fontSize: '12px', borderRadius: '6px' }}
-                                      >
-                                        Add Product to Catalog
-                                      </Button>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Bills Tab */}
-                                {subTab === 'bills' && (
-                                  <div>
-                                    {recentBills.length > 0 ? (
-                                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                        <thead>
-                                          <tr>
-                                            <th style={{ ...STYLES.subHeaderCell, padding: '10px 20px 10px 40px' }}>Bill #</th>
-                                            <th style={STYLES.subHeaderCell}>Date</th>
-                                            <th style={{ ...STYLES.subHeaderCell, textAlign: 'center' }}>Items</th>
-                                            <th style={{ ...STYLES.subHeaderCell, textAlign: 'right' }}>Amount</th>
-                                            <th style={{ ...STYLES.subHeaderCell, textAlign: 'center' }}>Status</th>
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          {recentBills.map((bill, bIdx) => {
-                                            const products = billProducts[bill.id] || [];
-                                            const itemCount = bill.productCount || products.length || 0;
-                                            return (
-                                              <tr key={bill.id} style={{
-                                                borderBottom: bIdx < recentBills.length - 1 ? '1px solid #eef0f2' : 'none',
-                                                cursor: onNavigateToBill ? 'pointer' : 'default',
-                                              }}
-                                                onClick={() => onNavigateToBill && onNavigateToBill(bill.billNumber)}
-                                              >
-                                                <td style={{ ...STYLES.subTableCell, padding: '10px 20px 10px 40px' }}>
-                                                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
-                                                    {bill.billNumber}
-                                                  </span>
-                                                </td>
-                                                <td style={STYLES.subTableCell}>
-                                                  <span style={{ fontSize: '13px', color: '#64748b' }}>
-                                                    {formatDate(bill.date)}
-                                                  </span>
-                                                </td>
-                                                <td style={{ ...STYLES.subTableCell, textAlign: 'center' }}>
-                                                  <span style={{
-                                                    fontSize: '12px', fontWeight: '500', color: '#64748b',
-                                                    background: '#f1f5f9', padding: '2px 8px', borderRadius: '10px',
-                                                  }}>
-                                                    {itemCount}
-                                                  </span>
-                                                </td>
-                                                <td style={{ ...STYLES.subTableCell, textAlign: 'right' }}>
-                                                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
-                                                    {formatCurrency(bill.totalAmount)}
-                                                  </span>
-                                                </td>
-                                                <td style={{ ...STYLES.subTableCell, textAlign: 'center' }}>
-                                                  {bill.status === 'paid' ? (
-                                                    <Badge variant="success" size="small" style={{ fontWeight: 600, fontSize: '11px' }}>Paid</Badge>
-                                                  ) : (
-                                                    <Badge variant="warning" size="small" style={{ fontWeight: 600, fontSize: '11px' }}>Pending</Badge>
-                                                  )}
-                                                </td>
-                                              </tr>
-                                            );
-                                          })}
-                                        </tbody>
-                                      </table>
-                                    ) : (
-                                      <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
-                                        <FileText size={24} style={{ margin: '0 auto 8px', opacity: 0.4 }} />
-                                        <div>No bills found for this vendor</div>
-                                      </div>
-                                    )}
-                                  </div>
+                                {!vendor.isUnregistered && (
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleDeleteVendorClick(vendor); }}
+                                    style={{
+                                      background: 'none', border: 'none', cursor: 'pointer',
+                                      padding: '4px', borderRadius: '4px', color: '#94a3b8',
+                                    }}
+                                    title="Delete vendor"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
                                 )}
                               </div>
                             </td>
                           </tr>
-                        )}
-                      </React.Fragment>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <Card style={{ textAlign: 'center', padding: '60px 20px' }}>
-              <Users size={48} style={{ margin: '0 auto 16px', color: '#9ca3af' }} />
-              <h3 style={{ fontSize: '18px', color: '#374151', marginBottom: '8px' }}>
-                No vendors found
-              </h3>
-              <p style={{ color: '#6b7280', marginBottom: '24px' }}>
-                {searchTerm ? 'Try adjusting your search' : 'Add your first vendor or create a bill to get started'}
-              </p>
-              {!searchTerm && (
-                <Button variant="primary" icon={<Plus size={16} />} onClick={openAddModal}>
-                  Add First Vendor
-                </Button>
-              )}
-            </Card>
-          )}
-        </div>
 
-        {/* ===== ADD/EDIT VENDOR MODAL ===== */}
-        {showAddModal && (
-          <div style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center',
-            justifyContent: 'center', zIndex: 9999,
-          }}
-            onClick={() => setShowAddModal(false)}
-          >
-            <div
-              style={{
-                background: '#fff', borderRadius: '16px', padding: '24px',
-                width: '500px', maxWidth: '90vw', maxHeight: '90vh', overflow: 'auto',
-              }}
-              onClick={e => e.stopPropagation()}
-            >
-              <div style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                marginBottom: '20px',
-              }}>
-                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>
-                  {editingVendor ? 'Edit Vendor' : 'Add New Vendor'}
-                </h3>
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
-                >
-                  <X size={20} />
-                </button>
+                          {/* Expanded Section */}
+                          {isExpanded && (
+                            <tr>
+                              <td colSpan={8} style={{ padding: 0 }}>
+                                <div style={{
+                                  background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '0',
+                                }}>
+                                  {/* Sub-tabs */}
+                                  <div style={{
+                                    display: 'flex', gap: '0', borderBottom: '1px solid #e2e8f0',
+                                    padding: '0 20px',
+                                  }}>
+                                    {['products', 'bills'].map(tab => (
+                                      <button
+                                        key={tab}
+                                        onClick={() => setExpandedSubTab(prev => ({ ...prev, [vendor.id]: tab }))}
+                                        style={{
+                                          padding: '10px 16px', border: 'none', background: 'none',
+                                          fontSize: '13px', fontWeight: '600', cursor: 'pointer',
+                                          color: subTab === tab ? '#1e293b' : '#94a3b8',
+                                          borderBottom: subTab === tab ? '2px solid #1e293b' : '2px solid transparent',
+                                          transition: 'all 0.15s',
+                                        }}
+                                      >
+                                        {tab === 'products' ? 'Products & Prices' : 'Recent Bills'}
+                                      </button>
+                                    ))}
+                                  </div>
+
+                                  {/* Products Tab */}
+                                  {subTab === 'products' && (
+                                    <div>
+                                      {mergedProducts.length > 0 ? (
+                                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                          <thead>
+                                            <tr>
+                                              <th style={{ ...STYLES.subHeaderCell, padding: '10px 20px 10px 40px' }}>Product</th>
+                                              <th style={STYLES.subHeaderCell}>Category</th>
+                                              <th style={{ ...STYLES.subHeaderCell, textAlign: 'right' }}>Last Price</th>
+                                              <th style={{ ...STYLES.subHeaderCell, textAlign: 'right' }}>Offered</th>
+                                              <th style={{ ...STYLES.subHeaderCell, textAlign: 'center' }}>Trend</th>
+                                              <th style={STYLES.subHeaderCell}>Last Bill</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            {mergedProducts.map((product, pIdx) => (
+                                              <tr key={pIdx} style={{
+                                                borderBottom: pIdx < mergedProducts.length - 1 ? '1px solid #eef0f2' : 'none',
+                                              }}>
+                                                <td style={{ ...STYLES.subTableCell, padding: '10px 20px 10px 40px' }}>
+                                                  <span style={{ fontSize: '13px', fontWeight: '600', color: '#1e293b' }}>
+                                                    {product.productName}
+                                                  </span>
+                                                </td>
+                                                <td style={STYLES.subTableCell}>
+                                                  <span style={{
+                                                    fontSize: '12px', color: '#94a3b8',
+                                                    background: '#eef0f2', padding: '1px 6px', borderRadius: '4px',
+                                                  }}>
+                                                    {product.category || '-'}
+                                                  </span>
+                                                </td>
+                                                <td style={{ ...STYLES.subTableCell, textAlign: 'right' }}>
+                                                  <span style={{ fontSize: '13px', color: '#64748b' }}>
+                                                    {product.lastPrice ? formatCurrency(product.lastPrice) : '-'}
+                                                  </span>
+                                                </td>
+                                                <td style={{ ...STYLES.subTableCell, textAlign: 'right' }}>
+                                                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
+                                                    {product.offeredPrice ? formatCurrency(product.offeredPrice) : '-'}
+                                                  </span>
+                                                </td>
+                                                <td style={{ ...STYLES.subTableCell, textAlign: 'center' }}>
+                                                  <PriceTrend lastPrice={product.lastPrice} offeredPrice={product.offeredPrice} />
+                                                </td>
+                                                <td style={STYLES.subTableCell}>
+                                                  <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                                                    {product.lastBillNumber || '-'}
+                                                  </span>
+                                                </td>
+                                              </tr>
+                                            ))}
+                                          </tbody>
+                                        </table>
+                                      ) : (
+                                        <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+                                          <Package size={24} style={{ margin: '0 auto 8px', opacity: 0.4 }} />
+                                          <div>No products tracked for this vendor</div>
+                                        </div>
+                                      )}
+                                      <div style={{ padding: '12px 20px', borderTop: '1px solid #e2e8f0' }}>
+                                        <Button
+                                          variant="outline"
+                                          size="small"
+                                          icon={<Plus size={12} />}
+                                          onClick={() => openAddProductModal(vendor)}
+                                          style={{ fontSize: '12px', borderRadius: '6px' }}
+                                        >
+                                          Add Product to Catalog
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Bills Tab */}
+                                  {subTab === 'bills' && (
+                                    <div>
+                                      {recentBills.length > 0 ? (
+                                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                          <thead>
+                                            <tr>
+                                              <th style={{ ...STYLES.subHeaderCell, padding: '10px 20px 10px 40px' }}>Bill #</th>
+                                              <th style={STYLES.subHeaderCell}>Date</th>
+                                              <th style={{ ...STYLES.subHeaderCell, textAlign: 'center' }}>Items</th>
+                                              <th style={{ ...STYLES.subHeaderCell, textAlign: 'right' }}>Amount</th>
+                                              <th style={{ ...STYLES.subHeaderCell, textAlign: 'center' }}>Status</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            {recentBills.map((bill, bIdx) => {
+                                              const products = billProducts[bill.id] || [];
+                                              const itemCount = bill.productCount || products.length || 0;
+                                              return (
+                                                <tr key={bill.id} style={{
+                                                  borderBottom: bIdx < recentBills.length - 1 ? '1px solid #eef0f2' : 'none',
+                                                  cursor: onNavigateToBill ? 'pointer' : 'default',
+                                                }}
+                                                  onClick={() => onNavigateToBill && onNavigateToBill(bill.billNumber)}
+                                                >
+                                                  <td style={{ ...STYLES.subTableCell, padding: '10px 20px 10px 40px' }}>
+                                                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
+                                                      {bill.billNumber}
+                                                    </span>
+                                                  </td>
+                                                  <td style={STYLES.subTableCell}>
+                                                    <span style={{ fontSize: '13px', color: '#64748b' }}>
+                                                      {formatDate(bill.date)}
+                                                    </span>
+                                                  </td>
+                                                  <td style={{ ...STYLES.subTableCell, textAlign: 'center' }}>
+                                                    <span style={{
+                                                      fontSize: '12px', fontWeight: '500', color: '#64748b',
+                                                      background: '#f1f5f9', padding: '2px 8px', borderRadius: '10px',
+                                                    }}>
+                                                      {itemCount}
+                                                    </span>
+                                                  </td>
+                                                  <td style={{ ...STYLES.subTableCell, textAlign: 'right' }}>
+                                                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
+                                                      {formatCurrency(bill.totalAmount)}
+                                                    </span>
+                                                  </td>
+                                                  <td style={{ ...STYLES.subTableCell, textAlign: 'center' }}>
+                                                    {bill.status === 'paid' ? (
+                                                      <Badge variant="success" size="small" style={{ fontWeight: 600, fontSize: '11px' }}>Paid</Badge>
+                                                    ) : (
+                                                      <Badge variant="warning" size="small" style={{ fontWeight: 600, fontSize: '11px' }}>Pending</Badge>
+                                                    )}
+                                                  </td>
+                                                </tr>
+                                              );
+                                            })}
+                                          </tbody>
+                                        </table>
+                                      ) : (
+                                        <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+                                          <FileText size={24} style={{ margin: '0 auto 8px', opacity: 0.4 }} />
+                                          <div>No bills found for this vendor</div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
+            ) : (
+              <Card style={{ textAlign: 'center', padding: '60px 20px' }}>
+                <Users size={48} style={{ margin: '0 auto 16px', color: '#9ca3af' }} />
+                <h3 style={{ fontSize: '18px', color: '#374151', marginBottom: '8px' }}>
+                  No vendors found
+                </h3>
+                <p style={{ color: '#6b7280', marginBottom: '24px' }}>
+                  {searchTerm ? 'Try adjusting your search' : 'Add your first vendor or create a bill to get started'}
+                </p>
+                {!searchTerm && (
+                  <Button variant="primary" icon={<Plus size={16} />} onClick={openAddModal}>
+                    Add First Vendor
+                  </Button>
+                )}
+              </Card>
+            )}
+          </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <Input
-                  label="Vendor Name *"
-                  placeholder="Enter vendor name"
-                  value={vendorForm.name}
-                  onChange={e => setVendorForm(prev => ({ ...prev, name: e.target.value }))}
-                />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+          {/* ===== ADD/EDIT VENDOR MODAL ===== */}
+          {showAddModal && (
+            <div style={{
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+              background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center',
+              justifyContent: 'center', zIndex: 9999,
+            }}
+              onClick={() => setShowAddModal(false)}
+            >
+              <div
+                style={{
+                  background: '#fff', borderRadius: '16px', padding: '24px',
+                  width: '500px', maxWidth: '90vw', maxHeight: '90vh', overflow: 'auto',
+                }}
+                onClick={e => e.stopPropagation()}
+              >
+                <div style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  marginBottom: '20px',
+                }}>
+                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>
+                    {editingVendor ? 'Edit Vendor' : 'Add New Vendor'}
+                  </h3>
+                  <button
+                    onClick={() => setShowAddModal(false)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   <Input
-                    label="Phone"
-                    placeholder="9876543210"
-                    value={vendorForm.phone}
-                    onChange={e => setVendorForm(prev => ({ ...prev, phone: e.target.value }))}
+                    label="Vendor Name *"
+                    placeholder="Enter vendor name"
+                    value={vendorForm.name}
+                    onChange={e => setVendorForm(prev => ({ ...prev, name: e.target.value }))}
+                  />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                    <Input
+                      label="Phone"
+                      placeholder="9876543210"
+                      value={vendorForm.phone}
+                      onChange={e => setVendorForm(prev => ({ ...prev, phone: e.target.value }))}
+                    />
+                    <Input
+                      label="Email"
+                      placeholder="vendor@email.com"
+                      value={vendorForm.email}
+                      onChange={e => setVendorForm(prev => ({ ...prev, email: e.target.value }))}
+                    />
+                  </div>
+                  <Input
+                    label="GSTIN"
+                    placeholder="29ABCDE1234F1Z5"
+                    value={vendorForm.gstin}
+                    onChange={e => setVendorForm(prev => ({ ...prev, gstin: e.target.value }))}
                   />
                   <Input
-                    label="Email"
-                    placeholder="vendor@email.com"
-                    value={vendorForm.email}
-                    onChange={e => setVendorForm(prev => ({ ...prev, email: e.target.value }))}
+                    label="Address"
+                    placeholder="Full address"
+                    value={vendorForm.address}
+                    onChange={e => setVendorForm(prev => ({ ...prev, address: e.target.value }))}
+                  />
+                  <Input
+                    label="Notes"
+                    placeholder="Any notes about this vendor"
+                    value={vendorForm.notes}
+                    onChange={e => setVendorForm(prev => ({ ...prev, notes: e.target.value }))}
                   />
                 </div>
-                <Input
-                  label="GSTIN"
-                  placeholder="29ABCDE1234F1Z5"
-                  value={vendorForm.gstin}
-                  onChange={e => setVendorForm(prev => ({ ...prev, gstin: e.target.value }))}
-                />
-                <Input
-                  label="Address"
-                  placeholder="Full address"
-                  value={vendorForm.address}
-                  onChange={e => setVendorForm(prev => ({ ...prev, address: e.target.value }))}
-                />
-                <Input
-                  label="Notes"
-                  placeholder="Any notes about this vendor"
-                  value={vendorForm.notes}
-                  onChange={e => setVendorForm(prev => ({ ...prev, notes: e.target.value }))}
-                />
-              </div>
 
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '20px' }}>
-                <Button variant="outline" onClick={() => setShowAddModal(false)}>Cancel</Button>
-                <Button variant="primary" onClick={handleSaveVendor}>
-                  {editingVendor ? 'Save Changes' : 'Add Vendor'}
-                </Button>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '20px' }}>
+                  <Button variant="outline" onClick={() => setShowAddModal(false)}>Cancel</Button>
+                  <Button variant="primary" onClick={handleSaveVendor}>
+                    {editingVendor ? 'Save Changes' : 'Add Vendor'}
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* ===== ADD PRODUCT TO VENDOR MODAL ===== */}
-        {showAddProductModal && (
-          <div style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center',
-            justifyContent: 'center', zIndex: 9999,
-          }}
-            onClick={() => setShowAddProductModal(false)}
-          >
-            <div
-              style={{
-                background: '#fff', borderRadius: '16px', padding: '24px',
-                width: '420px', maxWidth: '90vw',
-              }}
-              onClick={e => e.stopPropagation()}
+          {/* ===== ADD PRODUCT TO VENDOR MODAL ===== */}
+          {showAddProductModal && (
+            <div style={{
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+              background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center',
+              justifyContent: 'center', zIndex: 9999,
+            }}
+              onClick={() => setShowAddProductModal(false)}
             >
-              <div style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                marginBottom: '20px',
-              }}>
-                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>
-                  Add Product — {selectedVendorForProduct?.name}
-                </h3>
-                <button
-                  onClick={() => setShowAddProductModal(false)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
-                >
-                  <X size={20} />
-                </button>
-              </div>
+              <div
+                style={{
+                  background: '#fff', borderRadius: '16px', padding: '24px',
+                  width: '420px', maxWidth: '90vw',
+                }}
+                onClick={e => e.stopPropagation()}
+              >
+                <div style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  marginBottom: '20px',
+                }}>
+                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>
+                    Add Product — {selectedVendorForProduct?.name}
+                  </h3>
+                  <button
+                    onClick={() => setShowAddProductModal(false)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <Input
-                  label="Product Name *"
-                  placeholder="e.g. Cotton Shirt"
-                  value={productForm.productName}
-                  onChange={e => setProductForm(prev => ({ ...prev, productName: e.target.value }))}
-                />
-                <Input
-                  label="Category"
-                  placeholder="e.g. Clothing"
-                  value={productForm.category}
-                  onChange={e => setProductForm(prev => ({ ...prev, category: e.target.value }))}
-                />
-                <Input
-                  label="Offered Price (per unit)"
-                  type="number"
-                  placeholder="0"
-                  min="0"
-                  step="0.01"
-                  value={productForm.offeredPrice}
-                  onChange={e => setProductForm(prev => ({ ...prev, offeredPrice: e.target.value }))}
-                />
-              </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <Input
+                    label="Product Name *"
+                    placeholder="e.g. Cotton Shirt"
+                    value={productForm.productName}
+                    onChange={e => setProductForm(prev => ({ ...prev, productName: e.target.value }))}
+                  />
+                  <Input
+                    label="Category"
+                    placeholder="e.g. Clothing"
+                    value={productForm.category}
+                    onChange={e => setProductForm(prev => ({ ...prev, category: e.target.value }))}
+                  />
+                  <Input
+                    label="Offered Price (per unit)"
+                    type="number"
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
+                    value={productForm.offeredPrice}
+                    onChange={e => setProductForm(prev => ({ ...prev, offeredPrice: e.target.value }))}
+                  />
+                </div>
 
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '20px' }}>
-                <Button variant="outline" onClick={() => setShowAddProductModal(false)}>Cancel</Button>
-                <Button variant="primary" onClick={handleSaveVendorProduct}>Add Product</Button>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '20px' }}>
+                  <Button variant="outline" onClick={() => setShowAddProductModal(false)}>Cancel</Button>
+                  <Button variant="primary" onClick={handleSaveVendorProduct}>Add Product</Button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
-    </ErrorBoundary>
+          )}
+        </div>
+      </ErrorBoundary>
 
-    <ConfirmDialog
-      isOpen={confirmDialog.open}
-      title={confirmDialog.title}
-      message={confirmDialog.message}
-      onConfirm={confirmDialog.onConfirm}
-      onCancel={closeConfirm}
-    />
+      <ConfirmDialog
+        isOpen={confirmDialog.open}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={closeConfirm}
+      />
     </>
   );
 };

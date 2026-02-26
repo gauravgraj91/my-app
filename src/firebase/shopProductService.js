@@ -19,7 +19,7 @@ import { db } from './config';
 const COLLECTION_NAME = 'shopProducts';
 
 // Add a new shop product with optional bill association and optimistic updates
-export const addShopProduct = async (productData, billId = null, options = {}) => {
+export const addShopProduct = async (productData, billId = null, options = {}, tenantId = null) => {
   try {
     // Validate bill association if billId is provided
     if (billId) {
@@ -42,6 +42,7 @@ export const addShopProduct = async (productData, billId = null, options = {}) =
 
     const docRef = await addDoc(collection(db, COLLECTION_NAME), {
       ...productData,
+      tenantId,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
@@ -75,9 +76,9 @@ export const addShopProduct = async (productData, billId = null, options = {}) =
 };
 
 // Get all shop products
-export const getShopProducts = async () => {
+export const getShopProducts = async (tenantId) => {
   try {
-    const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
+    const querySnapshot = await getDocs(query(collection(db, COLLECTION_NAME), where('tenantId', '==', tenantId)));
     const products = [];
     querySnapshot.forEach((doc) => {
       products.push({
@@ -176,8 +177,8 @@ export const updateShopProduct = async (productId, updateData, options = {}) => 
 };
 
 // Real-time listener for shop products with enhanced metadata
-export const subscribeToShopProducts = (callback, options = {}) => {
-  const q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
+export const subscribeToShopProducts = (tenantId, callback, options = {}) => {
+  const q = query(collection(db, COLLECTION_NAME), where('tenantId', '==', tenantId), orderBy('createdAt', 'desc'));
 
   return onSnapshot(q, (querySnapshot) => {
     const products = [];
@@ -293,7 +294,7 @@ export const subscribeToProductsByBill = (billId, callback, options = {}) => {
 };
 
 // Enhanced paginated fetch with caching and performance optimizations
-export const fetchShopProductsPaginated = async (options = {}) => {
+export const fetchShopProductsPaginated = async (tenantId, options = {}) => {
   const {
     pageLimit = 20,
     startAfterDoc = null,
@@ -321,6 +322,7 @@ export const fetchShopProductsPaginated = async (options = {}) => {
     // Build query
     let q = query(
       collection(db, COLLECTION_NAME),
+      where('tenantId', '==', tenantId),
       orderBy(orderByField, orderDirection),
       fbLimit(pageLimit)
     );
@@ -381,7 +383,7 @@ export const fetchShopProductsPaginated = async (options = {}) => {
 };
 
 // Enhanced infinite scroll fetch for products
-export const fetchProductsInfinite = async (options = {}) => {
+export const fetchProductsInfinite = async (tenantId, options = {}) => {
   const {
     pageSize = 20,
     cursor = null,
@@ -406,6 +408,7 @@ export const fetchProductsInfinite = async (options = {}) => {
 
     let q = query(
       collection(db, COLLECTION_NAME),
+      where('tenantId', '==', tenantId),
       orderBy(orderByField, orderDirection),
       fbLimit(pageSize + 1)
     );
@@ -434,6 +437,7 @@ export const fetchProductsInfinite = async (options = {}) => {
         const reverseDirection = orderDirection === 'desc' ? 'asc' : 'desc';
         q = query(
           collection(db, COLLECTION_NAME),
+          where('tenantId', '==', tenantId),
           orderBy(orderByField, reverseDirection),
           startAfter(cursor),
           fbLimit(pageSize + 1)
@@ -580,9 +584,9 @@ export const moveProductToBill = async (productId, newBillId) => {
 };
 
 // Get products with bill information included
-export const getProductsWithBillInfo = async () => {
+export const getProductsWithBillInfo = async (tenantId) => {
   try {
-    const products = await getShopProducts();
+    const products = await getShopProducts(tenantId);
 
     // Group products by billId to minimize bill lookups
     const billIds = [...new Set(products.map(p => p.billId).filter(Boolean))];
@@ -645,10 +649,11 @@ export const removeProductFromBill = async (productId) => {
 };
 
 // Get products that are not associated with any bill
-export const getUnassignedProducts = async () => {
+export const getUnassignedProducts = async (tenantId) => {
   try {
     const q = query(
       collection(db, COLLECTION_NAME),
+      where('tenantId', '==', tenantId),
       where('billId', '==', null),
       orderBy('createdAt', 'desc')
     );
@@ -899,26 +904,29 @@ export const optimisticMoveProduct = (productId, newBillId, newBillNumber, curre
 };
 
 // Enhanced product queries that include bill references
-export const getProductsWithBillFilter = async (filters = {}) => {
+export const getProductsWithBillFilter = async (filters = {}, tenantId) => {
   try {
-    let q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
+    let q = query(collection(db, COLLECTION_NAME), where('tenantId', '==', tenantId), orderBy('createdAt', 'desc'));
 
     // Apply bill-specific filters
     if (filters.billId) {
       q = query(
         collection(db, COLLECTION_NAME),
+        where('tenantId', '==', tenantId),
         where('billId', '==', filters.billId),
         orderBy('createdAt', 'desc')
       );
     } else if (filters.hasBill === true) {
       q = query(
         collection(db, COLLECTION_NAME),
+        where('tenantId', '==', tenantId),
         where('billId', '!=', null),
         orderBy('createdAt', 'desc')
       );
     } else if (filters.hasBill === false) {
       q = query(
         collection(db, COLLECTION_NAME),
+        where('tenantId', '==', tenantId),
         where('billId', '==', null),
         orderBy('createdAt', 'desc')
       );

@@ -29,7 +29,7 @@ export { exportBillToCSV, exportMultipleBillsToCSV } from './billExport';
 const COLLECTION_NAME = 'bills';
 
 // Core CRUD operations
-export const addBill = async (billData) => {
+export const addBill = async (billData, tenantId) => {
   try {
     // Validate bill data
     const validationErrors = BillModel.validate(billData);
@@ -38,12 +38,12 @@ export const addBill = async (billData) => {
     }
 
     // Check if bill number already exists
-    const existingBill = await getBillByNumber(billData.billNumber);
+    const existingBill = await getBillByNumber(billData.billNumber, tenantId);
     if (existingBill) {
       throw new Error(`Bill number ${billData.billNumber} already exists`);
     }
 
-    const billToAdd = BillModel.createBillData(billData);
+    const billToAdd = { ...BillModel.createBillData(billData), tenantId };
     const docRef = await addDoc(collection(db, COLLECTION_NAME), billToAdd);
 
     return {
@@ -57,10 +57,10 @@ export const addBill = async (billData) => {
 };
 
 // Get all bills
-export const getBills = async () => {
+export const getBills = async (tenantId) => {
   try {
     const querySnapshot = await getDocs(
-      query(collection(db, COLLECTION_NAME), orderBy('date', 'desc'))
+      query(collection(db, COLLECTION_NAME), where('tenantId', '==', tenantId), orderBy('date', 'desc'))
     );
     const bills = [];
     querySnapshot.forEach((doc) => {
@@ -99,11 +99,12 @@ export const getBill = async (billId) => {
 };
 
 // Get bill by bill number
-export const getBillByNumber = async (billNumber) => {
+export const getBillByNumber = async (billNumber, tenantId) => {
   try {
     const q = query(
       collection(db, COLLECTION_NAME),
-      where('billNumber', '==', billNumber)
+      where('billNumber', '==', billNumber),
+      where('tenantId', '==', tenantId)
     );
     const querySnapshot = await getDocs(q);
 
@@ -176,8 +177,8 @@ export const deleteBill = async (billId) => {
 };
 
 // Real-time listener for bills with enhanced error handling and metadata
-export const subscribeToBills = (callback, options = {}) => {
-  const q = query(collection(db, COLLECTION_NAME), orderBy('date', 'desc'));
+export const subscribeToBills = (tenantId, callback, options = {}) => {
+  const q = query(collection(db, COLLECTION_NAME), where('tenantId', '==', tenantId), orderBy('date', 'desc'));
 
   return onSnapshot(q, (querySnapshot) => {
     const bills = [];
@@ -284,7 +285,7 @@ export const subscribeToBillWithProducts = (billId, callback, options = {}) => {
 };
 
 // Enhanced paginated fetch with caching and performance optimizations
-export const fetchBillsPaginated = async (options = {}) => {
+export const fetchBillsPaginated = async (tenantId, options = {}) => {
   const {
     pageLimit = 20,
     startAfterDoc = null,
@@ -312,6 +313,7 @@ export const fetchBillsPaginated = async (options = {}) => {
     // Build query
     let q = query(
       collection(db, COLLECTION_NAME),
+      where('tenantId', '==', tenantId),
       orderBy(orderByField, orderDirection),
       fbLimit(pageLimit)
     );
@@ -371,7 +373,7 @@ export const fetchBillsPaginated = async (options = {}) => {
 };
 
 // Enhanced infinite scroll fetch
-export const fetchBillsInfinite = async (options = {}) => {
+export const fetchBillsInfinite = async (tenantId, options = {}) => {
   const {
     pageSize = 20,
     cursor = null,
@@ -396,6 +398,7 @@ export const fetchBillsInfinite = async (options = {}) => {
 
     let q = query(
       collection(db, COLLECTION_NAME),
+      where('tenantId', '==', tenantId),
       orderBy(orderByField, orderDirection),
       fbLimit(pageSize + 1) // Fetch one extra to check if there are more
     );
@@ -423,6 +426,7 @@ export const fetchBillsInfinite = async (options = {}) => {
         const reverseDirection = orderDirection === 'desc' ? 'asc' : 'desc';
         q = query(
           collection(db, COLLECTION_NAME),
+          where('tenantId', '==', tenantId),
           orderBy(orderByField, reverseDirection),
           startAfter(cursor),
           fbLimit(pageSize + 1)
@@ -781,11 +785,12 @@ export const debouncedRecalculateBillTotals = (billId, delay = 1000) => {
   recalculationTimeouts.set(billId, timeoutId);
 };
 
-export const getBillsByVendor = async (vendor) => {
+export const getBillsByVendor = async (vendor, tenantId) => {
   try {
     const q = query(
       collection(db, COLLECTION_NAME),
       where('vendor', '==', vendor),
+      where('tenantId', '==', tenantId),
       orderBy('date', 'desc')
     );
 
@@ -807,12 +812,13 @@ export const getBillsByVendor = async (vendor) => {
   }
 };
 
-export const getBillsByDateRange = async (startDate, endDate) => {
+export const getBillsByDateRange = async (startDate, endDate, tenantId) => {
   try {
     const q = query(
       collection(db, COLLECTION_NAME),
       where('date', '>=', startDate),
       where('date', '<=', endDate),
+      where('tenantId', '==', tenantId),
       orderBy('date', 'desc')
     );
 
@@ -835,7 +841,7 @@ export const getBillsByDateRange = async (startDate, endDate) => {
 };
 
 // Bulk operations
-export const duplicateBill = async (billId) => {
+export const duplicateBill = async (billId, tenantId) => {
   try {
     const billWithProducts = await getBillWithProducts(billId);
     if (!billWithProducts) {
@@ -843,7 +849,7 @@ export const duplicateBill = async (billId) => {
     }
 
     // Generate new bill number
-    const allBills = await getBills();
+    const allBills = await getBills(tenantId);
     const newBillNumber = BillModel.generateBillNumber(allBills);
 
     // Create new bill
@@ -858,7 +864,7 @@ export const duplicateBill = async (billId) => {
     delete newBillData.createdAt;
     delete newBillData.updatedAt;
 
-    const newBill = await addBill(newBillData);
+    const newBill = await addBill(newBillData, tenantId);
 
     // Duplicate all products
     const { addShopProduct } = await import('./shopProductService');
@@ -935,7 +941,7 @@ export const bulkDeleteBills = async (billIds) => {
   }
 };
 
-export const bulkDuplicateBills = async (billIds) => {
+export const bulkDuplicateBills = async (billIds, tenantId) => {
   try {
     if (!Array.isArray(billIds) || billIds.length === 0) {
       throw new Error('Bill IDs array is required and cannot be empty');
@@ -945,7 +951,7 @@ export const bulkDuplicateBills = async (billIds) => {
 
     for (const billId of billIds) {
       try {
-        const duplicatedBill = await duplicateBill(billId);
+        const duplicatedBill = await duplicateBill(billId, tenantId);
         results.push({
           originalBillId: billId,
           newBillId: duplicatedBill.id,
@@ -1009,7 +1015,7 @@ export const bulkExportBillsToCSV = async (billIds) => {
 };
 
 // Enhanced bill operations with transaction support
-export const duplicateBillWithTransaction = async (billId) => {
+export const duplicateBillWithTransaction = async (billId, tenantId) => {
   try {
     return await runTransaction(db, async (transaction) => {
       // Get the original bill with products
@@ -1019,7 +1025,7 @@ export const duplicateBillWithTransaction = async (billId) => {
       }
 
       // Generate new bill number
-      const allBills = await getBills();
+      const allBills = await getBills(tenantId);
       const newBillNumber = BillModel.generateBillNumber(allBills);
 
       // Create new bill data
@@ -1038,6 +1044,7 @@ export const duplicateBillWithTransaction = async (billId) => {
       const newBillRef = doc(collection(db, COLLECTION_NAME));
       transaction.set(newBillRef, {
         ...BillModel.createBillData(newBillData),
+        tenantId,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
@@ -1054,6 +1061,7 @@ export const duplicateBillWithTransaction = async (billId) => {
         const newProductRef = doc(collection(db, 'shopProducts'));
         transaction.set(newProductRef, {
           ...newProductData,
+          tenantId,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         });
@@ -1072,9 +1080,9 @@ export const duplicateBillWithTransaction = async (billId) => {
 };
 
 // Search and filtering utilities
-export const searchBills = async (searchTerm) => {
+export const searchBills = async (searchTerm, tenantId) => {
   try {
-    const bills = await getBills();
+    const bills = await getBills(tenantId);
     const searchLower = searchTerm.toLowerCase();
 
     return bills.filter(bill =>
@@ -1089,13 +1097,13 @@ export const searchBills = async (searchTerm) => {
 };
 
 // Enhanced search that includes products within bills
-export const searchBillsAndProducts = async (searchTerm) => {
+export const searchBillsAndProducts = async (searchTerm, tenantId) => {
   try {
     if (!searchTerm || searchTerm.trim() === '') {
-      return await getBills();
+      return await getBills(tenantId);
     }
 
-    const bills = await getBills();
+    const bills = await getBills(tenantId);
     const searchLower = searchTerm.toLowerCase();
     const matchingBills = new Set();
 
@@ -1135,9 +1143,9 @@ export const searchBillsAndProducts = async (searchTerm) => {
   }
 };
 
-export const filterBills = async (filters) => {
+export const filterBills = async (filters, tenantId) => {
   try {
-    let bills = await getBills();
+    let bills = await getBills(tenantId);
 
     // Filter by date range with enhanced date handling
     if (filters.startDate || filters.endDate) {
@@ -1226,15 +1234,15 @@ export const filterBills = async (filters) => {
 };
 
 // Combined search and filter function for advanced queries
-export const searchAndFilterBills = async (searchTerm, filters = {}) => {
+export const searchAndFilterBills = async (searchTerm, filters = {}, tenantId) => {
   try {
     let bills;
 
     // Start with search if provided, otherwise get all bills
     if (searchTerm && searchTerm.trim() !== '') {
-      bills = await searchBillsAndProducts(searchTerm);
+      bills = await searchBillsAndProducts(searchTerm, tenantId);
     } else {
-      bills = await getBills();
+      bills = await getBills(tenantId);
     }
 
     // Apply filters to the search results
