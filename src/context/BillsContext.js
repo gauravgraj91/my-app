@@ -398,7 +398,7 @@ export const BillsProvider = ({ children }) => {
       const errorMessage = getErrorMessage(billError);
       throw new Error(errorMessage.message);
     }
-  }, [showSuccess]);
+  }, [showSuccess, tenantId]);
 
   const handleEditBill = useCallback(async (billId, updatedData) => {
     const retryHandler = createRetryHandler(2, 1000);
@@ -557,7 +557,7 @@ export const BillsProvider = ({ children }) => {
         } : undefined
       });
     }
-  }, [bills, showSuccess, showError]);
+  }, [bills, showSuccess, showError, tenantId]);
 
   const handleDeleteBill = useCallback(async (billId) => {
     const retryHandler = createRetryHandler(2, 1000);
@@ -604,7 +604,7 @@ export const BillsProvider = ({ children }) => {
         } : undefined
       });
     }
-  }, [bills, showError]);
+  }, [bills, showError, tenantId]);
 
   const handleDuplicateBill = useCallback(async (billId) => {
     const retryHandler = createRetryHandler(2, 1000);
@@ -631,7 +631,7 @@ export const BillsProvider = ({ children }) => {
         }
       });
     }
-  }, [bills, showSuccess, showError]);
+  }, [bills, showSuccess, showError, tenantId]);
 
   const handleExportBill = useCallback(async (billId) => {
     const retryHandler = createRetryHandler(2, 1000);
@@ -666,7 +666,7 @@ export const BillsProvider = ({ children }) => {
         }
       });
     }
-  }, [bills, showSuccess, showError]);
+  }, [bills, showSuccess, showError, tenantId]);
 
   // Add product to bill handler
   const handleAddProductToBill = useCallback(async (productData, selectedBill) => {
@@ -697,7 +697,7 @@ export const BillsProvider = ({ children }) => {
       const errorMessage = getErrorMessage(billError);
       throw new Error(errorMessage.message);
     }
-  }, [showSuccess]);
+  }, [showSuccess, tenantId]);
 
   // Selection handlers
   const handleSelectBill = useCallback((billId) => {
@@ -792,7 +792,7 @@ export const BillsProvider = ({ children }) => {
       setBulkActionLoading(false);
       setBulkOperationStatus(null);
     }
-  }, [selectedBills, showWarning, showInfo, showError]);
+  }, [selectedBills, showWarning, showInfo, showError, tenantId]);
 
   const handleBulkDuplicate = useCallback(async () => {
     setBulkActionLoading(true);
@@ -859,7 +859,7 @@ export const BillsProvider = ({ children }) => {
       setBulkActionLoading(false);
       setBulkOperationStatus(null);
     }
-  }, [selectedBills, showSuccess, showWarning, showInfo, showError]);
+  }, [selectedBills, showSuccess, showWarning, showInfo, showError, tenantId]);
 
   const handleBulkArchive = useCallback(async () => {
     setBulkActionLoading(true);
@@ -926,7 +926,7 @@ export const BillsProvider = ({ children }) => {
       setBulkActionLoading(false);
       setBulkOperationStatus(null);
     }
-  }, [selectedBills, showSuccess, showWarning, showInfo, showError]);
+  }, [selectedBills, showSuccess, showWarning, showInfo, showError, tenantId]);
 
   const handleBulkExport = useCallback(async () => {
     setBulkActionLoading(true);
@@ -981,7 +981,7 @@ export const BillsProvider = ({ children }) => {
       setBulkActionLoading(false);
       setBulkOperationStatus(null);
     }
-  }, [selectedBills, showSuccess, showError]);
+  }, [selectedBills, showSuccess, showError, tenantId]);
 
   // Retry subscription
   const retrySubscription = useCallback(() => {
