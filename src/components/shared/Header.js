@@ -1,9 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Moon, Sun, LayoutDashboard } from 'lucide-react';
+import { Moon, Sun, LayoutDashboard, LogOut, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { logout } from '../../firebase/authService';
 import './Header.css';
 
 const Header = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [darkMode, setDarkMode] = useState(false);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
 
   useEffect(() => {
     // Load dark mode preference from localStorage
@@ -37,6 +47,26 @@ const Header = () => {
           >
             {darkMode ? <Sun size={20} /> : <Moon size={20} />}
           </button>
+          {user && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '8px' }}>
+              <span style={{ fontSize: '13px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <User size={14} />
+                {user.displayName || user.email}
+              </span>
+              <button
+                onClick={handleLogout}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '4px',
+                  padding: '6px 12px', border: '1px solid #e2e8f0', borderRadius: '6px',
+                  background: '#fff', fontSize: '13px', color: '#64748b',
+                  cursor: 'pointer',
+                }}
+              >
+                <LogOut size={14} />
+                Logout
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>

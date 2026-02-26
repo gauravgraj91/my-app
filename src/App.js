@@ -14,31 +14,42 @@ import PriceList from './components/shop/PriceList';
 import VendorsView from './components/shop/VendorsView';
 import ShopTransactions from './pages/ShopTransactions';
 import Settings from './pages/Settings';
+import LoginPage from './components/auth/LoginPage';
+import SignupPage from './components/auth/SignupPage';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './components/ui/NotificationSystem';
 
 function App() {
   return (
     <ErrorBoundary>
-      <NotificationProvider maxNotifications={5}>
-        <Router>
-          <Layout>
+      <Router>
+        <AuthProvider>
+          <NotificationProvider maxNotifications={5}>
             <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/tasks" element={<Tasks />} />
-              <Route path="/office" element={<Office />} />
-              <Route path="/shop" element={<Shop />}>
-                <Route index element={<HomeView />} />
-                <Route path="bills" element={<BillsView />} />
-                <Route path="products" element={<ProductsView />} />
-                <Route path="price-list" element={<PriceList />} />
-                <Route path="vendors" element={<VendorsView />} />
+              {/* Public routes */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+
+              {/* Protected routes */}
+              <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/tasks" element={<Tasks />} />
+                <Route path="/office" element={<Office />} />
+                <Route path="/shop" element={<Shop />}>
+                  <Route index element={<HomeView />} />
+                  <Route path="bills" element={<BillsView />} />
+                  <Route path="products" element={<ProductsView />} />
+                  <Route path="price-list" element={<PriceList />} />
+                  <Route path="vendors" element={<VendorsView />} />
+                </Route>
+                <Route path="/shop/transactions" element={<ShopTransactions />} />
+                <Route path="/settings" element={<Settings />} />
               </Route>
-              <Route path="/shop/transactions" element={<ShopTransactions />} />
-              <Route path="/settings" element={<Settings />} />
             </Routes>
-          </Layout>
-        </Router>
-      </NotificationProvider>
+          </NotificationProvider>
+        </AuthProvider>
+      </Router>
     </ErrorBoundary>
   );
 }
