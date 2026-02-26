@@ -1,45 +1,87 @@
 {
   "indexes": [
     {
-      "collectionGroup": "shopProducts",
+      "collectionGroup": "bills",
       "queryScope": "COLLECTION",
       "fields": [
-        {
-          "fieldPath": "billId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "shopProducts",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "billNumber",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
+        { "fieldPath": "tenantId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "bills",
       "queryScope": "COLLECTION",
       "fields": [
-        {
-          "fieldPath": "status",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "date",
-          "order": "DESCENDING"
-        }
+        { "fieldPath": "tenantId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "shopProducts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "tenantId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "shopProducts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "tenantId", "order": "ASCENDING" },
+        { "fieldPath": "billId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "shopProducts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "tenantId", "order": "ASCENDING" },
+        { "fieldPath": "billNumber", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "shopVendors",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "tenantId", "order": "ASCENDING" },
+        { "fieldPath": "name", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "transactions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "tenantId", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "activityLogs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "tenantId", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "activityLogs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "tenantId", "order": "ASCENDING" },
+        { "fieldPath": "tab", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "priceList",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "tenantId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     }
   ],
