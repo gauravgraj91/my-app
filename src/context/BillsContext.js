@@ -97,6 +97,8 @@ export const BillsProvider = ({ children }) => {
 
   // Subscribe to bills data with real-time features
   useEffect(() => {
+    if (!tenantId) return;
+
     const retryHandler = createRetryHandler(3, 1000);
 
     const subscribeWithRetry = async () => {

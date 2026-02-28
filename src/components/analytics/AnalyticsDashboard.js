@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTasks } from '../../hooks/useTasks';
-import { subscribeToShopProducts } from '../../firebase/shopProductService';
 import { subscribeToTransactions } from '../../firebase/transactionService';
 import { subscribeToAnalytics, formatCurrency, formatPercentage } from '../../services/analyticsService';
 import { useState, useEffect } from 'react';
@@ -18,19 +17,9 @@ const AnalyticsDashboard = () => {
   const { user } = useAuth();
   const tenantId = user?.tenantId;
   const { stats: taskStats } = useTasks();
-  const [shopData, setShopData] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [analytics, setAnalytics] = useState(null);
   const [viewMode, setViewMode] = useState('bills'); // 'bills' or 'products'
-
-  // Subscribe to shop data
-  useEffect(() => {
-    if (!tenantId) return;
-    const unsubscribeShop = subscribeToShopProducts(tenantId, (products) => {
-      setShopData(products);
-    });
-    return () => unsubscribeShop();
-  }, [tenantId]);
 
   // Subscribe to transactions
   useEffect(() => {
@@ -43,18 +32,19 @@ const AnalyticsDashboard = () => {
 
   // Subscribe to enhanced analytics
   useEffect(() => {
-    const unsubscribeAnalytics = subscribeToAnalytics((analyticsData) => {
+    if (!tenantId) return;
+    const unsubscribeAnalytics = subscribeToAnalytics(tenantId, (analyticsData) => {
       setAnalytics(analyticsData);
     });
     return () => unsubscribeAnalytics();
-  }, []);
+  }, [tenantId]);
 
-  // Calculate shop statistics (legacy support)
-  const shopStats = {
-    totalSales: shopData.reduce((sum, item) => sum + (item.totalAmount || 0), 0),
-    totalProducts: shopData.length,
-    totalProfit: shopData.reduce((sum, item) => sum + ((item.profitPerPiece || 0) * (item.totalQuantity || 0)), 0)
-  };
+  // Derive shop stats from analytics (fallback when analytics hasn't loaded yet)
+  const shopStats = analytics ? {
+    totalSales: analytics.products.totalAmount,
+    totalProducts: analytics.products.totalProducts,
+    totalProfit: analytics.products.totalProfit
+  } : { totalSales: 0, totalProducts: 0, totalProfit: 0 };
 
   // Get current analytics based on view mode
   const currentAnalytics = analytics ?

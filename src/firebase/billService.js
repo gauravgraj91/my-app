@@ -326,10 +326,16 @@ export const fetchBillsPaginated = async (tenantId, options = {}) => {
       q = query(q, where('status', '==', filters.status));
     }
     if (filters.startDate) {
-      q = query(q, where('date', '>=', filters.startDate));
+      const startDate = new Date(filters.startDate);
+      if (!isNaN(startDate)) {
+        q = query(q, where('date', '>=', startDate));
+      }
     }
     if (filters.endDate) {
-      q = query(q, where('date', '<=', filters.endDate));
+      const endDate = new Date(filters.endDate);
+      if (!isNaN(endDate)) {
+        q = query(q, where('date', '<=', endDate));
+      }
     }
 
     // Add pagination
@@ -411,10 +417,16 @@ export const fetchBillsInfinite = async (tenantId, options = {}) => {
       q = query(q, where('status', '==', filters.status));
     }
     if (filters.startDate) {
-      q = query(q, where('date', '>=', filters.startDate));
+      const startDate = new Date(filters.startDate);
+      if (!isNaN(startDate)) {
+        q = query(q, where('date', '>=', startDate));
+      }
     }
     if (filters.endDate) {
-      q = query(q, where('date', '<=', filters.endDate));
+      const endDate = new Date(filters.endDate);
+      if (!isNaN(endDate)) {
+        q = query(q, where('date', '<=', endDate));
+      }
     }
 
     // Apply cursor
