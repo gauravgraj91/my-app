@@ -13,7 +13,16 @@ export const AuthProvider = ({ children }) => {
     const unsub = onAuthChange(async (firebaseUser) => {
       if (firebaseUser) {
         const profile = await getUserProfile(firebaseUser.uid);
-        setUser(profile);
+        if (profile) {
+          setUser(profile);
+        } else {
+          // Firestore profile missing — use minimal fallback from Firebase Auth
+          setUser({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName,
+          });
+        }
       } else {
         setUser(null);
       }

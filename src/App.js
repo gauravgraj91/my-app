@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import Layout from './components/Layout';
 import ErrorBoundary from './components/shared/ErrorBoundary';
@@ -42,10 +42,11 @@ function App() {
                   <Route path="products" element={<ProductsView />} />
                   <Route path="price-list" element={<PriceList />} />
                   <Route path="vendors" element={<VendorsView />} />
+                  <Route path="transactions" element={<ShopTransactions />} />
                 </Route>
-                <Route path="/shop/transactions" element={<ShopTransactions />} />
                 <Route path="/settings" element={<Settings />} />
               </Route>
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </NotificationProvider>
         </AuthProvider>

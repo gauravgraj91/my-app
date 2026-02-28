@@ -11,7 +11,11 @@ const Header = () => {
   const [darkMode, setDarkMode] = useState(false);
 
   const handleLogout = async () => {
-    await logout();
+    try {
+      await logout();
+    } catch (err) {
+      // Navigate to login even if sign-out fails
+    }
     navigate('/login');
   };
 

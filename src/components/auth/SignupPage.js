@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { signup } from '../../firebase/authService';
+import { useAuth } from '../../context/AuthContext';
 import './LoginPage.css';
 
 const SignupPage = () => {
+  const { user } = useAuth();
   const [form, setForm] = useState({ displayName: '', shopName: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleChange = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }));
 
