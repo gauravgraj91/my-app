@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import {
   subscribeToVendors,
   addVendor,
@@ -28,6 +28,17 @@ export const VendorsProvider = ({ children }) => {
   const [vendorProducts, setVendorProducts] = useState({}); // { vendorId: [products] }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const productUnsubscribes = useRef({});
+
+  // Cleanup all product subscriptions on unmount
+  useEffect(() => {
+    return () => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      Object.values(productUnsubscribes.current).forEach(unsub => {
+        if (typeof unsub === 'function') unsub();
+      });
+    };
+  }, []);
 
   // Subscribe to vendors
   useEffect(() => {
@@ -41,10 +52,11 @@ export const VendorsProvider = ({ children }) => {
 
   // Load products for a specific vendor (on demand)
   const loadVendorProducts = useCallback((vendorId) => {
-    if (vendorProducts[vendorId]) return; // already loaded
+    if (vendorProducts[vendorId] || productUnsubscribes.current[vendorId]) return; // already loaded or subscribing
     const unsubscribe = subscribeToVendorProducts(vendorId, (products) => {
       setVendorProducts(prev => ({ ...prev, [vendorId]: products }));
     });
+    productUnsubscribes.current[vendorId] = unsubscribe;
     return unsubscribe;
   }, [vendorProducts]);
 

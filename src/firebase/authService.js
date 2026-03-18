@@ -51,10 +51,26 @@ export async function logout() {
   return signOut(auth);
 }
 
+// Deduplicate concurrent getDoc calls for the same uid to prevent
+// Firestore internal target conflicts during React StrictMode double-mount
+let _pendingProfile = null;
+let _pendingUid = null;
+
 export async function getUserProfile(uid) {
-  const snap = await getDoc(doc(db, 'users', uid));
-  if (!snap.exists()) return null;
-  return { uid, ...snap.data() };
+  if (_pendingUid === uid && _pendingProfile) {
+    return _pendingProfile;
+  }
+  _pendingUid = uid;
+  _pendingProfile = getDoc(doc(db, 'users', uid))
+    .then(snap => {
+      if (!snap.exists()) return null;
+      return { uid, ...snap.data() };
+    })
+    .finally(() => {
+      _pendingProfile = null;
+      _pendingUid = null;
+    });
+  return _pendingProfile;
 }
 
 export function onAuthChange(callback) {

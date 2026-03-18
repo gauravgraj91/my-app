@@ -10,13 +10,15 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     const unsub = onAuthChange(async (firebaseUser) => {
+      if (cancelled) return;
       if (firebaseUser) {
         const profile = await getUserProfile(firebaseUser.uid);
+        if (cancelled) return;
         if (profile) {
           setUser(profile);
         } else {
-          // Firestore profile missing — use minimal fallback from Firebase Auth
           setUser({
             uid: firebaseUser.uid,
             email: firebaseUser.email,
@@ -28,7 +30,10 @@ export const AuthProvider = ({ children }) => {
       }
       setLoading(false);
     });
-    return unsub;
+    return () => {
+      cancelled = true;
+      unsub();
+    };
   }, []);
 
   const value = { user, loading };

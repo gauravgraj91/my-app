@@ -158,11 +158,6 @@ export const BillsProvider = ({ children }) => {
             isFirstLoad.current = false;
           }
 
-          // Handle offline/online status
-          if (metadata?.metadata?.fromCache && !metadata?.metadata?.hasPendingWrites) {
-            showWarning('You are offline. Changes will sync when connection is restored.');
-          }
-
           // Load products for new and modified bills
           const billsToLoadProducts = metadata?.changes?.filter(c => c.type === 'added' || c.type === 'modified').map(c => c.bill) || [];
           billsToLoadProducts.forEach(async (bill) => {
@@ -243,13 +238,20 @@ export const BillsProvider = ({ children }) => {
       }
     };
 
-    let unsubscribe;
+    let unsubscribe = null;
+    let isMounted = true;
+
     subscribeWithRetry().then(unsub => {
-      unsubscribe = unsub;
+      if (isMounted) {
+        unsubscribe = unsub;
+      } else if (unsub) {
+        unsub();
+      }
     });
 
     const timeoutsRef = modifiedNotificationTimeouts.current;
     return () => {
+      isMounted = false;
       if (unsubscribe) {
         unsubscribe();
       }
