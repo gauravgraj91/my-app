@@ -3,6 +3,7 @@ import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import { FileText, Search, Calendar, User, Package, Check, AlertCircle } from 'lucide-react';
 import { subscribeToBills } from '../../firebase/billService';
+import { useAuth } from '../../context/AuthContext';
 import { format } from 'date-fns';
 
 const AssignBillModal = ({
@@ -12,6 +13,8 @@ const AssignBillModal = ({
   products = [], // Array of products to assign (for bulk) or single product
   mode = 'single' // 'single' or 'bulk'
 }) => {
+  const { user } = useAuth();
+  const tenantId = user?.tenantId;
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
@@ -21,14 +24,14 @@ const AssignBillModal = ({
 
   // Subscribe to bills
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !tenantId) return;
 
     setLoading(true);
     setError('');
     setSelectedBillId('');
     setSearchTerm('');
 
-    const unsubscribe = subscribeToBills((billsData) => {
+    const unsubscribe = subscribeToBills(tenantId, (billsData) => {
       // Filter out archived bills
       const activeBills = billsData.filter(bill => bill.status !== 'archived');
       setBills(activeBills);
@@ -43,7 +46,7 @@ const AssignBillModal = ({
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [isOpen]);
+  }, [isOpen, tenantId]);
 
   // Filter bills by search term
   const filteredBills = bills.filter(bill => {

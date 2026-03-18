@@ -13,16 +13,29 @@ const ShopTransactions = () => {
   const [comment, setComment] = useState("")
   const [filter, setFilter] = useState("all")
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const { showSuccess, showError } = useNotifications()
 
   // Subscribe to real-time updates
   useEffect(() => {
-    if (!tenantId) return;
-    const unsubscribe = subscribeToTransactions(tenantId, (transactions) => {
-      setTransactions(transactions)
+    if (!tenantId) {
       setLoading(false)
-    })
+      return
+    }
+    setError(null)
+    const unsubscribe = subscribeToTransactions(
+      tenantId,
+      (transactions) => {
+        setTransactions(transactions)
+        setLoading(false)
+      },
+      (err) => {
+        console.error('Transaction subscription error:', err)
+        setError(err.message || 'Failed to load transactions')
+        setLoading(false)
+      }
+    )
 
     return () => unsubscribe()
   }, [tenantId])
@@ -104,6 +117,31 @@ const ShopTransactions = () => {
     return (
       <div className="max-w-4xl mx-auto p-4">
         <div className="text-center text-lg">Loading transactions...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-4xl mx-auto p-4">
+        <div className="text-center p-6 bg-red-50 rounded-lg">
+          <h3 className="text-lg font-semibold text-red-800 mb-2">Failed to load transactions</h3>
+          <p className="text-sm text-red-600 mb-4">{error}</p>
+          <button
+            onClick={() => { setError(null); setLoading(true); }}
+            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!tenantId) {
+    return (
+      <div className="max-w-4xl mx-auto p-4">
+        <div className="text-center text-lg text-gray-500">Unable to load transactions — no tenant found.</div>
       </div>
     )
   }
