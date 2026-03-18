@@ -1,8 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTasks } from '../../hooks/useTasks';
-import { subscribeToTransactions } from '../../firebase/transactionService';
-import { subscribeToAnalytics, formatCurrency, formatPercentage } from '../../services/analyticsService';
+import { getTransactions } from '../../firebase/transactionService';
+import { fetchAnalytics, formatCurrency, formatPercentage } from '../../services/analyticsService';
 import { useState, useEffect } from 'react';
 import {
   FileText, Package, CheckSquare, TrendingUp,
@@ -19,24 +19,30 @@ const AnalyticsDashboard = () => {
   const { stats: taskStats } = useTasks();
   const [transactions, setTransactions] = useState([]);
   const [analytics, setAnalytics] = useState(null);
-  const [viewMode, setViewMode] = useState('bills'); // 'bills' or 'products'
+  const [viewMode, setViewMode] = useState('bills');
 
-  // Subscribe to transactions
+  // Fetch data once on mount (no real-time listeners)
   useEffect(() => {
     if (!tenantId) return;
-    const unsubscribeTransactions = subscribeToTransactions(tenantId, (transactions) => {
-      setTransactions(transactions);
-    });
-    return () => unsubscribeTransactions();
-  }, [tenantId]);
+    let cancelled = false;
 
-  // Subscribe to enhanced analytics
-  useEffect(() => {
-    if (!tenantId) return;
-    const unsubscribeAnalytics = subscribeToAnalytics(tenantId, (analyticsData) => {
-      setAnalytics(analyticsData);
-    });
-    return () => unsubscribeAnalytics();
+    const loadData = async () => {
+      try {
+        const [txns, analyticsData] = await Promise.all([
+          getTransactions(tenantId),
+          fetchAnalytics(tenantId)
+        ]);
+        if (!cancelled) {
+          setTransactions(txns);
+          setAnalytics(analyticsData);
+        }
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+      }
+    };
+
+    loadData();
+    return () => { cancelled = true; };
   }, [tenantId]);
 
   // Derive shop stats from analytics (fallback when analytics hasn't loaded yet)

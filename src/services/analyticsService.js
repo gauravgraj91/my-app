@@ -1,121 +1,175 @@
 import { getBills } from '../firebase/billService';
-import { subscribeToShopProducts } from '../firebase/shopProductService';
+import { getShopProducts } from '../firebase/shopProductService';
 
 /**
  * Enhanced Analytics Service for Bill-wise Insights
- * Provides analytics calculations for both bill and product views
+ * Uses one-time fetches (getDocs) instead of real-time listeners
  */
 
-// Bill-based analytics calculations
-export const calculateBillAnalytics = async () => {
-  try {
-    const bills = await getBills();
-
-    if (bills.length === 0) {
-      return {
-        totalBills: 0,
-        totalAmount: 0,
-        totalProfit: 0,
-        averageBillValue: 0,
-        profitMargin: 0,
-        vendorAnalytics: [],
-        monthlyAnalytics: [],
-        topPerformingBills: []
-      };
-    }
-
-    // Basic totals
-    const totalAmount = bills.reduce((sum, bill) => sum + (bill.totalAmount || 0), 0);
-    const totalProfit = bills.reduce((sum, bill) => sum + (bill.totalProfit || 0), 0);
-    const averageBillValue = totalAmount / bills.length;
-    const profitMargin = totalAmount > 0 ? (totalProfit / totalAmount) * 100 : 0;
-
-    // Vendor performance analytics
-    const vendorMap = {};
-    bills.forEach(bill => {
-      const vendor = bill.vendor || 'Unknown';
-      if (!vendorMap[vendor]) {
-        vendorMap[vendor] = {
-          vendor,
-          billCount: 0,
-          totalAmount: 0,
-          totalProfit: 0,
-          averageBillValue: 0,
-          profitMargin: 0
-        };
-      }
-      vendorMap[vendor].billCount++;
-      vendorMap[vendor].totalAmount += bill.totalAmount || 0;
-      vendorMap[vendor].totalProfit += bill.totalProfit || 0;
-    });
-
-    // Calculate vendor averages and sort by performance
-    const vendorAnalytics = Object.values(vendorMap)
-      .map(vendor => ({
-        ...vendor,
-        averageBillValue: vendor.totalAmount / vendor.billCount,
-        profitMargin: vendor.totalAmount > 0 ? (vendor.totalProfit / vendor.totalAmount) * 100 : 0
-      }))
-      .sort((a, b) => b.totalAmount - a.totalAmount);
-
-    // Monthly analytics
-    const monthlyMap = {};
-    bills.forEach(bill => {
-      const date = bill.date instanceof Date ? bill.date : new Date(bill.date);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      const monthName = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
-
-      if (!monthlyMap[monthKey]) {
-        monthlyMap[monthKey] = {
-          month: monthName,
-          monthKey,
-          billCount: 0,
-          totalAmount: 0,
-          totalProfit: 0,
-          averageBillValue: 0,
-          profitMargin: 0
-        };
-      }
-      monthlyMap[monthKey].billCount++;
-      monthlyMap[monthKey].totalAmount += bill.totalAmount || 0;
-      monthlyMap[monthKey].totalProfit += bill.totalProfit || 0;
-    });
-
-    // Calculate monthly averages and sort by date
-    const monthlyAnalytics = Object.values(monthlyMap)
-      .map(month => ({
-        ...month,
-        averageBillValue: month.totalAmount / month.billCount,
-        profitMargin: month.totalAmount > 0 ? (month.totalProfit / month.totalAmount) * 100 : 0
-      }))
-      .sort((a, b) => a.monthKey.localeCompare(b.monthKey));
-
-    // Top performing bills by profit margin
-    const topPerformingBills = bills
-      .map(bill => ({
-        ...bill,
-        profitMargin: bill.totalAmount > 0 ? (bill.totalProfit / bill.totalAmount) * 100 : 0
-      }))
-      .sort((a, b) => b.profitMargin - a.profitMargin)
-      .slice(0, 10);
-
+// Bill-based analytics calculations (pure function, takes data as input)
+const calculateBillAnalyticsFromData = (bills) => {
+  if (!bills || bills.length === 0) {
     return {
-      totalBills: bills.length,
-      totalAmount,
-      totalProfit,
-      averageBillValue,
-      profitMargin,
-      vendorAnalytics,
-      monthlyAnalytics,
-      topPerformingBills
+      totalBills: 0,
+      totalAmount: 0,
+      totalProfit: 0,
+      averageBillValue: 0,
+      profitMargin: 0,
+      vendorAnalytics: [],
+      monthlyAnalytics: [],
+      topPerformingBills: []
     };
-  } catch (error) {
-    console.error('Error calculating bill analytics:', error);
-    throw error;
   }
+
+  const totalAmount = bills.reduce((sum, bill) => sum + (bill.totalAmount || 0), 0);
+  const totalProfit = bills.reduce((sum, bill) => sum + (bill.totalProfit || 0), 0);
+  const averageBillValue = totalAmount / bills.length;
+  const profitMargin = totalAmount > 0 ? (totalProfit / totalAmount) * 100 : 0;
+
+  const vendorMap = {};
+  bills.forEach(bill => {
+    const vendor = bill.vendor || 'Unknown';
+    if (!vendorMap[vendor]) {
+      vendorMap[vendor] = { vendor, billCount: 0, totalAmount: 0, totalProfit: 0 };
+    }
+    vendorMap[vendor].billCount++;
+    vendorMap[vendor].totalAmount += bill.totalAmount || 0;
+    vendorMap[vendor].totalProfit += bill.totalProfit || 0;
+  });
+
+  const vendorAnalytics = Object.values(vendorMap)
+    .map(vendor => ({
+      ...vendor,
+      averageBillValue: vendor.totalAmount / vendor.billCount,
+      profitMargin: vendor.totalAmount > 0 ? (vendor.totalProfit / vendor.totalAmount) * 100 : 0
+    }))
+    .sort((a, b) => b.totalAmount - a.totalAmount);
+
+  const monthlyMap = {};
+  bills.forEach(bill => {
+    const date = bill.date instanceof Date ? bill.date : new Date(bill.date);
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const monthName = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+
+    if (!monthlyMap[monthKey]) {
+      monthlyMap[monthKey] = { month: monthName, monthKey, billCount: 0, totalAmount: 0, totalProfit: 0 };
+    }
+    monthlyMap[monthKey].billCount++;
+    monthlyMap[monthKey].totalAmount += bill.totalAmount || 0;
+    monthlyMap[monthKey].totalProfit += bill.totalProfit || 0;
+  });
+
+  const monthlyAnalytics = Object.values(monthlyMap)
+    .map(month => ({
+      ...month,
+      averageBillValue: month.totalAmount / month.billCount,
+      profitMargin: month.totalAmount > 0 ? (month.totalProfit / month.totalAmount) * 100 : 0
+    }))
+    .sort((a, b) => a.monthKey.localeCompare(b.monthKey));
+
+  const topPerformingBills = bills
+    .map(bill => ({
+      ...bill,
+      profitMargin: bill.totalAmount > 0 ? (bill.totalProfit / bill.totalAmount) * 100 : 0
+    }))
+    .sort((a, b) => b.profitMargin - a.profitMargin)
+    .slice(0, 10);
+
+  return {
+    totalBills: bills.length,
+    totalAmount,
+    totalProfit,
+    averageBillValue,
+    profitMargin,
+    vendorAnalytics,
+    monthlyAnalytics,
+    topPerformingBills
+  };
 };
 
-// Chart data generators for bill analytics
+const calculateProductAnalyticsFromData = (products) => {
+  if (!products || products.length === 0) {
+    return {
+      totalProducts: 0,
+      totalAmount: 0,
+      totalProfit: 0,
+      averageProductValue: 0,
+      profitMargin: 0,
+      categoryAnalytics: [],
+      vendorAnalytics: []
+    };
+  }
+
+  const totalAmount = products.reduce((sum, product) => sum + (product.totalAmount || 0), 0);
+  const totalProfit = products.reduce((sum, product) =>
+    sum + ((product.profitPerPiece || 0) * (product.totalQuantity || 0)), 0);
+  const averageProductValue = totalAmount / products.length;
+  const profitMargin = totalAmount > 0 ? (totalProfit / totalAmount) * 100 : 0;
+
+  const categoryMap = {};
+  products.forEach(product => {
+    const category = product.category || 'Uncategorized';
+    if (!categoryMap[category]) {
+      categoryMap[category] = { category, productCount: 0, totalAmount: 0, totalProfit: 0 };
+    }
+    categoryMap[category].productCount++;
+    categoryMap[category].totalAmount += product.totalAmount || 0;
+    categoryMap[category].totalProfit += (product.profitPerPiece || 0) * (product.totalQuantity || 0);
+  });
+
+  const categoryAnalytics = Object.values(categoryMap)
+    .sort((a, b) => b.totalAmount - a.totalAmount);
+
+  const vendorMap = {};
+  products.forEach(product => {
+    const vendor = product.vendor || 'Unknown';
+    if (!vendorMap[vendor]) {
+      vendorMap[vendor] = { vendor, productCount: 0, totalAmount: 0, totalProfit: 0 };
+    }
+    vendorMap[vendor].productCount++;
+    vendorMap[vendor].totalAmount += product.totalAmount || 0;
+    vendorMap[vendor].totalProfit += (product.profitPerPiece || 0) * (product.totalQuantity || 0);
+  });
+
+  const vendorAnalytics = Object.values(vendorMap)
+    .sort((a, b) => b.totalAmount - a.totalAmount);
+
+  return {
+    totalProducts: products.length,
+    totalAmount,
+    totalProfit,
+    averageProductValue,
+    profitMargin,
+    categoryAnalytics,
+    vendorAnalytics
+  };
+};
+
+// One-time fetch for analytics data (no real-time listeners)
+export const fetchAnalytics = async (tenantId) => {
+  const [bills, products] = await Promise.all([
+    getBills(tenantId),
+    getShopProducts(tenantId)
+  ]);
+
+  const billAnalytics = calculateBillAnalyticsFromData(bills);
+  const productAnalytics = calculateProductAnalyticsFromData(products);
+
+  return {
+    bills: billAnalytics,
+    products: productAnalytics,
+    comparison: {
+      totalRevenue: billAnalytics.totalAmount,
+      totalProfit: billAnalytics.totalProfit,
+      profitMargin: billAnalytics.profitMargin,
+      averageBillValue: billAnalytics.averageBillValue,
+      totalProducts: productAnalytics.totalProducts,
+      averageProductValue: productAnalytics.averageProductValue
+    }
+  };
+};
+
+// Chart data generators
 export const generateVendorChartData = (vendorAnalytics) => {
   return {
     labels: vendorAnalytics.map(v => v.vendor),
@@ -183,161 +237,6 @@ export const generateProfitMarginChartData = (topPerformingBills) => {
         borderWidth: 1
       }
     ]
-  };
-};
-
-// Combined analytics for both bill and product views
-export const calculateCombinedAnalytics = async () => {
-  try {
-    const [billAnalytics, productAnalytics] = await Promise.all([
-      calculateBillAnalytics(),
-      calculateProductAnalytics()
-    ]);
-
-    return {
-      bills: billAnalytics,
-      products: productAnalytics,
-      comparison: {
-        totalRevenue: billAnalytics.totalAmount,
-        totalProfit: billAnalytics.totalProfit,
-        profitMargin: billAnalytics.profitMargin,
-        averageBillValue: billAnalytics.averageBillValue,
-        totalProducts: productAnalytics.totalProducts,
-        averageProductValue: productAnalytics.averageProductValue
-      }
-    };
-  } catch (error) {
-    console.error('Error calculating combined analytics:', error);
-    throw error;
-  }
-};
-
-// Product-based analytics (for comparison and dual view support)
-export const calculateProductAnalytics = async () => {
-  return new Promise((resolve, reject) => {
-    let unsubscribe;
-    unsubscribe = subscribeToShopProducts((products) => {
-      try {
-        if (unsubscribe) unsubscribe(); // Unsubscribe immediately after getting data
-
-        if (products.length === 0) {
-          resolve({
-            totalProducts: 0,
-            totalAmount: 0,
-            totalProfit: 0,
-            averageProductValue: 0,
-            profitMargin: 0,
-            categoryAnalytics: [],
-            vendorAnalytics: []
-          });
-          return;
-        }
-
-        const totalAmount = products.reduce((sum, product) => sum + (product.totalAmount || 0), 0);
-        const totalProfit = products.reduce((sum, product) =>
-          sum + ((product.profitPerPiece || 0) * (product.totalQuantity || 0)), 0);
-        const averageProductValue = totalAmount / products.length;
-        const profitMargin = totalAmount > 0 ? (totalProfit / totalAmount) * 100 : 0;
-
-        // Category analytics
-        const categoryMap = {};
-        products.forEach(product => {
-          const category = product.category || 'Uncategorized';
-          if (!categoryMap[category]) {
-            categoryMap[category] = {
-              category,
-              productCount: 0,
-              totalAmount: 0,
-              totalProfit: 0
-            };
-          }
-          categoryMap[category].productCount++;
-          categoryMap[category].totalAmount += product.totalAmount || 0;
-          categoryMap[category].totalProfit += (product.profitPerPiece || 0) * (product.totalQuantity || 0);
-        });
-
-        const categoryAnalytics = Object.values(categoryMap)
-          .sort((a, b) => b.totalAmount - a.totalAmount);
-
-        // Vendor analytics from products
-        const vendorMap = {};
-        products.forEach(product => {
-          const vendor = product.vendor || 'Unknown';
-          if (!vendorMap[vendor]) {
-            vendorMap[vendor] = {
-              vendor,
-              productCount: 0,
-              totalAmount: 0,
-              totalProfit: 0
-            };
-          }
-          vendorMap[vendor].productCount++;
-          vendorMap[vendor].totalAmount += product.totalAmount || 0;
-          vendorMap[vendor].totalProfit += (product.profitPerPiece || 0) * (product.totalQuantity || 0);
-        });
-
-        const vendorAnalytics = Object.values(vendorMap)
-          .sort((a, b) => b.totalAmount - a.totalAmount);
-
-        resolve({
-          totalProducts: products.length,
-          totalAmount,
-          totalProfit,
-          averageProductValue,
-          profitMargin,
-          categoryAnalytics,
-          vendorAnalytics
-        });
-      } catch (error) {
-        reject(error);
-      }
-    });
-  });
-};
-
-// Real-time analytics subscription
-export const subscribeToAnalytics = (callback) => {
-  // eslint-disable-next-line no-unused-vars
-  let billsData = [];
-  // eslint-disable-next-line no-unused-vars
-  let productsData = [];
-  let isInitialized = false;
-
-  const updateAnalytics = async () => {
-    if (!isInitialized) return;
-
-    try {
-      const analytics = await calculateCombinedAnalytics();
-      callback(analytics);
-    } catch (error) {
-      console.error('Error updating analytics:', error);
-      callback(null);
-    }
-  };
-
-  // Subscribe to bills
-  const { subscribeToBills } = require('../firebase/billService');
-  const unsubscribeBills = subscribeToBills((bills) => {
-    billsData = bills;
-    if (!isInitialized) {
-      isInitialized = true;
-    }
-    updateAnalytics();
-  });
-
-  // Subscribe to products
-  const unsubscribeProducts = subscribeToShopProducts((products) => {
-    productsData = products;
-    if (!isInitialized) {
-      isInitialized = true;
-    }
-    updateAnalytics();
-  });
-
-  // Return cleanup function
-  return () => {
-    unsubscribeBills();
-    unsubscribeProducts();
   };
 };
 
