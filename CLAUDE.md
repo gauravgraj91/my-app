@@ -36,6 +36,19 @@ Your goal is to write clean, minimal, production-quality code that fits the exis
 - `npm run build` — production build (output: `/build`)
 - `npm test` — run tests with React Testing Library (Jest)
 
+## Firebase/Firestore Debugging
+When debugging Firestore errors, check in this order:
+1. Is `tenantId` available before any query runs? (most common root cause)
+2. Do all `onSnapshot` calls have error handlers?
+3. Are listeners properly cleaned up for React StrictMode double-mount?
+4. Is `onSnapshot` being wrapped in `async` incorrectly? (`onSnapshot` is synchronous — never wrap in async)
+5. After applying Firestore config fixes, do a full page reload (not HMR) to clear cached state
+
+## Git & Deployment
+- Always verify changes are committed (not stashed) before deploying to Vercel
+- After removing exported functions, grep for all import references before considering the change complete
+- Always run `npm run build` after making changes to verify they work — don't assume passing lint means success
+
 ## Gotchas
 - Firebase config reads from `.env` — never hardcode keys; all vars prefixed `REACT_APP_`
 - Categories and vendors are stored in `localStorage`, not Firestore — don't try to fetch them from the DB

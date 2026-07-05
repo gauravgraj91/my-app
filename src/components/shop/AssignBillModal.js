@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import { FileText, Search, Calendar, User, Package, Check, AlertCircle } from 'lucide-react';
-import { subscribeToBills } from '../../firebase/billService';
-import { useAuth } from '../../context/AuthContext';
+import { useBills } from '../../context/BillsContext';
 import { format } from 'date-fns';
 
 const AssignBillModal = ({
@@ -13,40 +12,27 @@ const AssignBillModal = ({
   products = [], // Array of products to assign (for bulk) or single product
   mode = 'single' // 'single' or 'bulk'
 }) => {
-  const { user } = useAuth();
-  const tenantId = user?.tenantId;
-  const [bills, setBills] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { bills: allBills, loading: billsLoading } = useBills();
   const [assigning, setAssigning] = useState(false);
   const [selectedBillId, setSelectedBillId] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
 
-  // Subscribe to bills
+  // Filter out archived bills from context data
+  const bills = useMemo(
+    () => (allBills || []).filter(bill => bill.status !== 'archived'),
+    [allBills]
+  );
+  const loading = billsLoading;
+
+  // Reset state when modal opens
   useEffect(() => {
-    if (!isOpen || !tenantId) return;
-
-    setLoading(true);
-    setError('');
-    setSelectedBillId('');
-    setSearchTerm('');
-
-    const unsubscribe = subscribeToBills(tenantId, (billsData) => {
-      // Filter out archived bills
-      const activeBills = billsData.filter(bill => bill.status !== 'archived');
-      setBills(activeBills);
-      setLoading(false);
-    }, {
-      onError: (err) => {
-        setError('Failed to load bills. Please try again.');
-        setLoading(false);
-      }
-    });
-
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
-  }, [isOpen, tenantId]);
+    if (isOpen) {
+      setError('');
+      setSelectedBillId('');
+      setSearchTerm('');
+    }
+  }, [isOpen]);
 
   // Filter bills by search term
   const filteredBills = bills.filter(bill => {

@@ -52,7 +52,10 @@
       "Bash(vercel --prod:*)",
       "Bash(sudo npm cache clean:*)",
       "Bash(git:*)",
-      "Bash(echo === $icon ===:*)"
+      "Bash(echo === $icon ===:*)",
+      "Bash(CI=false npx react-scripts:*)",
+      "Bash(node:*)",
+      "Bash(find:*)"
     ]
   }
 }

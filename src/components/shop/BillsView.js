@@ -109,14 +109,6 @@ const BillsView = () => {
     retrySubscription,
   } = useBills();
 
-  // Pick up search term from navigation state (e.g. from Products/Vendors "View Bill" links)
-  useEffect(() => {
-    if (location.state?.search && !initialSearchApplied.current) {
-      setSearchTerm(location.state.search);
-      initialSearchApplied.current = true;
-    }
-  }, [location.state]);
-
   // Local UI state
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
@@ -131,6 +123,14 @@ const BillsView = () => {
     maxProductCount: '',
     status: ''
   });
+
+  // Pick up search term from navigation state (e.g. from Products/Vendors "View Bill" links)
+  useEffect(() => {
+    if (location.state?.search && !initialSearchApplied.current) {
+      setSearchTerm(location.state.search);
+      initialSearchApplied.current = true;
+    }
+  }, [location.state]);
   const [showFilters, setShowFilters] = useState(false);
   const [activeStatusTab, setActiveStatusTab] = useState('all');
 
@@ -415,51 +415,45 @@ const BillsView = () => {
 
     return (
       <div style={{ padding: '24px' }}>
-        <ErrorBoundary
-          title={errorMessage.title}
-          message={errorMessage.message}
-          fallback={(error, retry) => (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              minHeight: '400px',
-              padding: '20px'
-            }}>
-              <Card style={{ maxWidth: '500px', textAlign: 'center' }}>
-                <div style={{ marginBottom: '20px' }}>
-                  <AlertTriangle size={48} color="#ef4444" style={{ margin: '0 auto 16px' }} />
-                  <h2 style={{ margin: '0 0 12px 0', fontSize: '20px', fontWeight: '600', color: '#1f2937' }}>
-                    {errorMessage.title}
-                  </h2>
-                  <p style={{ margin: '0 0 20px 0', color: '#6b7280', lineHeight: '1.5' }}>
-                    {errorMessage.message}
-                  </p>
-                </div>
-                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                  {recoveryOptions.map((option, index) => (
-                    <Button
-                      key={index}
-                      variant={option.primary ? 'primary' : 'secondary'}
-                      onClick={() => {
-                        if (option.action === 'retry') retrySubscription();
-                        else if (option.action === 'go_back') window.history.back();
-                      }}
-                      loading={isRetrying && option.action === 'retry'}
-                    >
-                      {option.label}
-                    </Button>
-                  ))}
-                </div>
-                {retryCount > 0 && (
-                  <div style={{ marginTop: '12px', fontSize: '12px', color: '#6b7280' }}>
-                    Retry attempts: {retryCount}
-                  </div>
-                )}
-              </Card>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '400px',
+          padding: '20px'
+        }}>
+          <Card style={{ maxWidth: '500px', textAlign: 'center' }}>
+            <div style={{ marginBottom: '20px' }}>
+              <AlertTriangle size={48} color="#ef4444" style={{ margin: '0 auto 16px' }} />
+              <h2 style={{ margin: '0 0 12px 0', fontSize: '20px', fontWeight: '600', color: '#1f2937' }}>
+                {errorMessage.title}
+              </h2>
+              <p style={{ margin: '0 0 20px 0', color: '#6b7280', lineHeight: '1.5' }}>
+                {errorMessage.message}
+              </p>
             </div>
-          )}
-        />
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              {recoveryOptions.map((option, index) => (
+                <Button
+                  key={index}
+                  variant={option.primary ? 'primary' : 'secondary'}
+                  onClick={() => {
+                    if (option.action === 'retry') retrySubscription();
+                    else if (option.action === 'go_back') window.history.back();
+                  }}
+                  loading={isRetrying && option.action === 'retry'}
+                >
+                  {option.label}
+                </Button>
+              ))}
+            </div>
+            {retryCount > 0 && (
+              <div style={{ marginTop: '12px', fontSize: '12px', color: '#6b7280' }}>
+                Retry attempts: {retryCount}
+              </div>
+            )}
+          </Card>
+        </div>
       </div>
     );
   }

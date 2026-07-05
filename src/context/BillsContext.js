@@ -99,162 +99,115 @@ export const BillsProvider = ({ children }) => {
   useEffect(() => {
     if (!tenantId) return;
 
-    const retryHandler = createRetryHandler(3, 1000);
+    setError(null);
+    setIsRetrying(false);
 
-    const subscribeWithRetry = async () => {
-      try {
-        setError(null);
-        setIsRetrying(false);
+    const unsubscribe = subscribeToBills(tenantId, (billsData, metadata) => {
+      setBills(billsData);
+      setLoading(false);
 
-        const unsubscribe = subscribeToBills(tenantId, (billsData, metadata) => {
-          setBills(billsData);
-          setLoading(false);
-
-          // Handle real-time changes
-          if (metadata?.changes) {
-            if (isFirstLoad.current) {
-              metadata.changes.forEach(change => {
-                if (change.type === 'added') {
-                  knownBillIds.current.add(change.bill.id);
-                }
-              });
-            } else {
-              // Skip all real-time notifications during active CRUD operations
-              const isSuppressed = Date.now() < suppressAllNotificationsUntil.current;
-
-              metadata.changes.forEach(change => {
-                if (change.type === 'added') {
-                  if (!isSuppressed &&
-                    !recentlyCreatedBills.current.has(change.bill.id) &&
-                    !knownBillIds.current.has(change.bill.id)) {
-                    showSuccess(`New bill ${change.bill.billNumber} added!`);
-                  }
-                  knownBillIds.current.add(change.bill.id);
-                } else if (change.type === 'modified') {
-                  if (!isSuppressed &&
-                    !recentlyCreatedBills.current.has(change.bill.id) &&
-                    !recentlyEditedBills.current.has(change.bill.id)) {
-                    const billId = change.bill.id;
-                    const billNumber = change.bill.billNumber;
-
-                    if (modifiedNotificationTimeouts.current.has(billId)) {
-                      clearTimeout(modifiedNotificationTimeouts.current.get(billId));
-                    }
-
-                    const timeoutId = setTimeout(() => {
-                      if (Date.now() >= suppressAllNotificationsUntil.current &&
-                        !recentlyCreatedBills.current.has(billId) &&
-                        !recentlyEditedBills.current.has(billId)) {
-                        showInfo(`Bill ${billNumber} updated!`);
-                      }
-                      modifiedNotificationTimeouts.current.delete(billId);
-                    }, 3000);
-
-                    modifiedNotificationTimeouts.current.set(billId, timeoutId);
-                  }
-                }
-              });
-            }
-            isFirstLoad.current = false;
-          }
-
-          // Load products for new and modified bills
-          const billsToLoadProducts = metadata?.changes?.filter(c => c.type === 'added' || c.type === 'modified').map(c => c.bill) || [];
-          billsToLoadProducts.forEach(async (bill) => {
-            try {
-              const products = await getProductsByBill(bill.id);
-              setBillProducts(prev => ({
-                ...prev,
-                [bill.id]: products
-              }));
-            } catch (err) {
-              const billError = classifyError(err);
-              reportError(billError, { context: 'loading_bill_products', billId: bill.id });
-              console.error(`Error loading products for bill ${bill.id}:`, billError);
+      // Handle real-time changes
+      if (metadata?.changes) {
+        if (isFirstLoad.current) {
+          metadata.changes.forEach(change => {
+            if (change.type === 'added') {
+              knownBillIds.current.add(change.bill.id);
             }
           });
+        } else {
+          // Skip all real-time notifications during active CRUD operations
+          const isSuppressed = Date.now() < suppressAllNotificationsUntil.current;
 
-          // For initial load, load all products
-          if (!metadata?.changes && billsData.length > 0) {
-            billsData.forEach(async (bill) => {
-              try {
-                const products = await getProductsByBill(bill.id);
-                setBillProducts(prev => ({
-                  ...prev,
-                  [bill.id]: products
-                }));
-              } catch (err) {
-                const billError = classifyError(err);
-                reportError(billError, { context: 'loading_initial_products', billId: bill.id });
-                console.error(`Error loading products for bill ${bill.id}:`, billError);
+          metadata.changes.forEach(change => {
+            if (change.type === 'added') {
+              if (!isSuppressed &&
+                !recentlyCreatedBills.current.has(change.bill.id) &&
+                !knownBillIds.current.has(change.bill.id)) {
+                showSuccess(`New bill ${change.bill.billNumber} added!`);
               }
-            });
-          }
-        }, {
-          onError: (err) => {
+              knownBillIds.current.add(change.bill.id);
+            } else if (change.type === 'modified') {
+              if (!isSuppressed &&
+                !recentlyCreatedBills.current.has(change.bill.id) &&
+                !recentlyEditedBills.current.has(change.bill.id)) {
+                const billId = change.bill.id;
+                const billNumber = change.bill.billNumber;
+
+                if (modifiedNotificationTimeouts.current.has(billId)) {
+                  clearTimeout(modifiedNotificationTimeouts.current.get(billId));
+                }
+
+                const timeoutId = setTimeout(() => {
+                  if (Date.now() >= suppressAllNotificationsUntil.current &&
+                    !recentlyCreatedBills.current.has(billId) &&
+                    !recentlyEditedBills.current.has(billId)) {
+                    showInfo(`Bill ${billNumber} updated!`);
+                  }
+                  modifiedNotificationTimeouts.current.delete(billId);
+                }, 3000);
+
+                modifiedNotificationTimeouts.current.set(billId, timeoutId);
+              }
+            }
+          });
+        }
+        isFirstLoad.current = false;
+      }
+
+      // Load products for new and modified bills
+      const billsToLoadProducts = metadata?.changes?.filter(c => c.type === 'added' || c.type === 'modified').map(c => c.bill) || [];
+      billsToLoadProducts.forEach(async (bill) => {
+        try {
+          const products = await getProductsByBill(bill.id);
+          setBillProducts(prev => ({
+            ...prev,
+            [bill.id]: products
+          }));
+        } catch (err) {
+          const billError = classifyError(err);
+          reportError(billError, { context: 'loading_bill_products', billId: bill.id });
+          console.error(`Error loading products for bill ${bill.id}:`, billError);
+        }
+      });
+
+      // For initial load, load all products
+      if (!metadata?.changes && billsData.length > 0) {
+        billsData.forEach(async (bill) => {
+          try {
+            const products = await getProductsByBill(bill.id);
+            setBillProducts(prev => ({
+              ...prev,
+              [bill.id]: products
+            }));
+          } catch (err) {
             const billError = classifyError(err);
-            reportError(billError, { context: 'bills_subscription' });
-
-            setError(billError);
-            setLoading(false);
-
-            const errorMessage = getErrorMessage(billError);
-            showError(errorMessage.message, {
-              title: errorMessage.title,
-              action: {
-                label: 'Retry',
-                onClick: () => handleRetrySubscription()
-              }
-            });
+            reportError(billError, { context: 'loading_initial_products', billId: bill.id });
+            console.error(`Error loading products for bill ${bill.id}:`, billError);
           }
         });
-
-        return unsubscribe;
-      } catch (err) {
+      }
+    }, {
+      onError: (err) => {
         const billError = classifyError(err);
+        reportError(billError, { context: 'bills_subscription' });
+
         setError(billError);
         setLoading(false);
-        throw billError;
-      }
-    };
 
-    const handleRetrySubscription = async () => {
-      setIsRetrying(true);
-      setRetryCount(prev => prev + 1);
-
-      try {
-        const unsubscribe = await retryHandler(subscribeWithRetry, {
-          context: 'bills_subscription_retry',
-          retryCount: retryCount + 1
+        const errorMessage = getErrorMessage(billError);
+        showError(errorMessage.message, {
+          title: errorMessage.title,
+          action: {
+            label: 'Retry',
+            onClick: () => setRetryCount(prev => prev + 1)
+          }
         });
-        return unsubscribe;
-      } catch (err) {
-        setIsRetrying(false);
-        const errorMessage = getErrorMessage(err);
-        showError(`Failed to load bills after ${retryCount + 1} attempts. ${errorMessage.message}`, {
-          title: 'Connection Failed',
-          duration: 10000
-        });
-      }
-    };
-
-    let unsubscribe = null;
-    let isMounted = true;
-
-    subscribeWithRetry().then(unsub => {
-      if (isMounted) {
-        unsubscribe = unsub;
-      } else if (unsub) {
-        unsub();
       }
     });
 
     const timeoutsRef = modifiedNotificationTimeouts.current;
     return () => {
-      isMounted = false;
-      if (unsubscribe) {
-        unsubscribe();
-      }
+      unsubscribe();
       timeoutsRef.forEach(timeoutId => clearTimeout(timeoutId));
       timeoutsRef.clear();
     };
