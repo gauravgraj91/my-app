@@ -37,3 +37,6 @@ Thumbs.db
 # Debug
 *.log
 .claude/worktrees/
+
+# Vercel
+.vercel
