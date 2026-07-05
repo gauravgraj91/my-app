@@ -1,0 +1,87 @@
+/* ============================================================
+   theme.css — single source of truth for the whole app.
+   Import ONCE in src/index.js:  import './styles/theme.css';
+   Dark mode already works: Header.js toggles `.dark` on <body>.
+   Font (Hanken Grotesk) is loaded via <link> in public/index.html.
+   ============================================================ */
+
+:root {
+  /* Surfaces & text */
+  --background:        #f5f6f8;
+  --foreground:        #171a20;  /* headings / primary numbers */
+  --foreground-body:   #5a606c;  /* body copy */
+  --card:              #ffffff;
+  --card-foreground:   #171a20;
+
+  /* Brand — ONE hue (indigo). Replaces the green-vs-blue conflict. */
+  --primary:           #4753d6;  /* buttons, active nav, links */
+  --primary-hover:     #3a45c4;
+  --primary-foreground:#ffffff;
+  --primary-soft:      #eef0fd;  /* tinted chip / active-nav background */
+  --primary-accent:    #4753d6;  /* text/icon accent (same as primary in light) */
+
+  /* Neutrals */
+  --secondary:         #f1f3f6;  /* chips, subtle fills */
+  --muted:             #f5f6f8;
+  --muted-foreground:  #7a8090;  /* labels, captions */
+  --border:            #e7e9ee;  /* card borders */
+  --border-subtle:     #eef0f4;  /* row dividers */
+  --input:             #e0e3e9;  /* control borders */
+  --ring:              #4753d6;
+
+  /* Semantic — status ONLY, never decoration */
+  --success:           #0a8f5b;  --success-soft: #e7f6ef;
+  --warning:           #b0770a;  --warning-soft: #f9f0dd;
+  --danger:            #cf3b2d;  --danger-soft:  #fbece9;
+
+  /* Shape & depth — flat, one shadow scale, no colored glows */
+  --radius-sm: 8px;
+  --radius:    12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 2px rgba(23,26,32,.06);
+  --shadow:    0 1px 3px rgba(23,26,32,.08), 0 1px 2px rgba(23,26,32,.04);
+  --shadow-lg: 0 12px 30px rgba(23,26,32,.12);
+
+  --font-sans: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+}
+
+.dark {
+  --background:        #0d0f14;
+  --foreground:        #e9ebef;
+  --foreground-body:   #b9bec9;
+  --card:              #16191f;
+  --card-foreground:   #e9ebef;
+
+  --primary:           #5b67e0;  /* button fill, lifted for contrast */
+  --primary-hover:     #6b76e6;
+  --primary-foreground:#ffffff;
+  --primary-soft:      #1c2030;
+  --primary-accent:    #a3abf8;  /* lighter for text/links on dark */
+
+  --secondary:         #1b1f27;
+  --muted:             #12151b;
+  --muted-foreground:  #7e8595;
+  --border:            #272b34;
+  --border-subtle:     #21252d;
+  --input:             #2c313b;
+  --ring:              #5b67e0;
+
+  --success:           #34c98a;  --success-soft: #122820;
+  --warning:           #e2a94a;  --warning-soft: #28210f;
+  --danger:            #f2796f;  --danger-soft:  #2b1512;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
+  --shadow:    0 1px 3px rgba(0,0,0,.5);
+  --shadow-lg: 0 12px 30px rgba(0,0,0,.55);
+}
+
+/* Global resets so every screen inherits the system */
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--background);
+  color: var(--foreground-body);
+  font-variant-numeric: tabular-nums;   /* aligned money columns */
+  -webkit-font-smoothing: antialiased;
+  transition: background-color .25s, color .25s;
+}

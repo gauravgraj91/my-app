@@ -67,10 +67,12 @@ const AnalyticsDashboard = () => {
   return (
     <div className="analytics-dashboard">
       <div className="analytics-header">
-        <h1 className="analytics-title">Analytics Dashboard</h1>
+        <div>
+          <h1 className="analytics-title">Analytics Dashboard</h1>
+          <p className="analytics-subtitle">Here's where your shop stands today</p>
+        </div>
 
         <div className="view-toggle-container">
-          <span style={{ fontWeight: 600, color: 'var(--foreground)', marginRight: '0.5rem' }}>View:</span>
           <button
             className={`view-toggle-btn ${viewMode === 'bills' ? 'active' : ''}`}
             onClick={() => setViewMode('bills')}
@@ -92,140 +94,134 @@ const AnalyticsDashboard = () => {
       <div className="analytics-grid">
 
         {/* Tasks Widget */}
-        <div className="stat-card fade-in-up">
+        <div className="stat-card">
           <div className="card-header">
-            <div className="card-title" style={{ color: 'var(--primary)' }}>
-              <CheckSquare size={20} />
+            <div className="card-title">
+              <CheckSquare size={18} color="var(--primary)" />
               Tasks
             </div>
             <button className="view-all-link" onClick={() => navigate('/tasks')}>
-              View All
+              View all
             </button>
           </div>
           <div className="stat-grid">
             <div className="stat-item">
-              <div className="stat-value" style={{ color: '#22c55e' }}>{taskStats.completed}</div>
+              <div className="stat-value">{taskStats.completed}</div>
               <div className="stat-label">Completed</div>
             </div>
             <div className="stat-item">
-              <div className="stat-value" style={{ color: 'var(--primary)' }}>{taskStats.pending}</div>
+              <div className="stat-value">{taskStats.pending}</div>
               <div className="stat-label">Pending</div>
             </div>
-            <div className="stat-item">
-              <div className="stat-value" style={{ color: '#ef4444' }}>{taskStats.overdue}</div>
+            <div className="stat-item" style={{ background: 'var(--danger-soft)' }}>
+              <div className="stat-value" style={{ color: 'var(--danger)' }}>{taskStats.overdue}</div>
               <div className="stat-label">Overdue</div>
             </div>
-            <div className="stat-item">
-              <div className="stat-value" style={{ color: '#f59e0b' }}>{taskStats.dueToday}</div>
-              <div className="stat-label">Due Today</div>
+            <div className="stat-item" style={{ background: 'var(--warning-soft)' }}>
+              <div className="stat-value" style={{ color: 'var(--warning)' }}>{taskStats.dueToday}</div>
+              <div className="stat-label">Due today</div>
             </div>
           </div>
         </div>
 
         {/* Enhanced Shop Analytics Widget */}
-        <div className="stat-card fade-in-up" style={{ animationDelay: '0.1s' }}>
+        <div className="stat-card">
           <div className="card-header">
-            <div className="card-title" style={{ color: '#10b981' }}>
-              {viewMode === 'bills' ? <FileText size={20} /> : <Package size={20} />}
+            <div className="card-title">
+              {viewMode === 'bills' ? <FileText size={18} color="var(--primary)" /> : <Package size={18} color="var(--primary)" />}
               {viewMode === 'bills' ? 'Bills' : 'Products'}
             </div>
             <button
               className="view-all-link"
               onClick={() => navigate(viewMode === 'bills' ? '/shop/bills' : '/shop')}
-              style={{ color: '#10b981' }}
             >
-              View All
+              View all
             </button>
           </div>
 
           <div className="main-stat">
-            <div className="main-stat-value" style={{ color: '#10b981' }}>
+            <div className="main-stat-value">
               {currentAnalytics ? formatCurrency(currentAnalytics.totalAmount) : formatCurrency(shopStats.totalSales)}
             </div>
             <div className="stat-label">
-              {viewMode === 'bills' ? 'Total Bill Value' : 'Total Product Value'}
+              {viewMode === 'bills' ? 'Total bill value' : 'Total product value'}
             </div>
           </div>
 
           <div className="stat-grid">
             <div className="stat-item">
-              <div className="stat-value" style={{ color: '#8b5cf6' }}>
+              <div className="stat-value">
                 {currentAnalytics ?
                   (viewMode === 'bills' ? currentAnalytics.totalBills : currentAnalytics.totalProducts) :
                   shopStats.totalProducts
                 }
               </div>
               <div className="stat-label">
-                {viewMode === 'bills' ? 'Total Bills' : 'Total Products'}
+                {viewMode === 'bills' ? 'Total bills' : 'Total products'}
               </div>
             </div>
             <div className="stat-item">
-              <div className="stat-value" style={{ color: '#f59e0b' }}>
+              <div className="stat-value" style={{ color: 'var(--success)' }}>
                 {currentAnalytics ? formatCurrency(currentAnalytics.totalProfit) : formatCurrency(shopStats.totalProfit)}
               </div>
-              <div className="stat-label">Total Profit</div>
+              <div className="stat-label">Total profit</div>
             </div>
           </div>
         </div>
 
         {/* Transactions Widget */}
-        <div className="stat-card fade-in-up" style={{ animationDelay: '0.2s' }}>
+        <div className="stat-card">
           <div className="card-header">
-            <div className="card-title" style={{ color: '#f59e0b' }}>
-              <DollarSign size={20} />
+            <div className="card-title">
+              <DollarSign size={18} color="var(--primary)" />
               Transactions
             </div>
             <button
               className="view-all-link"
               onClick={() => navigate('/shop/transactions')}
-              style={{ color: '#f59e0b' }}
             >
-              View All
+              View all
             </button>
           </div>
 
           <div className="main-stat">
-            <div className="main-stat-value" style={{ color: 'var(--primary)' }}>
+            <div className="main-stat-value">
               {formatCurrency(transactionStats.netBalance)}
             </div>
-            <div className="stat-label">Net Balance</div>
+            <div className="stat-label">Net balance</div>
           </div>
 
           <div className="stat-grid">
             <div className="stat-item">
-              <div className="stat-value" style={{ color: '#22c55e' }}>{formatCurrency(transactionStats.cashIn)}</div>
-              <div className="stat-label">Cash In</div>
+              <div className="stat-value" style={{ color: 'var(--success)' }}>{formatCurrency(transactionStats.cashIn)}</div>
+              <div className="stat-label">Cash in</div>
             </div>
             <div className="stat-item">
-              <div className="stat-value" style={{ color: '#ef4444' }}>{formatCurrency(transactionStats.cashOut)}</div>
-              <div className="stat-label">Cash Out</div>
+              <div className="stat-value" style={{ color: 'var(--danger)' }}>{formatCurrency(transactionStats.cashOut)}</div>
+              <div className="stat-label">Cash out</div>
             </div>
           </div>
         </div>
 
         {/* Price List Widget */}
-        <div className="stat-card fade-in-up" style={{ animationDelay: '0.3s' }}>
+        <div className="stat-card">
           <div className="card-header">
-            <div className="card-title" style={{ color: '#8b5cf6' }}>
-              <ShoppingCart size={20} />
-              Price List
+            <div className="card-title">
+              <ShoppingCart size={18} color="var(--primary)" />
+              Price list
             </div>
             <button
               className="view-all-link"
               onClick={() => navigate('/shop/price-list')}
-              style={{ color: '#8b5cf6' }}
             >
-              View All
+              View all
             </button>
           </div>
-          <div style={{ textAlign: 'center', padding: '2rem 0' }}>
-            <div style={{ fontSize: '3rem', fontWeight: 800, color: '#8b5cf6', marginBottom: '0.5rem' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0.5rem 0' }}>
+            <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--foreground)', letterSpacing: '-0.03em', lineHeight: 1 }}>
               {shopStats.totalProducts}
             </div>
-            <div className="stat-label">Total Items</div>
-            <p style={{ fontSize: '0.875rem', color: 'var(--muted-foreground)', marginTop: '1rem' }}>
-              Manage your product pricing and inventory
-            </p>
+            <div className="stat-label" style={{ marginTop: '0.4rem' }}>Items priced &amp; tracked</div>
           </div>
         </div>
       </div>
@@ -234,49 +230,49 @@ const AnalyticsDashboard = () => {
       {currentAnalytics && (
         <>
           {/* Key Metrics Row */}
-          <div style={{ marginBottom: '3rem' }}>
+          <div style={{ marginBottom: '2rem' }}>
             <div className="section-header">
-              <TrendingUp size={24} />
-              {viewMode === 'bills' ? 'Bill Analytics' : 'Product Analytics'}
+              <TrendingUp size={20} color="var(--primary)" />
+              {viewMode === 'bills' ? 'Bill analytics' : 'Product analytics'}
             </div>
 
             <div className="analytics-grid" style={{ marginBottom: 0 }}>
               {/* Average Value Card */}
               <div className="stat-card">
-                <div style={{ textAlign: 'center' }}>
-                  <div className="stat-value" style={{ fontSize: '2rem', color: 'var(--primary)' }}>
+                <div>
+                  <div className="stat-value" style={{ fontSize: '1.75rem' }}>
                     {viewMode === 'bills' ?
                       formatCurrency(currentAnalytics.averageBillValue) :
                       formatCurrency(currentAnalytics.averageProductValue)
                     }
                   </div>
                   <div className="stat-label">
-                    {viewMode === 'bills' ? 'Average Bill Value' : 'Average Product Value'}
+                    {viewMode === 'bills' ? 'Average bill value' : 'Average product value'}
                   </div>
                 </div>
               </div>
 
               {/* Profit Margin Card */}
               <div className="stat-card">
-                <div style={{ textAlign: 'center' }}>
-                  <div className="stat-value" style={{ fontSize: '2rem', color: '#16a34a' }}>
+                <div>
+                  <div className="stat-value" style={{ fontSize: '1.75rem', color: 'var(--success)' }}>
                     {formatPercentage(currentAnalytics.profitMargin)}
                   </div>
-                  <div className="stat-label">Overall Profit Margin</div>
+                  <div className="stat-label">Overall profit margin</div>
                 </div>
               </div>
 
               {/* Top Vendor Card */}
               <div className="stat-card">
-                <div style={{ textAlign: 'center' }}>
-                  <div className="stat-value" style={{ fontSize: '1.5rem', color: '#dc2626' }}>
+                <div>
+                  <div className="stat-value" style={{ fontSize: '1.35rem' }}>
                     {currentAnalytics.vendorAnalytics.length > 0 ?
-                      currentAnalytics.vendorAnalytics[0].vendor : 'No Data'
+                      currentAnalytics.vendorAnalytics[0].vendor : 'No data'
                     }
                   </div>
-                  <div className="stat-label">Top Vendor</div>
+                  <div className="stat-label">Top vendor</div>
                   {currentAnalytics.vendorAnalytics.length > 0 && (
-                    <div style={{ fontSize: '0.875rem', color: 'var(--muted-foreground)', marginTop: '0.5rem' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)', marginTop: '0.4rem' }}>
                       {formatCurrency(currentAnalytics.vendorAnalytics[0].totalAmount)}
                     </div>
                   )}
@@ -286,14 +282,14 @@ const AnalyticsDashboard = () => {
           </div>
 
           {/* Vendor Performance Section */}
-          <div style={{ marginBottom: '3rem' }}>
+          <div style={{ marginBottom: '2rem' }}>
             <div className="section-header">
-              <CreditCard size={24} />
-              Vendor Performance
+              <CreditCard size={20} color="var(--primary)" />
+              Vendor performance
             </div>
             <div className="stat-card" style={{ padding: 0, overflow: 'hidden' }}>
               <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                {currentAnalytics.vendorAnalytics.slice(0, 10).map((vendor, index) => (
+                {currentAnalytics.vendorAnalytics.slice(0, 10).map((vendor) => (
                   <div key={vendor.vendor} className="list-item">
                     <div>
                       <div className="item-main">{vendor.vendor}</div>
@@ -305,8 +301,8 @@ const AnalyticsDashboard = () => {
                       </div>
                     </div>
                     <div className="item-value">
-                      <div style={{ color: '#16a34a' }}>{formatCurrency(vendor.totalAmount)}</div>
-                      <div className="item-sub">
+                      <div>{formatCurrency(vendor.totalAmount)}</div>
+                      <div className="item-sub" style={{ color: 'var(--success)' }}>
                         {formatPercentage(vendor.profitMargin || (vendor.totalAmount > 0 ? (vendor.totalProfit / vendor.totalAmount) * 100 : 0))} profit
                       </div>
                     </div>
@@ -318,14 +314,14 @@ const AnalyticsDashboard = () => {
 
           {/* Monthly Trends Section (Bills only) */}
           {viewMode === 'bills' && currentAnalytics.monthlyAnalytics && currentAnalytics.monthlyAnalytics.length > 0 && (
-            <div style={{ marginBottom: '3rem' }}>
+            <div style={{ marginBottom: '2rem' }}>
               <div className="section-header">
-                <TrendingUp size={24} />
-                Monthly Trends
+                <TrendingUp size={20} color="var(--primary)" />
+                Monthly trends
               </div>
               <div className="stat-card" style={{ padding: 0, overflow: 'hidden' }}>
                 <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                  {currentAnalytics.monthlyAnalytics.slice(-6).map((month, index) => (
+                  {currentAnalytics.monthlyAnalytics.slice(-6).map((month) => (
                     <div key={month.monthKey} className="list-item">
                       <div>
                         <div className="item-main">{month.month}</div>
@@ -334,8 +330,8 @@ const AnalyticsDashboard = () => {
                         </div>
                       </div>
                       <div className="item-value">
-                        <div style={{ color: '#3b82f6' }}>{formatCurrency(month.totalAmount)}</div>
-                        <div className="item-sub">
+                        <div>{formatCurrency(month.totalAmount)}</div>
+                        <div className="item-sub" style={{ color: 'var(--success)' }}>
                           {formatPercentage(month.profitMargin)} profit
                         </div>
                       </div>
@@ -348,14 +344,14 @@ const AnalyticsDashboard = () => {
 
           {/* Top Performing Bills Section (Bills only) */}
           {viewMode === 'bills' && currentAnalytics.topPerformingBills && currentAnalytics.topPerformingBills.length > 0 && (
-            <div style={{ marginBottom: '3rem' }}>
+            <div style={{ marginBottom: '2rem' }}>
               <div className="section-header">
-                <ArrowUpRight size={24} />
-                Top Performing Bills
+                <ArrowUpRight size={20} color="var(--primary)" />
+                Top performing bills
               </div>
               <div className="stat-card" style={{ padding: 0, overflow: 'hidden' }}>
                 <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                  {currentAnalytics.topPerformingBills.slice(0, 5).map((bill, index) => (
+                  {currentAnalytics.topPerformingBills.slice(0, 5).map((bill) => (
                     <div key={bill.id} className="list-item">
                       <div>
                         <div className="item-main">{bill.billNumber}</div>
@@ -364,8 +360,8 @@ const AnalyticsDashboard = () => {
                         </div>
                       </div>
                       <div className="item-value">
-                        <div style={{ color: '#16a34a' }}>{formatCurrency(bill.totalAmount)}</div>
-                        <div className="item-sub">
+                        <div>{formatCurrency(bill.totalAmount)}</div>
+                        <div className="item-sub" style={{ color: 'var(--success)' }}>
                           {formatPercentage(bill.profitMargin)} profit
                         </div>
                       </div>
@@ -381,8 +377,8 @@ const AnalyticsDashboard = () => {
       {/* Quick Actions */}
       <div>
         <div className="section-header">
-          <Plus size={24} />
-          Quick Actions
+          <Plus size={20} color="var(--primary)" />
+          Quick actions
         </div>
         <div className="quick-actions-grid">
           <button
@@ -390,27 +386,27 @@ const AnalyticsDashboard = () => {
             onClick={() => navigate('/tasks')}
           >
             <CheckSquare size={20} />
-            Add Task
+            Add task
           </button>
 
           <button
-            className="action-button btn-accent"
+            className="action-button"
             onClick={() => navigate('/shop/bills')}
           >
             <ShoppingCart size={20} />
-            Add Product
+            Add product
           </button>
 
           <button
-            className="action-button btn-success"
+            className="action-button"
             onClick={() => navigate('/shop/transactions')}
           >
             <DollarSign size={20} />
-            Add Transaction
+            Add transaction
           </button>
 
           <button
-            className="action-button btn-dark"
+            className="action-button"
             onClick={() => navigate('/settings')}
           >
             <Settings size={20} />

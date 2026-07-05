@@ -1,28 +1,10 @@
-:root{
-  --background:#f5f6f8; --foreground:#171a20; --card:#ffffff;
-  --primary:#4753d6; --primary-hover:#3a45c0; --primary-soft:#eef0fd;
-  --secondary:#f5f6f8; --muted-foreground:#7a8090; --border:#e7e9ee;
-  --success:#0a8f5b; --success-soft:#e7f6ef;
-  --warning:#b0770a; --warning-soft:#f9f0dd;
-  --danger:#cf3b2d;  --danger-soft:#fbece9;
-  --radius:.8rem; --font-sans:'Hanken Grotesk',system-ui,sans-serif;
-}
-.dark{
-  --background:#0d0f14; --foreground:#e9ebef; --card:#16191f;
-  --primary:#7b86f5; --primary-hover:#5b67e0; --primary-soft:#1c2030;
-  --secondary:#1b1f27; --muted-foreground:#7e8595; --border:#272b34;
-  --success:#34c98a; --success-soft:#122820;
-  --warning:#e2a94a; --warning-soft:#28210f;
-  --danger:#f2796f;  --danger-soft:#2b1512;
-}
-
-body {
-    font-family: var(--font-sans);
-    background-color: var(--background);
-    color: var(--foreground);
-    margin: 0;
-    transition: background-color 0.3s, color 0.3s;
-}
+/* ============================================================
+   Analytics theme — Design Refresh
+   One brand hue (indigo), semantic-only status colors,
+   warm-slate neutrals, flat surfaces, real type scale.
+   Design tokens live in src/styles/theme.css (single source).
+   This file holds only the analytics component classes.
+   ============================================================ */
 
 .analytics-dashboard {
     padding: 2rem;
@@ -31,51 +13,58 @@ body {
     min-height: 100vh;
 }
 
+/* Header — left-aligned, real hierarchy */
 .analytics-header {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 3rem;
-    text-align: center;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
 }
 
 .analytics-title {
-    font-size: 2.5rem;
+    font-size: 1.75rem;
     font-weight: 800;
     color: var(--foreground);
-    margin: 0 0 1.5rem 0;
-    letter-spacing: -0.025em;
+    margin: 0;
+    letter-spacing: -0.03em;
+}
+
+.analytics-subtitle {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+    margin: 0.25rem 0 0 0;
 }
 
 /* View Toggle */
 .view-toggle-container {
     display: inline-flex;
     align-items: center;
-    background: var(--muted);
-    padding: 0.375rem;
-    border-radius: 1rem;
-    gap: 0.25rem;
+    background: var(--secondary);
+    padding: 0.25rem;
+    border-radius: 0.6rem;
+    gap: 0.2rem;
 }
 
 .view-toggle-btn {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.625rem 1.25rem;
+    padding: 0.5rem 1rem;
     border: none;
-    border-radius: 0.75rem;
-    font-size: 0.95rem;
+    border-radius: 0.45rem;
+    font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
     color: var(--muted-foreground);
     background: transparent;
 }
 
 .view-toggle-btn.active {
-    background: var(--card);
-    color: var(--primary);
-    box-shadow: var(--shadow-sm);
+    background: var(--primary);
+    color: var(--primary-foreground);
 }
 
 .view-toggle-btn:hover:not(.active) {
@@ -86,46 +75,42 @@ body {
 .analytics-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 3rem;
+    gap: 1rem;
+    margin-bottom: 2rem;
 }
 
+/* Flat surfaces — one border, one soft shadow, no hover lift */
 .stat-card {
     background: var(--card);
     border-radius: var(--radius);
-    padding: 1.5rem;
+    padding: 1.25rem;
     box-shadow: var(--shadow);
     border: 1px solid var(--border);
-    transition: transform 0.2s, box-shadow 0.2s;
     display: flex;
     flex-direction: column;
-}
-
-.stat-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
 }
 
 .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .card-title {
-    font-size: 1.1rem;
+    font-size: 0.9rem;
     font-weight: 700;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    color: var(--foreground);
 }
 
 .view-all-link {
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     color: var(--primary);
     text-decoration: none;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
     background: none;
     border: none;
@@ -139,52 +124,54 @@ body {
 .stat-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    gap: 0.6rem;
 }
 
 .stat-item {
-    text-align: center;
-    padding: 0.5rem;
+    text-align: left;
+    padding: 0.7rem;
     border-radius: 0.5rem;
     background: var(--secondary);
 }
 
 .stat-value {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin-bottom: 0.25rem;
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--foreground);
+    margin-bottom: 0.15rem;
+    letter-spacing: -0.02em;
 }
 
 .stat-label {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     color: var(--muted-foreground);
     font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
 }
 
 .main-stat {
-    text-align: center;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
     border-bottom: 1px solid var(--border);
 }
 
 .main-stat-value {
-    font-size: 2rem;
+    font-size: 1.75rem;
     font-weight: 800;
-    margin-bottom: 0.5rem;
+    color: var(--foreground);
+    margin-bottom: 0.25rem;
+    letter-spacing: -0.02em;
 }
 
 /* Section Headers */
 .section-header {
-    font-size: 1.5rem;
+    font-size: 1.1rem;
     font-weight: 700;
     color: var(--foreground);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.6rem;
+    letter-spacing: -0.02em;
 }
 
 /* List Items */
@@ -192,9 +179,9 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
+    padding: 0.85rem 1.125rem;
     border-bottom: 1px solid var(--border);
-    transition: background-color 0.2s;
+    transition: background-color 0.15s;
 }
 
 .list-item:last-child {
@@ -211,90 +198,52 @@ body {
 }
 
 .item-sub {
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     color: var(--muted-foreground);
 }
 
 .item-value {
     font-weight: 700;
     text-align: right;
+    color: var(--foreground);
 }
 
-/* Quick Actions */
+/* Quick Actions — flat, brand-led */
 .quick-actions-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
+    gap: 1rem;
 }
 
 .action-button {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.75rem;
-    padding: 1.25rem;
+    gap: 0.6rem;
+    padding: 1rem;
     border-radius: var(--radius);
-    border: none;
-    font-size: 1rem;
+    border: 1px solid var(--border);
+    font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
-    color: white;
-    box-shadow: var(--shadow);
+    transition: all 0.15s;
+    background: var(--card);
+    color: var(--foreground);
 }
 
 .action-button:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+    background: var(--secondary);
 }
 
+/* Primary action stands out; the rest are quiet outline buttons */
 .btn-primary {
     background: var(--primary);
+    color: var(--primary-foreground);
+    border-color: var(--primary);
 }
 
 .btn-primary:hover {
-    background: #1d4ed8;
-}
-
-.btn-accent {
-    background: var(--accent);
-}
-
-.btn-accent:hover {
-    background: #d97706;
-}
-
-.btn-success {
-    background: #10b981;
-}
-
-.btn-success:hover {
-    background: #059669;
-}
-
-.btn-dark {
-    background: #334155;
-}
-
-.btn-dark:hover {
-    background: #1e293b;
-}
-
-/* Animations */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.fade-in-up {
-    animation: fadeInUp 0.5s ease-out forwards;
+    background: var(--primary-hover);
 }
 
 /* Responsive */
@@ -304,7 +253,7 @@ body {
     }
 
     .analytics-title {
-        font-size: 2rem;
+        font-size: 1.5rem;
     }
 
     .analytics-grid {
