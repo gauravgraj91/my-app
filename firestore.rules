@@ -44,13 +44,16 @@ service cloud.firestore {
       allow update, delete: if isTenant();
     }
 
-    match /shopVendors/{document} {
+    match /shopVendors/{vendorId} {
       allow read: if isTenant();
       allow create: if isAuth() && isNewTenant();
       allow update, delete: if isTenant();
 
+      // Product docs carry no tenantId field; tenancy comes from the parent vendor doc.
       match /products/{productId} {
-        allow read, write: if isTenant();
+        allow read, write: if isAuth() &&
+          get(/databases/$(database)/documents/shopVendors/$(vendorId)).data.tenantId ==
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tenantId;
       }
     }
 
