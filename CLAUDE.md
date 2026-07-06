@@ -24,6 +24,8 @@ Your goal is to write clean, minimal, production-quality code that fits the exis
 
 ## Coding Rules
 - Match existing inline style patterns; never introduce CSS modules or styled-components
+- Colors/shadows: always use theme tokens from `src/styles/theme.css` (`var(--primary)`, `var(--card)`, `var(--shadow)`, …) — never hardcoded hex. Dark mode works by `.dark` on `<body>` flipping the tokens; never write per-component `.dark` CSS overrides
+- Hex-alpha appends (`` `${color}20` ``) break with `var()` — use `color-mix(in srgb, ${color} 12%, transparent)`
 - Reuse `formatCurrency` / `formatDate` from formatters.js — don't reimplement
 - Reuse `SummaryCard` from `src/components/ui/SummaryCard.js` — don't redefine locally
 - Reuse `SortableHeader` from `src/components/ui/SortableHeader.js` (props: `sortField`, `sortDirection`, `handleSort`)
@@ -60,7 +62,8 @@ When debugging Firestore errors, check in this order:
 ## TODO — Improvements Backlog
 
 ### P1 — High (do soon)
-- [ ] **Add Firebase Authentication** — no auth currently; anyone with the Firebase config can read/write all data. Add at least anonymous auth + Firestore security rules.
+- [x] **Add Firebase Authentication** — DONE: email/password auth (`AuthContext`, `authService`, `ProtectedRoute`) + tenant-scoped `firestore.rules`. Verify the rules are actually deployed to the Firebase project.
+- [ ] **PDF invoice generation + share** — top feature gap from competitive research; prerequisite for invoice status tracking, payment reminders, UPI QR.
 
 ### P2 — Medium (nice to have)
 - [ ] **Remove or commit to Tailwind** — `tailwindcss` is in devDeps but used across 15 files; too entrenched to remove quickly
@@ -68,5 +71,5 @@ When debugging Firestore errors, check in this order:
 
 ### P3 — Low (future)
 - [ ] **Add React.lazy() for route code splitting** — all pages load eagerly in `App.js`
-- [ ] **Clean up or integrate `VirtualizedBillsList.js`** — built but never imported
+- [ ] **Delete dead code** — `VirtualizedBillsList.js`, `TestChart.js`, and `src/components/migration/` are never imported anywhere
 - [ ] **Consider IndexedDB for activity logs** — localStorage has ~5MB shared limit
