@@ -2,8 +2,8 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 import { useNotifications } from '../components/ui/NotificationSystem';
 import {
   subscribeToBills,
-  addBill,
-  updateBill,
+  createBillWithProducts,
+  updateBillWithProducts,
   deleteBillWithProducts,
   duplicateBill,
   getBillAnalytics,
@@ -14,7 +14,7 @@ import {
   bulkExportBillsToCSV,
   BillModel
 } from '../firebase/billService';
-import { addShopProduct, getProductsByBill, deleteShopProduct } from '../firebase/shopProductService';
+import { addShopProduct, getProductsByBill } from '../firebase/shopProductService';
 import {
   classifyError,
   getErrorMessage,
@@ -103,6 +103,9 @@ export const BillsProvider = ({ children }) => {
     setIsRetrying(false);
 
     const unsubscribe = subscribeToBills(tenantId, (billsData, metadata) => {
+      if (!isFirstLoad.current && metadata?.changes?.length > 0) {
+        analyticsCacheUtils.delete('bill-analytics');
+      }
       setBills(billsData);
       setLoading(false);
 
@@ -158,7 +161,7 @@ export const BillsProvider = ({ children }) => {
       const billsToLoadProducts = metadata?.changes?.filter(c => c.type === 'added' || c.type === 'modified').map(c => c.bill) || [];
       billsToLoadProducts.forEach(async (bill) => {
         try {
-          const products = await getProductsByBill(bill.id);
+          const products = await getProductsByBill(bill.id, tenantId);
           setBillProducts(prev => ({
             ...prev,
             [bill.id]: products
@@ -174,7 +177,7 @@ export const BillsProvider = ({ children }) => {
       if (!metadata?.changes && billsData.length > 0) {
         billsData.forEach(async (bill) => {
           try {
-            const products = await getProductsByBill(bill.id);
+            const products = await getProductsByBill(bill.id, tenantId);
             setBillProducts(prev => ({
               ...prev,
               [bill.id]: products
@@ -217,7 +220,7 @@ export const BillsProvider = ({ children }) => {
   // Load analytics with caching
   useEffect(() => {
     const loadAnalytics = async () => {
-      if (bills.length === 0) return;
+      if (bills.length === 0 || !tenantId) return;
 
       setAnalyticsLoading(true);
       const retryHandler = createRetryHandler(2, 1000);
@@ -232,7 +235,7 @@ export const BillsProvider = ({ children }) => {
 
         const analyticsData = await retryHandler(async () => {
           const timingId = performanceMonitor.startTiming('load-analytics');
-          const data = await getBillAnalytics();
+          const data = await getBillAnalytics(tenantId);
           performanceMonitor.endTiming(timingId, { billCount: bills.length });
           return data;
         }, { context: 'load_analytics' });
@@ -256,7 +259,7 @@ export const BillsProvider = ({ children }) => {
     };
 
     loadAnalytics();
-  }, [bills]);
+  }, [bills, tenantId]);
 
   // Conflict resolution handlers
   const handleAcknowledgeConflict = useCallback((conflictIndex) => {
@@ -282,59 +285,57 @@ export const BillsProvider = ({ children }) => {
     try {
       const retryHandler = createRetryHandler(2, 1000);
 
-      const newBill = await retryHandler(async () => {
-        const bill = await addBill(billData, tenantId);
+      // Handle multi-product array
+      const productsToAdd = billData.products && billData.products.length > 0
+        ? billData.products
+        : (billData.productName && billData.quantity ? [billData] : []);
 
-        recentlyCreatedBills.current.add(bill.id);
-        recentlyEditedBills.current.add(bill.id);
+      // Compute base totals and extra charges for proportional distribution
+      const baseTotalAmount = productsToAdd.reduce((s, p) => s + (parseFloat(p.totalAmount) || 0), 0);
+      const charges = BillModel.computeExtraCharges(baseTotalAmount, {
+        discountPercent: billData.discountPercent,
+        surchargePercent: billData.surchargePercent,
+        transportCost: billData.transportCost,
+      });
+      const netAdjustment = -charges.discountAmount + charges.surchargeAmount + charges.transportCost;
 
-        // Handle multi-product array
-        const productsToAdd = billData.products && billData.products.length > 0
-          ? billData.products
-          : (billData.productName && billData.quantity ? [billData] : []);
+      const productDocs = productsToAdd
+        .filter(p => p.productName || (parseFloat(p.quantity) || 0) > 0 || (parseFloat(p.totalAmount) || 0) > 0)
+        .map(p => {
+          const qty = parseFloat(p.quantity) || 0;
+          const amount = parseFloat(p.totalAmount) || 0;
+          const mrp = parseFloat(p.mrp) || 0;
 
-        // Compute base totals and extra charges for proportional distribution
-        const baseTotalAmount = productsToAdd.reduce((s, p) => s + (parseFloat(p.totalAmount) || 0), 0);
-        const charges = BillModel.computeExtraCharges(baseTotalAmount, {
-          discountPercent: billData.discountPercent,
-          surchargePercent: billData.surchargePercent,
-          transportCost: billData.transportCost,
+          // Distribute bill charges proportionally
+          const share = baseTotalAmount > 0 ? netAdjustment * (amount / baseTotalAmount) : 0;
+          const effectiveAmount = amount + share;
+          const costPerUnit = qty > 0 ? Math.round((effectiveAmount / qty + Number.EPSILON) * 100) / 100 : 0;
+          const profitPerPiece = Math.round((mrp - costPerUnit + Number.EPSILON) * 100) / 100;
+
+          return {
+            productName: p.productName || '',
+            mrp: mrp,
+            totalQuantity: qty,
+            quantity: qty,
+            totalAmount: amount,
+            vendor: billData.vendor,
+            category: 'Uncategorized',
+            status: 'in_stock',
+            costPerUnit: costPerUnit,
+            pricePerPiece: costPerUnit,
+            profitPerPiece: profitPerPiece,
+            totalProfit: Math.round((profitPerPiece * qty + Number.EPSILON) * 100) / 100
+          };
         });
-        const netAdjustment = -charges.discountAmount + charges.surchargeAmount + charges.transportCost;
 
-        const productPromises = productsToAdd
-          .filter(p => p.productName || (parseFloat(p.quantity) || 0) > 0 || (parseFloat(p.totalAmount) || 0) > 0)
-          .map(p => {
-            const qty = parseFloat(p.quantity) || 0;
-            const amount = parseFloat(p.totalAmount) || 0;
-            const mrp = parseFloat(p.mrp) || 0;
+      // Atomic batch write: retrying is safe because a failed commit writes nothing
+      const newBill = await retryHandler(
+        () => createBillWithProducts(billData, productDocs, tenantId),
+        { context: 'create_bill', billNumber: billData.billNumber }
+      );
 
-            // Distribute bill charges proportionally
-            const share = baseTotalAmount > 0 ? netAdjustment * (amount / baseTotalAmount) : 0;
-            const effectiveAmount = amount + share;
-            const costPerUnit = qty > 0 ? Math.round((effectiveAmount / qty + Number.EPSILON) * 100) / 100 : 0;
-            const profitPerPiece = Math.round((mrp - costPerUnit + Number.EPSILON) * 100) / 100;
-
-            return addShopProduct({
-              productName: p.productName || '',
-              mrp: mrp,
-              totalQuantity: qty,
-              quantity: qty,
-              totalAmount: amount,
-              vendor: billData.vendor,
-              category: 'Uncategorized',
-              status: 'in_stock',
-              costPerUnit: costPerUnit,
-              pricePerPiece: costPerUnit,
-              profitPerPiece: profitPerPiece,
-              totalProfit: Math.round((profitPerPiece * qty + Number.EPSILON) * 100) / 100
-            }, bill.id, {}, tenantId);
-          });
-
-        await Promise.all(productPromises);
-
-        return bill;
-      }, { context: 'create_bill', billNumber: billData.billNumber });
+      recentlyCreatedBills.current.add(newBill.id);
+      recentlyEditedBills.current.add(newBill.id);
 
       // Allow real-time notifications again after a grace period for debounced recalculations
       suppressAllNotificationsUntil.current = Date.now() + 15000;
@@ -410,28 +411,14 @@ export const BillsProvider = ({ children }) => {
       ));
 
       try {
-        // 1. Update the bill document (without products array)
-        await retryHandler(async () => {
-          return await updateBill(billId, billUpdateData);
-        }, { context: 'update_bill', billId, billNumber: billToUpdate?.billNumber });
-
-        // 2. Sync products: delete old products, add new ones
+        // Build the replacement product docs with distributed charges
+        let productDocs = null;
         if (updatedProducts) {
-          const existingProducts = await getProductsByBill(billId);
-
-          // Delete all existing products in parallel
-          await Promise.all(
-            existingProducts.map(p => deleteShopProduct(p.id).catch(err =>
-              console.error(`Error deleting old product ${p.id}:`, err)
-            ))
-          );
-
-          // Add updated products in parallel with distributed charges
           const validProducts = updatedProducts.filter(p => p.productName || p.quantity || p.totalAmount);
           const editNetAdjustment = -extraCharges.discountAmount + extraCharges.surchargeAmount + extraCharges.transportCost;
           const editBaseTotalAmount = totals.totalAmount || 0;
 
-          await Promise.all(validProducts.map(p => {
+          productDocs = validProducts.map(p => {
             const qty = parseFloat(p.quantity) || 0;
             const amount = parseFloat(p.totalAmount) || 0;
             const mrp = parseFloat(p.mrp) || 0;
@@ -441,7 +428,7 @@ export const BillsProvider = ({ children }) => {
             const costPerUnit = qty > 0 ? Math.round((effectiveAmount / qty + Number.EPSILON) * 100) / 100 : 0;
             const profitPerPiece = Math.round((mrp - costPerUnit + Number.EPSILON) * 100) / 100;
 
-            return addShopProduct({
+            return {
               productName: p.productName || '',
               mrp: mrp,
               totalQuantity: qty,
@@ -454,14 +441,20 @@ export const BillsProvider = ({ children }) => {
               pricePerPiece: costPerUnit,
               profitPerPiece: profitPerPiece,
               totalProfit: Math.round((profitPerPiece * qty + Number.EPSILON) * 100) / 100
-            }, billId, {}, tenantId).catch(err =>
-              console.error(`Error adding updated product:`, err)
-            );
-          }));
+            };
+          });
+        }
 
-          // Refresh billProducts for this bill
+        // Atomic batch: bill update + product swap commit together or not at all
+        await retryHandler(
+          () => updateBillWithProducts(billId, billUpdateData, productDocs, tenantId),
+          { context: 'update_bill', billId, billNumber: billToUpdate?.billNumber }
+        );
+
+        // Refresh billProducts for this bill
+        if (productDocs) {
           try {
-            const refreshedProducts = await getProductsByBill(billId);
+            const refreshedProducts = await getProductsByBill(billId, tenantId);
             setBillProducts(prev => ({
               ...prev,
               [billId]: refreshedProducts
@@ -639,7 +632,7 @@ export const BillsProvider = ({ children }) => {
 
       // Refresh the products for this bill
       try {
-        const products = await getProductsByBill(selectedBill.id);
+        const products = await getProductsByBill(selectedBill.id, tenantId);
         setBillProducts(prev => ({
           ...prev,
           [selectedBill.id]: products

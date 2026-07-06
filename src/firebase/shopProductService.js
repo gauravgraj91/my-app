@@ -508,16 +508,23 @@ export const getShopProduct = async (productId) => {
 };
 
 // Get products by bill ID
-export const getProductsByBill = async (billId) => {
+export const getProductsByBill = async (billId, tenantId = null) => {
   try {
     if (!billId) {
       throw new Error('Bill ID is required');
     }
 
-    const q = query(
-      collection(db, COLLECTION_NAME),
-      where('billId', '==', billId)
-    );
+    // tenantId filter keeps the list query provable under tenant-scoped security rules
+    const q = tenantId
+      ? query(
+          collection(db, COLLECTION_NAME),
+          where('billId', '==', billId),
+          where('tenantId', '==', tenantId)
+        )
+      : query(
+          collection(db, COLLECTION_NAME),
+          where('billId', '==', billId)
+        );
 
     const querySnapshot = await getDocs(q);
     const products = [];

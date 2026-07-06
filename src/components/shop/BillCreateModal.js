@@ -36,10 +36,17 @@ const BillCreateModal = ({
   const [products, setProducts] = useState([emptyProduct()]);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const formInitialized = React.useRef(false);
 
-  // Pre-fill form for edit mode, or generate bill number for create mode
+  // Pre-fill form for edit mode, or generate bill number for create mode.
+  // Runs once per modal open — real-time bills updates must not clobber user input.
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      formInitialized.current = false;
+      return;
+    }
+    if (formInitialized.current) return;
+    formInitialized.current = true;
 
     if (isEditMode) {
       const billDate = bill.date?.toDate ? bill.date.toDate() :
@@ -69,14 +76,14 @@ const BillCreateModal = ({
       } else {
         setProducts([emptyProduct()]);
       }
-    } else if (existingBills.length >= 0) {
+    } else {
       const newBillNumber = BillModel.generateBillNumber(existingBills);
       setFormData(prev => ({
         ...prev,
         billNumber: newBillNumber
       }));
     }
-  }, [isOpen, isEditMode, bill, existingBills]);
+  }, [isOpen, isEditMode, bill, existingBills, billProducts]);
 
   // Calculate per-product derived values and grand totals (with extra charges)
   const { productCalcs, grandTotals, extraCharges } = React.useMemo(() => {

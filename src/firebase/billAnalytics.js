@@ -1,8 +1,8 @@
 import { getBills } from './billService';
 
-export const getBillAnalytics = async () => {
+export const getBillAnalytics = async (tenantId) => {
   try {
-    const bills = await getBills();
+    const bills = await getBills(tenantId);
 
     const analytics = {
       totalBills: bills.length,

@@ -144,7 +144,7 @@ export const updateBill = async (billId, updateData) => {
       Object.prototype.hasOwnProperty.call(updateData, 'billNumber') &&
       updateData.billNumber !== existing.billNumber
     ) {
-      const duplicate = await getBillByNumber(updateData.billNumber);
+      const duplicate = await getBillByNumber(updateData.billNumber, existing.tenantId);
       if (duplicate && duplicate.id !== billId) {
         throw new Error(`Bill number ${updateData.billNumber} already exists`);
       }
@@ -162,6 +162,112 @@ export const updateBill = async (billId, updateData) => {
     return await getBill(billId);
   } catch (error) {
     console.error('Error updating bill: ', error);
+    throw error;
+  }
+};
+
+// Create a bill and all its products in a single atomic batch.
+// Safe to retry: if the commit fails, nothing was written.
+export const createBillWithProducts = async (billData, products = [], tenantId = null) => {
+  try {
+    const validationErrors = BillModel.validate(billData);
+    if (validationErrors) {
+      throw new Error(`Validation failed: ${JSON.stringify(validationErrors)}`);
+    }
+
+    const existingBill = await getBillByNumber(billData.billNumber, tenantId);
+    if (existingBill) {
+      throw new Error(`Bill number ${billData.billNumber} already exists`);
+    }
+
+    const billToAdd = { ...BillModel.createBillData(billData), tenantId };
+    const batch = writeBatch(db);
+    const billRef = doc(collection(db, COLLECTION_NAME));
+    batch.set(billRef, billToAdd);
+
+    products.forEach((product) => {
+      const productRef = doc(collection(db, 'shopProducts'));
+      batch.set(productRef, {
+        ...product,
+        billId: billRef.id,
+        billNumber: billToAdd.billNumber,
+        tenantId,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+    });
+
+    await batch.commit();
+
+    return {
+      id: billRef.id,
+      ...billToAdd
+    };
+  } catch (error) {
+    console.error('Error creating bill with products: ', error);
+    throw error;
+  }
+};
+
+// Update a bill and replace its products in a single atomic batch.
+// Pass products = null to update only the bill fields.
+export const updateBillWithProducts = async (billId, billUpdateData, products = null, tenantId = null) => {
+  try {
+    const existing = await getBill(billId);
+    if (!existing) {
+      throw new Error('Bill not found');
+    }
+
+    const merged = { ...existing, ...billUpdateData };
+    const validationErrors = BillModel.validate(merged);
+    if (validationErrors) {
+      throw new Error(`Validation failed: ${JSON.stringify(validationErrors)}`);
+    }
+
+    if (
+      Object.prototype.hasOwnProperty.call(billUpdateData, 'billNumber') &&
+      billUpdateData.billNumber !== existing.billNumber
+    ) {
+      const duplicate = await getBillByNumber(billUpdateData.billNumber, existing.tenantId);
+      if (duplicate && duplicate.id !== billId) {
+        throw new Error(`Bill number ${billUpdateData.billNumber} already exists`);
+      }
+    }
+
+    const effectiveTenantId = tenantId || existing.tenantId || null;
+    const { products: _products, ...cleanUpdateData } = billUpdateData;
+
+    const batch = writeBatch(db);
+    batch.update(doc(db, COLLECTION_NAME, billId), {
+      ...cleanUpdateData,
+      updatedAt: serverTimestamp()
+    });
+
+    if (Array.isArray(products)) {
+      const { getProductsByBill } = await import('./shopProductService');
+      const oldProducts = await getProductsByBill(billId, effectiveTenantId);
+      oldProducts.forEach((p) => {
+        batch.delete(doc(db, 'shopProducts', p.id));
+      });
+
+      products.forEach((product) => {
+        const productRef = doc(collection(db, 'shopProducts'));
+        batch.set(productRef, {
+          ...product,
+          billId,
+          billNumber: merged.billNumber,
+          tenantId: effectiveTenantId,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+      });
+    }
+
+    await batch.commit();
+
+    return await getBill(billId);
+  } catch (error) {
+    console.error('Error updating bill with products: ', error);
     throw error;
   }
 };
@@ -255,7 +361,7 @@ export const subscribeToBillWithProducts = (billId, callback, options = {}) => {
 
       // Get products for this bill
       const { getProductsByBill } = await import('./shopProductService');
-      const products = await getProductsByBill(billId);
+      const products = await getProductsByBill(billId, billDoc.data().tenantId);
 
       callback({
         ...billData,
@@ -501,7 +607,7 @@ export const getBillWithProducts = async (billId) => {
 
     // Get products associated with this bill
     const { getProductsByBill } = await import('./shopProductService');
-    const products = await getProductsByBill(billId);
+    const products = await getProductsByBill(billId, bill.tenantId);
 
     return {
       ...bill,
@@ -589,12 +695,13 @@ export const moveProductToBill = async (productId, newBillId) => {
 export const recalculateBillTotals = async (billId) => {
   try {
     const { getProductsByBill, updateShopProduct } = await import('./shopProductService');
-    const products = await getProductsByBill(billId);
-    const totals = BillModel.calculateTotals(products);
 
-    // Read existing charge fields from the bill
+    // Read existing charge fields from the bill (also provides tenantId for the product query)
     const billDoc = await getDoc(doc(db, COLLECTION_NAME, billId));
     const billData = billDoc.exists() ? billDoc.data() : {};
+
+    const products = await getProductsByBill(billId, billData.tenantId);
+    const totals = BillModel.calculateTotals(products);
     const extraCharges = BillModel.computeExtraCharges(totals.totalAmount, {
       discountPercent: billData.discountPercent,
       surchargePercent: billData.surchargePercent,
@@ -904,8 +1011,9 @@ export const duplicateBill = async (billId, tenantId) => {
 export const deleteBillWithProducts = async (billId) => {
   try {
     // Get all products in the bill using the service function that handles indexes correctly
+    const bill = await getBill(billId);
     const { getProductsByBill } = await import('./shopProductService');
-    const products = await getProductsByBill(billId);
+    const products = await getProductsByBill(billId, bill?.tenantId);
 
     // Use batch operation for better performance
     const batch = writeBatch(db);
@@ -928,7 +1036,7 @@ export const deleteBillWithProducts = async (billId) => {
 };
 
 // Bulk operations for multiple bills
-export const bulkDeleteBills = async (billIds) => {
+export const bulkDeleteBills = async (billIds, options = {}) => {
   try {
     if (!Array.isArray(billIds) || billIds.length === 0) {
       throw new Error('Bill IDs array is required and cannot be empty');
@@ -944,6 +1052,7 @@ export const bulkDeleteBills = async (billIds) => {
         console.error(`Failed to delete bill ${billId}:`, error);
         results.push({ billId, success: false, error: error.message });
       }
+      options.onProgress?.(results.length, billId);
     }
 
     return results;
@@ -953,7 +1062,7 @@ export const bulkDeleteBills = async (billIds) => {
   }
 };
 
-export const bulkDuplicateBills = async (billIds, tenantId) => {
+export const bulkDuplicateBills = async (billIds, tenantId, options = {}) => {
   try {
     if (!Array.isArray(billIds) || billIds.length === 0) {
       throw new Error('Bill IDs array is required and cannot be empty');
@@ -978,6 +1087,7 @@ export const bulkDuplicateBills = async (billIds, tenantId) => {
           error: error.message
         });
       }
+      options.onProgress?.(results.length, billId);
     }
 
     return results;
@@ -987,7 +1097,7 @@ export const bulkDuplicateBills = async (billIds, tenantId) => {
   }
 };
 
-export const bulkUpdateBillStatus = async (billIds, status) => {
+export const bulkUpdateBillStatus = async (billIds, status, options = {}) => {
   try {
     if (!Array.isArray(billIds) || billIds.length === 0) {
       throw new Error('Bill IDs array is required and cannot be empty');
@@ -1008,6 +1118,7 @@ export const bulkUpdateBillStatus = async (billIds, status) => {
         console.error(`Failed to update status for bill ${billId}:`, error);
         results.push({ billId, success: false, error: error.message });
       }
+      options.onProgress?.(results.length, billId);
     }
 
     return results;
@@ -1132,7 +1243,7 @@ export const searchBillsAndProducts = async (searchTerm, tenantId) => {
 
     // Then, search within products and add their parent bills
     const { getShopProducts } = await import('./shopProductService');
-    const allProducts = await getShopProducts();
+    const allProducts = await getShopProducts(tenantId);
 
     allProducts.forEach(product => {
       if (
