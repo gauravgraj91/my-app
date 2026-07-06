@@ -62,6 +62,7 @@ When debugging Firestore errors, check in this order:
 ## TODO — Improvements Backlog
 
 ### P1 — High (do soon)
+- [ ] **Bump Vercel Node.js version to 24.x** — project is pinned to deprecated Node 20.x; deployments on or after 2026-10-01 will fail to build. One-click: Vercel → Project Settings → Node.js Version.
 - [x] **Add Firebase Authentication** — DONE: email/password auth (`AuthContext`, `authService`, `ProtectedRoute`) + tenant-scoped `firestore.rules`. Verify the rules are actually deployed to the Firebase project.
 - [ ] **PDF invoice generation + share** — top feature gap from competitive research; prerequisite for invoice status tracking, payment reminders, UPI QR.
 
