@@ -15,11 +15,12 @@ const Card = ({
   };
 
   const cardStyle = {
-    background: '#fff',
+    background: 'var(--card)',
+    color: 'var(--card-foreground)',
     borderRadius: 12,
     boxShadow: shadowStyles[shadow],
     padding: padding,
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     transition: 'box-shadow 0.2s ease-in-out',
     ...props.style
   };

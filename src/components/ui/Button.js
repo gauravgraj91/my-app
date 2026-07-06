@@ -12,32 +12,29 @@ const Button = ({
 }) => {
   const variants = {
     primary: {
-      background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-      color: 'white',
-      border: 'none',
-      boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
-    },
-    secondary: {
-      background: '#f3f4f6',
-      color: '#374151',
+      background: 'var(--primary)',
+      color: 'var(--primary-foreground)',
       border: 'none'
     },
+    secondary: {
+      background: 'var(--secondary)',
+      color: 'var(--foreground)',
+      border: '1px solid var(--border)'
+    },
     success: {
-      background: 'linear-gradient(135deg, #10b981, #059669)',
-      color: 'white',
-      border: 'none',
-      boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+      background: 'var(--success)',
+      color: 'var(--primary-foreground)',
+      border: 'none'
     },
     danger: {
-      background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-      color: 'white',
-      border: 'none',
-      boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
+      background: 'var(--danger)',
+      color: 'var(--primary-foreground)',
+      border: 'none'
     },
     outline: {
       background: 'transparent',
-      color: '#3b82f6',
-      border: '1px solid #3b82f6'
+      color: 'var(--primary)',
+      border: '1px solid var(--primary)'
     }
   };
 

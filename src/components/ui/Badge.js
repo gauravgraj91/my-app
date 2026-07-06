@@ -10,28 +10,28 @@ const Badge = ({
 }) => {
   const variants = {
     default: {
-      background: '#f3f4f6',
-      color: '#374151'
+      background: 'var(--secondary)',
+      color: 'var(--foreground)'
     },
     primary: {
-      background: '#3b82f620',
-      color: '#3b82f6'
+      background: 'var(--primary-soft)',
+      color: 'var(--primary)'
     },
     success: {
-      background: '#10b98120',
-      color: '#10b981'
+      background: 'var(--success-soft)',
+      color: 'var(--success)'
     },
     warning: {
-      background: '#f59e0b20',
-      color: '#f59e0b'
+      background: 'var(--warning-soft)',
+      color: 'var(--warning)'
     },
     danger: {
-      background: '#ef444420',
-      color: '#ef4444'
+      background: 'var(--danger-soft)',
+      color: 'var(--danger)'
     },
     info: {
-      background: '#06b6d420',
-      color: '#06b6d4'
+      background: 'var(--primary-soft)',
+      color: 'var(--primary)'
     }
   };
 

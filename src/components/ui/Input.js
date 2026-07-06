@@ -14,10 +14,12 @@ const Input = ({
   const inputStyle = {
     width: '100%',
     padding: icon ? '12px 12px 12px 44px' : '12px',
-    border: `1px solid ${error ? '#ef4444' : '#d1d5db'}`,
+    border: `1px solid ${error ? 'var(--danger)' : 'var(--input)'}`,
     borderRadius: 8,
     fontSize: 14,
     outline: 'none',
+    background: 'var(--card)',
+    color: 'var(--foreground)',
     transition: 'border-color 0.2s',
     ...props.style
   };
@@ -37,7 +39,7 @@ const Input = ({
             fontSize: 14, 
             fontWeight: 500, 
             marginBottom: 4,
-            color: error ? '#ef4444' : '#374151'
+            color: error ? 'var(--danger)' : 'var(--foreground)'
           }}
         >
           {label}
@@ -49,8 +51,8 @@ const Input = ({
             position: 'absolute', 
             left: 12, 
             top: '50%', 
-            transform: 'translateY(-50%)', 
-            color: '#9ca3af' 
+            transform: 'translateY(-50%)',
+            color: 'var(--muted-foreground)'
           }}>
             {icon}
           </div>
@@ -62,10 +64,10 @@ const Input = ({
         />
       </div>
       {error && (
-        <div style={{ 
-          fontSize: 12, 
-          color: '#ef4444', 
-          marginTop: 4 
+        <div style={{
+          fontSize: 12,
+          color: 'var(--danger)',
+          marginTop: 4
         }}>
           {error}
         </div>

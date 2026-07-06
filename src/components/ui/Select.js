@@ -14,11 +14,12 @@ const Select = ({
   const selectStyle = {
     width: '100%',
     padding: '12px',
-    border: `1px solid ${error ? '#ef4444' : '#d1d5db'}`,
+    border: `1px solid ${error ? 'var(--danger)' : 'var(--input)'}`,
     borderRadius: 8,
     fontSize: 14,
     outline: 'none',
-    background: 'white',
+    background: 'var(--card)',
+    color: 'var(--foreground)',
     cursor: 'pointer',
     ...props.style
   };
@@ -38,7 +39,7 @@ const Select = ({
             fontSize: 14, 
             fontWeight: 500, 
             marginBottom: 4,
-            color: error ? '#ef4444' : '#374151'
+            color: error ? 'var(--danger)' : 'var(--foreground)'
           }}
         >
           {label}
@@ -56,10 +57,10 @@ const Select = ({
         ))}
       </select>
       {error && (
-        <div style={{ 
-          fontSize: 12, 
-          color: '#ef4444', 
-          marginTop: 4 
+        <div style={{
+          fontSize: 12,
+          color: 'var(--danger)',
+          marginTop: 4
         }}>
           {error}
         </div>

@@ -25,7 +25,8 @@ const Modal = ({
   };
 
   const modalStyle = {
-    background: 'white',
+    background: 'var(--card)',
+    color: 'var(--card-foreground)',
     borderRadius: 16,
     padding: 0,
     width: '90%',
@@ -34,7 +35,7 @@ const Modal = ({
     overflowY: 'auto',
     position: 'relative',
     boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-    border: '1px solid #e5e7eb'
+    border: '1px solid var(--border)'
   };
 
   const headerStyle = {
@@ -42,8 +43,8 @@ const Modal = ({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '20px 24px',
-    borderBottom: '1px solid #e5e7eb',
-    background: '#f9fafb',
+    borderBottom: '1px solid var(--border)',
+    background: 'var(--secondary)',
     borderRadius: '16px 16px 0 0'
   };
 
@@ -51,7 +52,7 @@ const Modal = ({
     background: 'none',
     border: 'none',
     cursor: 'pointer',
-    color: '#6b7280',
+    color: 'var(--muted-foreground)',
     padding: 4
   };
 
@@ -64,7 +65,7 @@ const Modal = ({
       >
         {title && (
           <div style={headerStyle}>
-            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#1f2937' }}>
+            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: 'var(--foreground)' }}>
               {title}
             </h2>
             <button 

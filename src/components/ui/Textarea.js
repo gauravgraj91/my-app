@@ -14,13 +14,15 @@ const Textarea = ({
   const textareaStyle = {
     width: '100%',
     padding: '12px',
-    border: `1px solid ${error ? '#ef4444' : '#d1d5db'}`,
+    border: `1px solid ${error ? 'var(--danger)' : 'var(--input)'}`,
     borderRadius: 8,
     fontSize: 14,
     outline: 'none',
     resize: 'vertical',
     minHeight: rows * 20,
     fontFamily: 'inherit',
+    background: 'var(--card)',
+    color: 'var(--foreground)',
     ...props.style
   };
 
@@ -39,7 +41,7 @@ const Textarea = ({
             fontSize: 14, 
             fontWeight: 500, 
             marginBottom: 4,
-            color: error ? '#ef4444' : '#374151'
+            color: error ? 'var(--danger)' : 'var(--foreground)'
           }}
         >
           {label}
@@ -52,10 +54,10 @@ const Textarea = ({
         {...props}
       />
       {error && (
-        <div style={{ 
-          fontSize: 12, 
-          color: '#ef4444', 
-          marginTop: 4 
+        <div style={{
+          fontSize: 12,
+          color: 'var(--danger)',
+          marginTop: 4
         }}>
           {error}
         </div>
