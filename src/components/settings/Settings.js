@@ -6,14 +6,14 @@ import ConfirmDialog from '../ui/ConfirmDialog';
 import "./Settings.css";
 
 const ACTION_BADGE = {
-  created:    { bg: '#ecfdf5', color: '#059669' },
-  duplicated: { bg: '#ecfdf5', color: '#059669' },
-  updated:    { bg: '#eff6ff', color: '#2563eb' },
-  assigned:   { bg: '#eff6ff', color: '#2563eb' },
-  archived:   { bg: '#eff6ff', color: '#2563eb' },
-  deleted:    { bg: '#fef2f2', color: '#dc2626' },
-  removed:    { bg: '#fef2f2', color: '#dc2626' },
-  exported:   { bg: '#f1f5f9', color: '#64748b' },
+  created:    { bg: 'var(--success-soft)', color: 'var(--success)' },
+  duplicated: { bg: 'var(--success-soft)', color: 'var(--success)' },
+  updated:    { bg: 'var(--primary-soft)', color: 'var(--primary)' },
+  assigned:   { bg: 'var(--primary-soft)', color: 'var(--primary)' },
+  archived:   { bg: 'var(--primary-soft)', color: 'var(--primary)' },
+  deleted:    { bg: 'var(--danger-soft)', color: 'var(--danger)' },
+  removed:    { bg: 'var(--danger-soft)', color: 'var(--danger)' },
+  exported:   { bg: 'var(--secondary)', color: 'var(--muted-foreground)' },
 };
 
 function timeAgo(ts) {
@@ -347,8 +347,8 @@ const Settings = () => {
               style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
                 padding: '6px 14px', borderRadius: '8px',
-                border: '1px solid #fecaca', background: '#fef2f2',
-                fontSize: '13px', fontWeight: '500', color: '#dc2626',
+                border: '1px solid var(--danger-soft)', background: 'var(--danger-soft)',
+                fontSize: '13px', fontWeight: '500', color: 'var(--danger)',
                 cursor: 'pointer', transition: 'all 0.15s',
               }}
             >
@@ -361,7 +361,7 @@ const Settings = () => {
         {/* Filter Pills */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: '4px',
-          background: '#f1f5f9', borderRadius: '8px', padding: '3px',
+          background: 'var(--secondary)', borderRadius: '8px', padding: '3px',
           marginBottom: '16px', width: 'fit-content',
         }}>
           {['All', 'Bills', 'Products', 'Vendors'].map(tab => (
@@ -372,8 +372,8 @@ const Settings = () => {
                 padding: '6px 16px', border: 'none', borderRadius: '6px',
                 fontSize: '13px', fontWeight: '600', cursor: 'pointer',
                 transition: 'all 0.15s',
-                background: logFilter === tab ? '#1e293b' : 'transparent',
-                color: logFilter === tab ? '#fff' : '#64748b',
+                background: logFilter === tab ? 'var(--foreground)' : 'transparent',
+                color: logFilter === tab ? 'var(--card)' : 'var(--muted-foreground)',
               }}
             >
               {tab}
@@ -385,7 +385,7 @@ const Settings = () => {
         <div className="settings-card" style={{ overflow: 'hidden' }}>
           {logsLoading ? (
             <div style={{ padding: '48px 20px', textAlign: 'center' }}>
-              <div style={{ fontSize: '14px', color: '#94a3b8' }}>Loading activity logs...</div>
+              <div style={{ fontSize: '14px', color: 'var(--muted-foreground)' }}>Loading activity logs...</div>
             </div>
           ) : logs.length > 0 ? (
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -393,33 +393,33 @@ const Settings = () => {
                 <tr>
                   <th style={{
                     padding: '12px 16px', textAlign: 'left', fontSize: '12px',
-                    fontWeight: '600', color: '#64748b', textTransform: 'uppercase',
-                    letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0',
-                    background: '#f8fafc', width: '120px',
+                    fontWeight: '600', color: 'var(--muted-foreground)', textTransform: 'uppercase',
+                    letterSpacing: '0.05em', borderBottom: '1px solid var(--border)',
+                    background: 'var(--secondary)', width: '120px',
                   }}>
                     Time
                   </th>
                   <th style={{
                     padding: '12px 16px', textAlign: 'left', fontSize: '12px',
-                    fontWeight: '600', color: '#64748b', textTransform: 'uppercase',
-                    letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0',
-                    background: '#f8fafc', width: '100px',
+                    fontWeight: '600', color: 'var(--muted-foreground)', textTransform: 'uppercase',
+                    letterSpacing: '0.05em', borderBottom: '1px solid var(--border)',
+                    background: 'var(--secondary)', width: '100px',
                   }}>
                     Action
                   </th>
                   <th style={{
                     padding: '12px 16px', textAlign: 'left', fontSize: '12px',
-                    fontWeight: '600', color: '#64748b', textTransform: 'uppercase',
-                    letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0',
-                    background: '#f8fafc',
+                    fontWeight: '600', color: 'var(--muted-foreground)', textTransform: 'uppercase',
+                    letterSpacing: '0.05em', borderBottom: '1px solid var(--border)',
+                    background: 'var(--secondary)',
                   }}>
                     Entity
                   </th>
                   <th style={{
                     padding: '12px 16px', textAlign: 'left', fontSize: '12px',
-                    fontWeight: '600', color: '#64748b', textTransform: 'uppercase',
-                    letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0',
-                    background: '#f8fafc',
+                    fontWeight: '600', color: 'var(--muted-foreground)', textTransform: 'uppercase',
+                    letterSpacing: '0.05em', borderBottom: '1px solid var(--border)',
+                    background: 'var(--secondary)',
                   }}>
                     Details
                   </th>
@@ -430,11 +430,11 @@ const Settings = () => {
                   const badge = ACTION_BADGE[log.action] || ACTION_BADGE.exported;
                   return (
                     <tr key={log.id} style={{
-                      borderBottom: '1px solid #f1f5f9',
-                      background: idx % 2 === 0 ? '#fff' : '#fafbfc',
+                      borderBottom: '1px solid var(--secondary)',
+                      background: idx % 2 === 0 ? 'var(--card)' : 'var(--muted)',
                     }}>
                       <td style={{ padding: '10px 16px' }}>
-                        <span style={{ fontSize: '13px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '13px', color: 'var(--muted-foreground)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <Clock size={12} />
                           {timeAgo(log.timestamp)}
                         </span>
@@ -449,12 +449,12 @@ const Settings = () => {
                         </span>
                       </td>
                       <td style={{ padding: '10px 16px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#1e293b' }}>
+                        <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--foreground)' }}>
                           {log.entity}
                         </span>
                       </td>
                       <td style={{ padding: '10px 16px' }}>
-                        <span style={{ fontSize: '13px', color: '#64748b' }}>
+                        <span style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>
                           {log.details || '\u2014'}
                         </span>
                       </td>
@@ -465,11 +465,11 @@ const Settings = () => {
             </table>
           ) : (
             <div style={{ padding: '48px 20px', textAlign: 'center' }}>
-              <FileText size={40} style={{ margin: '0 auto 12px', color: '#cbd5e1' }} />
-              <div style={{ fontSize: '15px', fontWeight: '600', color: '#64748b', marginBottom: '4px' }}>
+              <FileText size={40} style={{ margin: '0 auto 12px', color: 'var(--border)' }} />
+              <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--muted-foreground)', marginBottom: '4px' }}>
                 No activity recorded yet
               </div>
-              <div style={{ fontSize: '13px', color: '#94a3b8' }}>
+              <div style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>
                 Actions on bills, products, and vendors will appear here
               </div>
             </div>

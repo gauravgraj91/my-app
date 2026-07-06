@@ -3,9 +3,9 @@ import { SortAsc, SortDesc } from 'lucide-react';
 
 const HEADER_STYLE = {
   padding: '12px 16px', textAlign: 'left',
-  fontSize: '12px', fontWeight: '600', color: '#64748b',
+  fontSize: '12px', fontWeight: '600', color: 'var(--muted-foreground)',
   textTransform: 'uppercase', letterSpacing: '0.05em',
-  borderBottom: '1px solid #e2e8f0', background: '#f8fafc',
+  borderBottom: '1px solid var(--border)', background: 'var(--secondary)',
   cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap',
   transition: 'color 0.15s',
 };

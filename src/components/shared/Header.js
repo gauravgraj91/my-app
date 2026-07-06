@@ -53,7 +53,7 @@ const Header = () => {
           </button>
           {user && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '8px' }}>
-              <span style={{ fontSize: '13px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '13px', color: 'var(--muted-foreground)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <User size={14} />
                 {user.displayName || user.email}
               </span>
@@ -61,8 +61,8 @@ const Header = () => {
                 onClick={handleLogout}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '4px',
-                  padding: '6px 12px', border: '1px solid #e2e8f0', borderRadius: '6px',
-                  background: '#fff', fontSize: '13px', color: '#64748b',
+                  padding: '6px 12px', border: '1px solid var(--border)', borderRadius: '6px',
+                  background: 'var(--card)', fontSize: '13px', color: 'var(--muted-foreground)',
                   cursor: 'pointer',
                 }}
               >

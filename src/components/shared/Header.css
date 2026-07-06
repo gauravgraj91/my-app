@@ -1,11 +1,11 @@
 .app-header {
-  background: #fff;
-  border-bottom: 1px solid #e5e7ef;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
   padding: 14px 24px;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: var(--shadow-sm);
 }
 
 .header-content {
@@ -25,19 +25,19 @@
 .brand-logo {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  background: var(--success);
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+  color: var(--primary-foreground);
+  box-shadow: var(--shadow);
 }
 
 .app-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--foreground);
   margin: 0;
   letter-spacing: -0.02em;
 }
@@ -49,8 +49,8 @@
 }
 
 .header-btn {
-  background: #f8fafc;
-  border: 1px solid #e0e7ef;
+  background: var(--secondary);
+  border: 1px solid var(--border);
   border-radius: 10px;
   width: 44px;
   height: 44px;
@@ -59,14 +59,14 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: #374151;
+  color: var(--foreground);
 }
 
 .header-btn:hover {
-  background: #e0e7ef;
-  border-color: #cbd5e1;
+  background: var(--border);
+  border-color: var(--border);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: var(--shadow);
 }
 
 .header-btn:active {
@@ -74,47 +74,12 @@
 }
 
 .dark-mode-toggle {
-  color: #f59e0b;
+  color: var(--warning);
 }
 
 .dark-mode-toggle:hover {
-  background: #fef3c7;
-  border-color: #f59e0b;
-}
-
-/* Dark mode styles */
-.dark .app-header {
-  background: #1f2937;
-  border-bottom-color: #374151;
-}
-
-.dark .brand-logo {
-  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-.dark .app-title {
-  color: #f9fafb;
-}
-
-.dark .header-btn {
-  background: #374151;
-  border-color: #4b5563;
-  color: #d1d5db;
-}
-
-.dark .header-btn:hover {
-  background: #4b5563;
-  border-color: #6b7280;
-}
-
-.dark .dark-mode-toggle {
-  color: #fbbf24;
-}
-
-.dark .dark-mode-toggle:hover {
-  background: #78350f;
-  border-color: #fbbf24;
+  background: var(--warning-soft);
+  border-color: var(--warning);
 }
 
 @media (max-width: 600px) {

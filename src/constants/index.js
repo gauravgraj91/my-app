@@ -1,19 +1,19 @@
 // Task Categories
 export const TASK_CATEGORIES = [
-  { id: 'personal', name: 'Personal', color: '#3b82f6', icon: '👤' },
-  { id: 'work', name: 'Work', color: '#8b5cf6', icon: '💼' },
-  { id: 'shopping', name: 'Shopping', color: '#10b981', icon: '🛒' },
-  { id: 'health', name: 'Health', color: '#f59e0b', icon: '🏥' },
-  { id: 'finance', name: 'Finance', color: '#ef4444', icon: '💰' },
-  { id: 'learning', name: 'Learning', color: '#06b6d4', icon: '📚' }
+  { id: 'personal', name: 'Personal', color: 'var(--primary)', icon: '👤' },
+  { id: 'work', name: 'Work', color: 'var(--primary)', icon: '💼' },
+  { id: 'shopping', name: 'Shopping', color: 'var(--success)', icon: '🛒' },
+  { id: 'health', name: 'Health', color: 'var(--warning)', icon: '🏥' },
+  { id: 'finance', name: 'Finance', color: 'var(--danger)', icon: '💰' },
+  { id: 'learning', name: 'Learning', color: 'var(--primary)', icon: '📚' }
 ];
 
 // Task Priorities
 export const TASK_PRIORITIES = [
-  { id: 'low', name: 'Low', color: '#6b7280', icon: '⬇️' },
-  { id: 'medium', name: 'Medium', color: '#f59e0b', icon: '➡️' },
-  { id: 'high', name: 'High', color: '#ef4444', icon: '⬆️' },
-  { id: 'urgent', name: 'Urgent', color: '#dc2626', icon: '🚨' }
+  { id: 'low', name: 'Low', color: 'var(--muted-foreground)', icon: '⬇️' },
+  { id: 'medium', name: 'Medium', color: 'var(--warning)', icon: '➡️' },
+  { id: 'high', name: 'High', color: 'var(--danger)', icon: '⬆️' },
+  { id: 'urgent', name: 'Urgent', color: 'var(--danger)', icon: '🚨' }
 ];
 
 // Shop Categories

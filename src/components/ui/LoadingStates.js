@@ -34,7 +34,7 @@ export const LoadingOverlay = ({
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'rgba(255, 255, 255, 0.9)',
+        background: 'color-mix(in srgb, var(--card) 90%, transparent)',
         zIndex: 10,
         minHeight: children ? 'auto' : '200px'
       }}>
@@ -42,7 +42,7 @@ export const LoadingOverlay = ({
         <div style={{
           marginTop: '12px',
           fontSize: '14px',
-          color: '#6b7280',
+          color: 'var(--muted-foreground)',
           fontWeight: '500'
         }}>
           {message}
@@ -57,7 +57,7 @@ export const BillLoadingCard = ({ message = 'Loading bill...' }) => (
   <Card style={{ padding: '40px', textAlign: 'center' }}>
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
       <div style={{ position: 'relative' }}>
-        <Package size={32} color="#e5e7eb" />
+        <Package size={32} color="var(--border)" />
         <div style={{
           position: 'absolute',
           top: '50%',
@@ -67,7 +67,7 @@ export const BillLoadingCard = ({ message = 'Loading bill...' }) => (
           <LoadingSpinner size={16} />
         </div>
       </div>
-      <div style={{ color: '#6b7280', fontSize: '14px' }}>
+      <div style={{ color: 'var(--muted-foreground)', fontSize: '14px' }}>
         {message}
       </div>
     </div>
@@ -84,7 +84,7 @@ export const BillsListLoading = ({ count = 3 }) => (
             <div style={{
               height: '20px',
               width: '120px',
-              background: '#f3f4f6',
+              background: 'var(--secondary)',
               borderRadius: '4px',
               marginBottom: '8px',
               animation: 'pulse 2s infinite'
@@ -92,7 +92,7 @@ export const BillsListLoading = ({ count = 3 }) => (
             <div style={{
               height: '14px',
               width: '200px',
-              background: '#f3f4f6',
+              background: 'var(--secondary)',
               borderRadius: '4px',
               animation: 'pulse 2s infinite'
             }} />
@@ -106,7 +106,7 @@ export const BillsListLoading = ({ count = 3 }) => (
                 style={{
                   width: '32px',
                   height: '32px',
-                  background: '#f3f4f6',
+                  background: 'var(--secondary)',
                   borderRadius: '4px',
                   animation: 'pulse 2s infinite'
                 }}
@@ -127,7 +127,7 @@ export const BillsListLoading = ({ count = 3 }) => (
               <div style={{
                 height: '12px',
                 width: '80px',
-                background: '#f3f4f6',
+                background: 'var(--secondary)',
                 borderRadius: '4px',
                 marginBottom: '8px',
                 animation: 'pulse 2s infinite'
@@ -135,7 +135,7 @@ export const BillsListLoading = ({ count = 3 }) => (
               <div style={{
                 height: '18px',
                 width: '100px',
-                background: '#f3f4f6',
+                background: 'var(--secondary)',
                 borderRadius: '4px',
                 animation: 'pulse 2s infinite'
               }} />
@@ -161,15 +161,15 @@ export const AnalyticsLoading = () => (
     gap: '16px'
   }}>
     {[
-      { icon: Package, color: '#3b82f6' },
-      { icon: DollarSign, color: '#10b981' },
-      { icon: TrendingUp, color: '#f59e0b' },
-      { icon: Calendar, color: '#8b5cf6' }
+      { icon: Package, color: 'var(--primary)' },
+      { icon: DollarSign, color: 'var(--success)' },
+      { icon: TrendingUp, color: 'var(--warning)' },
+      { icon: Calendar, color: 'var(--primary)' }
     ].map((item, index) => (
       <Card key={index} padding={20}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{
-            background: `${item.color}20`,
+            background: `color-mix(in srgb, ${item.color} 12%, transparent)`,
             borderRadius: '12px',
             padding: '12px',
             position: 'relative'
@@ -188,7 +188,7 @@ export const AnalyticsLoading = () => (
             <div style={{
               height: '24px',
               width: '80px',
-              background: '#f3f4f6',
+              background: 'var(--secondary)',
               borderRadius: '4px',
               marginBottom: '4px',
               animation: 'pulse 2s infinite'
@@ -196,7 +196,7 @@ export const AnalyticsLoading = () => (
             <div style={{
               height: '14px',
               width: '60px',
-              background: '#f3f4f6',
+              background: 'var(--secondary)',
               borderRadius: '4px',
               animation: 'pulse 2s infinite'
             }} />
@@ -224,7 +224,7 @@ export const BillOperationLoading = ({
     <div style={{ position: 'relative' }}>
       <Loader2
         size={40}
-        color="#3b82f6"
+        color="var(--primary)"
         style={{ animation: 'spin 1s linear infinite' }}
       />
     </div>
@@ -233,7 +233,7 @@ export const BillOperationLoading = ({
       <div style={{
         fontSize: '16px',
         fontWeight: '600',
-        color: '#1f2937',
+        color: 'var(--foreground)',
         marginBottom: '4px'
       }}>
         {operation}
@@ -242,7 +242,7 @@ export const BillOperationLoading = ({
 
       <div style={{
         fontSize: '14px',
-        color: '#6b7280'
+        color: 'var(--muted-foreground)'
       }}>
         Please wait while we process your request...
       </div>
@@ -253,21 +253,21 @@ export const BillOperationLoading = ({
         <div style={{
           width: '100%',
           height: '4px',
-          background: '#e5e7eb',
+          background: 'var(--border)',
           borderRadius: '2px',
           overflow: 'hidden'
         }}>
           <div style={{
             width: `${progress}%`,
             height: '100%',
-            background: 'linear-gradient(90deg, #3b82f6, #1d4ed8)',
+            background: 'var(--primary)',
             borderRadius: '2px',
             transition: 'width 0.3s ease'
           }} />
         </div>
         <div style={{
           fontSize: '12px',
-          color: '#6b7280',
+          color: 'var(--muted-foreground)',
           marginTop: '4px'
         }}>
           {Math.round(progress)}% complete
@@ -295,7 +295,7 @@ export const BulkOperationLoading = ({
     <div style={{ position: 'relative' }}>
       <Loader2
         size={48}
-        color="#3b82f6"
+        color="var(--primary)"
         style={{ animation: 'spin 1s linear infinite' }}
       />
     </div>
@@ -304,7 +304,7 @@ export const BulkOperationLoading = ({
       <div style={{
         fontSize: '18px',
         fontWeight: '600',
-        color: '#1f2937',
+        color: 'var(--foreground)',
         marginBottom: '8px'
       }}>
         {operation} {total} Bills
@@ -313,7 +313,7 @@ export const BulkOperationLoading = ({
       {current && (
         <div style={{
           fontSize: '14px',
-          color: '#6b7280',
+          color: 'var(--muted-foreground)',
           marginBottom: '4px'
         }}>
           Currently processing: {current}
@@ -322,7 +322,7 @@ export const BulkOperationLoading = ({
 
       <div style={{
         fontSize: '14px',
-        color: '#6b7280'
+        color: 'var(--muted-foreground)'
       }}>
         {completed} of {total} completed
       </div>
@@ -332,21 +332,21 @@ export const BulkOperationLoading = ({
       <div style={{
         width: '100%',
         height: '6px',
-        background: '#e5e7eb',
+        background: 'var(--border)',
         borderRadius: '3px',
         overflow: 'hidden'
       }}>
         <div style={{
           width: `${(completed / total) * 100}%`,
           height: '100%',
-          background: 'linear-gradient(90deg, #10b981, #059669)',
+          background: 'var(--success)',
           borderRadius: '3px',
           transition: 'width 0.3s ease'
         }} />
       </div>
       <div style={{
         fontSize: '12px',
-        color: '#6b7280',
+        color: 'var(--muted-foreground)',
         marginTop: '6px'
       }}>
         {Math.round((completed / total) * 100)}% complete

@@ -108,8 +108,8 @@ const BillFilters = ({ filters, onFilterChange, onClear }) => (
 
     {Object.values(filters).some(value => value !== '') && (
       <div style={{
-        background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px',
-        padding: '12px', fontSize: '14px', color: '#64748b'
+        background: 'var(--secondary)', border: '1px solid var(--border)', borderRadius: '8px',
+        padding: '12px', fontSize: '14px', color: 'var(--muted-foreground)'
       }}>
         <strong>Active Filters:</strong>{' '}
         {Object.entries(filters)

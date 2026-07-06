@@ -106,19 +106,19 @@ const AssignBillModal = ({
         {/* Product Info */}
         <div style={{
           padding: '12px 16px',
-          background: '#f0f9ff',
-          border: '1px solid #bae6fd',
+          background: 'var(--primary-soft)',
+          border: '1px solid var(--primary-soft)',
           borderRadius: '8px',
           display: 'flex',
           alignItems: 'center',
           gap: '12px'
         }}>
-          <Package size={20} color="#0369a1" />
+          <Package size={20} color="var(--primary-accent)" />
           <div>
-            <div style={{ fontSize: '14px', fontWeight: '600', color: '#0369a1' }}>
+            <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--primary-accent)' }}>
               {mode === 'bulk' ? 'Bulk Assignment' : 'Assigning Product'}
             </div>
-            <div style={{ fontSize: '13px', color: '#0c4a6e' }}>
+            <div style={{ fontSize: '13px', color: 'var(--primary-accent)' }}>
               {getProductNames()}
             </div>
           </div>
@@ -134,7 +134,7 @@ const AssignBillModal = ({
                 left: '12px',
                 top: '50%',
                 transform: 'translateY(-50%)',
-                color: '#9ca3af'
+                color: 'var(--muted-foreground)'
               }}
             />
             <input
@@ -145,7 +145,7 @@ const AssignBillModal = ({
               style={{
                 width: '100%',
                 padding: '10px 12px 10px 40px',
-                border: '1px solid #d1d5db',
+                border: '1px solid var(--input)',
                 borderRadius: '8px',
                 fontSize: '14px',
                 outline: 'none'
@@ -158,14 +158,14 @@ const AssignBillModal = ({
         <div style={{
           maxHeight: '300px',
           overflowY: 'auto',
-          border: '1px solid #e5e7eb',
+          border: '1px solid var(--border)',
           borderRadius: '8px'
         }}>
           {loading ? (
             <div style={{
               padding: '40px',
               textAlign: 'center',
-              color: '#6b7280'
+              color: 'var(--muted-foreground)'
             }}>
               Loading bills...
             </div>
@@ -173,7 +173,7 @@ const AssignBillModal = ({
             <div style={{
               padding: '40px',
               textAlign: 'center',
-              color: '#6b7280'
+              color: 'var(--muted-foreground)'
             }}>
               <FileText size={32} style={{ margin: '0 auto 12px', opacity: 0.5 }} />
               <div>{searchTerm ? 'No bills match your search' : 'No active bills found'}</div>
@@ -186,9 +186,9 @@ const AssignBillModal = ({
                   onClick={() => setSelectedBillId(bill.id)}
                   style={{
                     padding: '12px 16px',
-                    borderBottom: index < filteredBills.length - 1 ? '1px solid #f3f4f6' : 'none',
+                    borderBottom: index < filteredBills.length - 1 ? '1px solid var(--secondary)' : 'none',
                     cursor: 'pointer',
-                    background: selectedBillId === bill.id ? '#eff6ff' : 'white',
+                    background: selectedBillId === bill.id ? 'var(--primary-soft)' : 'var(--card)',
                     transition: 'background 0.15s',
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -196,12 +196,12 @@ const AssignBillModal = ({
                   }}
                   onMouseEnter={(e) => {
                     if (selectedBillId !== bill.id) {
-                      e.currentTarget.style.background = '#f9fafb';
+                      e.currentTarget.style.background = 'var(--secondary)';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (selectedBillId !== bill.id) {
-                      e.currentTarget.style.background = 'white';
+                      e.currentTarget.style.background = 'var(--card)';
                     }
                   }}
                 >
@@ -214,7 +214,7 @@ const AssignBillModal = ({
                     }}>
                       <span style={{
                         fontWeight: '600',
-                        color: '#1f2937',
+                        color: 'var(--foreground)',
                         fontSize: '14px'
                       }}>
                         {bill.billNumber}
@@ -223,8 +223,8 @@ const AssignBillModal = ({
                         fontSize: '11px',
                         padding: '2px 6px',
                         borderRadius: '4px',
-                        background: bill.status === 'active' ? '#dcfce7' : '#f3f4f6',
-                        color: bill.status === 'active' ? '#166534' : '#6b7280'
+                        background: bill.status === 'active' ? 'var(--success-soft)' : 'var(--secondary)',
+                        color: bill.status === 'active' ? 'var(--success)' : 'var(--muted-foreground)'
                       }}>
                         {bill.status || 'active'}
                       </span>
@@ -233,7 +233,7 @@ const AssignBillModal = ({
                       display: 'flex',
                       gap: '16px',
                       fontSize: '12px',
-                      color: '#6b7280'
+                      color: 'var(--muted-foreground)'
                     }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <User size={12} />
@@ -253,12 +253,12 @@ const AssignBillModal = ({
                     <div style={{
                       fontSize: '14px',
                       fontWeight: '600',
-                      color: '#1f2937'
+                      color: 'var(--foreground)'
                     }}>
                       {formatCurrency(bill.totalAmount)}
                     </div>
                     {selectedBillId === bill.id && (
-                      <Check size={16} color="#2563eb" style={{ marginTop: '4px' }} />
+                      <Check size={16} color="var(--primary)" style={{ marginTop: '4px' }} />
                     )}
                   </div>
                 </div>
@@ -271,10 +271,10 @@ const AssignBillModal = ({
         {error && (
           <div style={{
             padding: '12px',
-            background: '#fef2f2',
-            border: '1px solid #fecaca',
+            background: 'var(--danger-soft)',
+            border: '1px solid var(--danger-soft)',
             borderRadius: '8px',
-            color: '#dc2626',
+            color: 'var(--danger)',
             fontSize: '14px',
             display: 'flex',
             alignItems: 'center',
@@ -291,7 +291,7 @@ const AssignBillModal = ({
           gap: '12px',
           justifyContent: 'flex-end',
           paddingTop: '16px',
-          borderTop: '1px solid #e5e7eb'
+          borderTop: '1px solid var(--border)'
         }}>
           <Button
             variant="secondary"

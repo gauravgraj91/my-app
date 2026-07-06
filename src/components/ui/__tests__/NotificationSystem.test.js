@@ -67,7 +67,7 @@ describe('NotificationSystem', () => {
 
     // Check for success styling (green background)
     const notification = screen.getByText('Success message').closest('div');
-    expect(notification).toHaveStyle('background: linear-gradient(135deg, #10b981, #059669)');
+    expect(notification).toHaveStyle('background: var(--success)');
   });
 
   it('renders error notification', async () => {
@@ -85,7 +85,7 @@ describe('NotificationSystem', () => {
 
     // Check for error styling (red background)
     const notification = screen.getByText('Error message').closest('div');
-    expect(notification).toHaveStyle('background: linear-gradient(135deg, #ef4444, #dc2626)');
+    expect(notification).toHaveStyle('background: var(--danger)');
   });
 
   it('renders warning notification', async () => {
@@ -103,7 +103,7 @@ describe('NotificationSystem', () => {
 
     // Check for warning styling (orange background)
     const notification = screen.getByText('Warning message').closest('div');
-    expect(notification).toHaveStyle('background: linear-gradient(135deg, #f59e0b, #d97706)');
+    expect(notification).toHaveStyle('background: var(--warning)');
   });
 
   it('renders info notification', async () => {
@@ -121,7 +121,7 @@ describe('NotificationSystem', () => {
 
     // Check for info styling (blue background)
     const notification = screen.getByText('Info message').closest('div');
-    expect(notification).toHaveStyle('background: linear-gradient(135deg, #3b82f6, #1d4ed8)');
+    expect(notification).toHaveStyle('background: var(--primary)');
   });
 
   it('renders notification with custom title', async () => {

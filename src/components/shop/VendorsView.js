@@ -24,26 +24,26 @@ import { useAuth } from '../../context/AuthContext';
 const STYLES = {
   headerCell: {
     padding: '12px 16px', textAlign: 'left',
-    fontSize: '12px', fontWeight: '600', color: '#64748b',
+    fontSize: '12px', fontWeight: '600', color: 'var(--muted-foreground)',
     textTransform: 'uppercase', letterSpacing: '0.05em',
-    borderBottom: '1px solid #e2e8f0', background: '#f8fafc',
+    borderBottom: '1px solid var(--border)', background: 'var(--secondary)',
   },
   tableCell: { padding: '12px 16px' },
   subHeaderCell: {
     padding: '10px 16px', textAlign: 'left',
-    fontSize: '11px', fontWeight: '600', color: '#94a3b8',
+    fontSize: '11px', fontWeight: '600', color: 'var(--muted-foreground)',
     textTransform: 'uppercase', letterSpacing: '0.05em',
-    borderBottom: '1px solid #e2e8f0',
+    borderBottom: '1px solid var(--border)',
   },
   subTableCell: { padding: '10px 16px' },
 };
 
 // --- Extracted components ---
 const PriceTrend = ({ lastPrice, offeredPrice }) => {
-  if (!lastPrice || !offeredPrice) return <Minus size={14} color="#94a3b8" />;
-  if (offeredPrice < lastPrice) return <TrendingDown size={14} color="#10b981" />;
-  if (offeredPrice > lastPrice) return <TrendingUp size={14} color="#ef4444" />;
-  return <Minus size={14} color="#94a3b8" />;
+  if (!lastPrice || !offeredPrice) return <Minus size={14} color="var(--muted-foreground)" />;
+  if (offeredPrice < lastPrice) return <TrendingDown size={14} color="var(--success)" />;
+  if (offeredPrice > lastPrice) return <TrendingUp size={14} color="var(--danger)" />;
+  return <Minus size={14} color="var(--muted-foreground)" />;
 };
 
 // --- Main component ---
@@ -407,7 +407,7 @@ const VendorsView = () => {
     return (
       <div style={{ padding: '24px' }}>
         <Card style={{ padding: '60px 20px', textAlign: 'center' }}>
-          <div style={{ color: '#64748b', fontSize: '14px' }}>Loading vendors...</div>
+          <div style={{ color: 'var(--muted-foreground)', fontSize: '14px' }}>Loading vendors...</div>
         </Card>
       </div>
     );
@@ -424,12 +424,12 @@ const VendorsView = () => {
           }}>
             <div>
               <h2 style={{
-                fontSize: '24px', fontWeight: '800', color: '#0f172a',
+                fontSize: '24px', fontWeight: '800', color: 'var(--foreground)',
                 margin: '0 0 4px 0', letterSpacing: '-0.02em'
               }}>
                 Vendors
               </h2>
-              <p style={{ margin: 0, fontSize: '14px', color: '#64748b' }}>
+              <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted-foreground)' }}>
                 Manage suppliers, track prices and payments
               </p>
             </div>
@@ -451,21 +451,21 @@ const VendorsView = () => {
           }}>
             <SummaryCard
               label="Total Vendors" value={summaryStats.total}
-              subtitle="vendors" icon={Users} color="#0f172a" bgColor="#f1f5f9"
+              subtitle="vendors" icon={Users} color="var(--foreground)" bgColor="var(--secondary)"
             />
             <SummaryCard
               label="Active Vendors" value={summaryStats.active}
-              subtitle="last 30 days" icon={CheckCircle} color="#10b981" bgColor="#ecfdf5"
+              subtitle="last 30 days" icon={CheckCircle} color="var(--success)" bgColor="var(--success-soft)"
             />
             <SummaryCard
               label="Outstanding" value={formatCurrency(summaryStats.outstanding.amount)}
               subtitle={`${summaryStats.outstanding.count} vendor${summaryStats.outstanding.count !== 1 ? 's' : ''}`}
-              icon={Clock} color="#f59e0b" bgColor="#fff7ed"
+              icon={Clock} color="var(--warning)" bgColor="var(--warning-soft)"
             />
             <SummaryCard
               label="Overdue" value={formatCurrency(summaryStats.overdue.amount)}
               subtitle={`${summaryStats.overdue.count} vendor${summaryStats.overdue.count !== 1 ? 's' : ''}`}
-              icon={AlertTriangle} color="#ef4444" bgColor="#fef2f2"
+              icon={AlertTriangle} color="var(--danger)" bgColor="var(--danger-soft)"
             />
           </div>
 
@@ -481,12 +481,12 @@ const VendorsView = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 containerStyle={{ marginBottom: 0 }}
-                style={{ background: '#fff', border: '1px solid #e2e8f0', fontSize: '13px', padding: '10px 12px' }}
+                style={{ background: 'var(--card)', border: '1px solid var(--border)', fontSize: '13px', padding: '10px 12px' }}
               />
             </div>
             <div style={{
               display: 'flex', alignItems: 'center', gap: '4px',
-              background: '#f1f5f9', borderRadius: '8px', padding: '3px',
+              background: 'var(--secondary)', borderRadius: '8px', padding: '3px',
             }}>
               {[
                 { key: 'all', label: 'All' },
@@ -501,8 +501,8 @@ const VendorsView = () => {
                     padding: '6px 16px', border: 'none', borderRadius: '6px',
                     fontSize: '13px', fontWeight: '600', cursor: 'pointer',
                     transition: 'all 0.15s',
-                    background: activeTab === tab.key ? '#1e293b' : 'transparent',
-                    color: activeTab === tab.key ? '#fff' : '#64748b',
+                    background: activeTab === tab.key ? 'var(--foreground)' : 'transparent',
+                    color: activeTab === tab.key ? 'var(--background)' : 'var(--muted-foreground)',
                   }}
                 >
                   {tab.label}
@@ -515,7 +515,7 @@ const VendorsView = () => {
           <div style={{ marginBottom: '24px' }}>
             {filteredVendors.length > 0 ? (
               <div style={{
-                background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
+                background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '12px',
                 overflow: 'hidden',
               }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -542,8 +542,8 @@ const VendorsView = () => {
                       return (
                         <React.Fragment key={vendor.id}>
                           <tr style={{
-                            borderBottom: isExpanded ? 'none' : '1px solid #f1f5f9',
-                            background: idx % 2 === 0 ? '#fff' : '#fafbfc',
+                            borderBottom: isExpanded ? 'none' : '1px solid var(--secondary)',
+                            background: idx % 2 === 0 ? 'var(--card)' : 'var(--muted)',
                             transition: 'background 0.15s',
                           }}>
                             <td style={{ padding: '12px 8px' }}>
@@ -552,7 +552,7 @@ const VendorsView = () => {
                                 style={{
                                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                                   background: 'none', border: 'none', cursor: 'pointer', padding: '2px',
-                                  color: '#94a3b8', transition: 'color 0.15s',
+                                  color: 'var(--muted-foreground)', transition: 'color 0.15s',
                                 }}
                               >
                                 {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -560,13 +560,13 @@ const VendorsView = () => {
                             </td>
                             <td style={STYLES.tableCell}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span style={{ fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>
+                                <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--foreground)' }}>
                                   {vendor.name}
                                 </span>
                                 {vendor.isUnregistered && (
                                   <span style={{
-                                    fontSize: '10px', fontWeight: '600', color: '#f59e0b',
-                                    background: '#fef3c7', padding: '1px 6px', borderRadius: '4px',
+                                    fontSize: '10px', fontWeight: '600', color: 'var(--warning)',
+                                    background: 'var(--warning-soft)', padding: '1px 6px', borderRadius: '4px',
                                   }}>
                                     From Bills
                                   </span>
@@ -574,32 +574,32 @@ const VendorsView = () => {
                               </div>
                             </td>
                             <td style={STYLES.tableCell}>
-                              <span style={{ fontSize: '13px', color: '#64748b' }}>
+                              <span style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>
                                 {vendor.phone || '-'}
                               </span>
                             </td>
                             <td style={STYLES.tableCell}>
-                              <span style={{ fontSize: '12px', color: '#94a3b8', fontFamily: 'monospace' }}>
+                              <span style={{ fontSize: '12px', color: 'var(--muted-foreground)', fontFamily: 'monospace' }}>
                                 {vendor.gstin ? vendor.gstin.substring(0, 15) : '-'}
                               </span>
                             </td>
                             <td style={{ ...STYLES.tableCell, textAlign: 'center' }}>
                               <span style={{
-                                fontSize: '12px', fontWeight: '500', color: '#64748b',
-                                background: '#f1f5f9', padding: '2px 8px', borderRadius: '10px',
+                                fontSize: '12px', fontWeight: '500', color: 'var(--muted-foreground)',
+                                background: 'var(--secondary)', padding: '2px 8px', borderRadius: '10px',
                               }}>
                                 {productCount} item{productCount !== 1 ? 's' : ''}
                               </span>
                             </td>
                             <td style={{ ...STYLES.tableCell, textAlign: 'center' }}>
-                              <span style={{ fontSize: '13px', fontWeight: '600', color: '#334155' }}>
+                              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--foreground)' }}>
                                 {vendor.stats.totalBills}
                               </span>
                             </td>
                             <td style={{ ...STYLES.tableCell, textAlign: 'right' }}>
                               <span style={{
                                 fontSize: '14px', fontWeight: '700',
-                                color: vendor.stats.outstandingAmount > 0 ? '#ef4444' : '#10b981',
+                                color: vendor.stats.outstandingAmount > 0 ? 'var(--danger)' : 'var(--success)',
                               }}>
                                 {vendor.stats.outstandingAmount > 0
                                   ? formatCurrency(vendor.stats.outstandingAmount)
@@ -612,7 +612,7 @@ const VendorsView = () => {
                                   onClick={(e) => { e.stopPropagation(); openEditModal(vendor); }}
                                   style={{
                                     background: 'none', border: 'none', cursor: 'pointer',
-                                    padding: '4px', borderRadius: '4px', color: '#94a3b8',
+                                    padding: '4px', borderRadius: '4px', color: 'var(--muted-foreground)',
                                   }}
                                   title="Edit vendor"
                                 >
@@ -623,7 +623,7 @@ const VendorsView = () => {
                                     onClick={(e) => { e.stopPropagation(); handleDeleteVendorClick(vendor); }}
                                     style={{
                                       background: 'none', border: 'none', cursor: 'pointer',
-                                      padding: '4px', borderRadius: '4px', color: '#94a3b8',
+                                      padding: '4px', borderRadius: '4px', color: 'var(--muted-foreground)',
                                     }}
                                     title="Delete vendor"
                                   >
@@ -639,11 +639,11 @@ const VendorsView = () => {
                             <tr>
                               <td colSpan={8} style={{ padding: 0 }}>
                                 <div style={{
-                                  background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '0',
+                                  background: 'var(--secondary)', borderBottom: '1px solid var(--border)', padding: '0',
                                 }}>
                                   {/* Sub-tabs */}
                                   <div style={{
-                                    display: 'flex', gap: '0', borderBottom: '1px solid #e2e8f0',
+                                    display: 'flex', gap: '0', borderBottom: '1px solid var(--border)',
                                     padding: '0 20px',
                                   }}>
                                     {['products', 'bills'].map(tab => (
@@ -653,8 +653,8 @@ const VendorsView = () => {
                                         style={{
                                           padding: '10px 16px', border: 'none', background: 'none',
                                           fontSize: '13px', fontWeight: '600', cursor: 'pointer',
-                                          color: subTab === tab ? '#1e293b' : '#94a3b8',
-                                          borderBottom: subTab === tab ? '2px solid #1e293b' : '2px solid transparent',
+                                          color: subTab === tab ? 'var(--foreground)' : 'var(--muted-foreground)',
+                                          borderBottom: subTab === tab ? '2px solid var(--foreground)' : '2px solid transparent',
                                           transition: 'all 0.15s',
                                         }}
                                       >
@@ -681,28 +681,28 @@ const VendorsView = () => {
                                           <tbody>
                                             {mergedProducts.map((product, pIdx) => (
                                               <tr key={pIdx} style={{
-                                                borderBottom: pIdx < mergedProducts.length - 1 ? '1px solid #eef0f2' : 'none',
+                                                borderBottom: pIdx < mergedProducts.length - 1 ? '1px solid var(--border)' : 'none',
                                               }}>
                                                 <td style={{ ...STYLES.subTableCell, padding: '10px 20px 10px 40px' }}>
-                                                  <span style={{ fontSize: '13px', fontWeight: '600', color: '#1e293b' }}>
+                                                  <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--foreground)' }}>
                                                     {product.productName}
                                                   </span>
                                                 </td>
                                                 <td style={STYLES.subTableCell}>
                                                   <span style={{
-                                                    fontSize: '12px', color: '#94a3b8',
-                                                    background: '#eef0f2', padding: '1px 6px', borderRadius: '4px',
+                                                    fontSize: '12px', color: 'var(--muted-foreground)',
+                                                    background: 'var(--border)', padding: '1px 6px', borderRadius: '4px',
                                                   }}>
                                                     {product.category || '-'}
                                                   </span>
                                                 </td>
                                                 <td style={{ ...STYLES.subTableCell, textAlign: 'right' }}>
-                                                  <span style={{ fontSize: '13px', color: '#64748b' }}>
+                                                  <span style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>
                                                     {product.lastPrice ? formatCurrency(product.lastPrice) : '-'}
                                                   </span>
                                                 </td>
                                                 <td style={{ ...STYLES.subTableCell, textAlign: 'right' }}>
-                                                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
+                                                  <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--foreground)' }}>
                                                     {product.offeredPrice ? formatCurrency(product.offeredPrice) : '-'}
                                                   </span>
                                                 </td>
@@ -710,7 +710,7 @@ const VendorsView = () => {
                                                   <PriceTrend lastPrice={product.lastPrice} offeredPrice={product.offeredPrice} />
                                                 </td>
                                                 <td style={STYLES.subTableCell}>
-                                                  <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                                                  <span style={{ fontSize: '12px', color: 'var(--muted-foreground)' }}>
                                                     {product.lastBillNumber || '-'}
                                                   </span>
                                                 </td>
@@ -719,12 +719,12 @@ const VendorsView = () => {
                                           </tbody>
                                         </table>
                                       ) : (
-                                        <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+                                        <div style={{ padding: '24px', textAlign: 'center', color: 'var(--muted-foreground)', fontSize: '13px' }}>
                                           <Package size={24} style={{ margin: '0 auto 8px', opacity: 0.4 }} />
                                           <div>No products tracked for this vendor</div>
                                         </div>
                                       )}
-                                      <div style={{ padding: '12px 20px', borderTop: '1px solid #e2e8f0' }}>
+                                      <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border)' }}>
                                         <Button
                                           variant="outline"
                                           size="small"
@@ -758,31 +758,31 @@ const VendorsView = () => {
                                               const itemCount = bill.productCount || products.length || 0;
                                               return (
                                                 <tr key={bill.id} style={{
-                                                  borderBottom: bIdx < recentBills.length - 1 ? '1px solid #eef0f2' : 'none',
+                                                  borderBottom: bIdx < recentBills.length - 1 ? '1px solid var(--border)' : 'none',
                                                   cursor: onNavigateToBill ? 'pointer' : 'default',
                                                 }}
                                                   onClick={() => onNavigateToBill && onNavigateToBill(bill.billNumber)}
                                                 >
                                                   <td style={{ ...STYLES.subTableCell, padding: '10px 20px 10px 40px' }}>
-                                                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
+                                                    <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--foreground)' }}>
                                                       {bill.billNumber}
                                                     </span>
                                                   </td>
                                                   <td style={STYLES.subTableCell}>
-                                                    <span style={{ fontSize: '13px', color: '#64748b' }}>
+                                                    <span style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>
                                                       {formatDate(bill.date)}
                                                     </span>
                                                   </td>
                                                   <td style={{ ...STYLES.subTableCell, textAlign: 'center' }}>
                                                     <span style={{
-                                                      fontSize: '12px', fontWeight: '500', color: '#64748b',
-                                                      background: '#f1f5f9', padding: '2px 8px', borderRadius: '10px',
+                                                      fontSize: '12px', fontWeight: '500', color: 'var(--muted-foreground)',
+                                                      background: 'var(--secondary)', padding: '2px 8px', borderRadius: '10px',
                                                     }}>
                                                       {itemCount}
                                                     </span>
                                                   </td>
                                                   <td style={{ ...STYLES.subTableCell, textAlign: 'right' }}>
-                                                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
+                                                    <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--foreground)' }}>
                                                       {formatCurrency(bill.totalAmount)}
                                                     </span>
                                                   </td>
@@ -799,7 +799,7 @@ const VendorsView = () => {
                                           </tbody>
                                         </table>
                                       ) : (
-                                        <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+                                        <div style={{ padding: '24px', textAlign: 'center', color: 'var(--muted-foreground)', fontSize: '13px' }}>
                                           <FileText size={24} style={{ margin: '0 auto 8px', opacity: 0.4 }} />
                                           <div>No bills found for this vendor</div>
                                         </div>
@@ -818,11 +818,11 @@ const VendorsView = () => {
               </div>
             ) : (
               <Card style={{ textAlign: 'center', padding: '60px 20px' }}>
-                <Users size={48} style={{ margin: '0 auto 16px', color: '#9ca3af' }} />
-                <h3 style={{ fontSize: '18px', color: '#374151', marginBottom: '8px' }}>
+                <Users size={48} style={{ margin: '0 auto 16px', color: 'var(--muted-foreground)' }} />
+                <h3 style={{ fontSize: '18px', color: 'var(--foreground)', marginBottom: '8px' }}>
                   No vendors found
                 </h3>
-                <p style={{ color: '#6b7280', marginBottom: '24px' }}>
+                <p style={{ color: 'var(--muted-foreground)', marginBottom: '24px' }}>
                   {searchTerm ? 'Try adjusting your search' : 'Add your first vendor or create a bill to get started'}
                 </p>
                 {!searchTerm && (
@@ -845,7 +845,7 @@ const VendorsView = () => {
             >
               <div
                 style={{
-                  background: '#fff', borderRadius: '16px', padding: '24px',
+                  background: 'var(--card)', borderRadius: '16px', padding: '24px',
                   width: '500px', maxWidth: '90vw', maxHeight: '90vh', overflow: 'auto',
                 }}
                 onClick={e => e.stopPropagation()}
@@ -854,12 +854,12 @@ const VendorsView = () => {
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                   marginBottom: '20px',
                 }}>
-                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>
+                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: 'var(--foreground)' }}>
                     {editingVendor ? 'Edit Vendor' : 'Add New Vendor'}
                   </h3>
                   <button
                     onClick={() => setShowAddModal(false)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted-foreground)' }}
                   >
                     <X size={20} />
                   </button>
@@ -927,7 +927,7 @@ const VendorsView = () => {
             >
               <div
                 style={{
-                  background: '#fff', borderRadius: '16px', padding: '24px',
+                  background: 'var(--card)', borderRadius: '16px', padding: '24px',
                   width: '420px', maxWidth: '90vw',
                 }}
                 onClick={e => e.stopPropagation()}
@@ -936,12 +936,12 @@ const VendorsView = () => {
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                   marginBottom: '20px',
                 }}>
-                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>
+                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: 'var(--foreground)' }}>
                     Add Product — {selectedVendorForProduct?.name}
                   </h3>
                   <button
                     onClick={() => setShowAddProductModal(false)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted-foreground)' }}
                   >
                     <X size={20} />
                   </button>

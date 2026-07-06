@@ -12,7 +12,7 @@ const StatCard = ({
   ...props 
 }) => {
   const isGradient = style.background && style.background.includes('gradient');
-  const titleColor = isGradient ? 'white' : '#111827';
+  const titleColor = isGradient ? 'white' : 'var(--foreground)';
   
   return (
     <Card className={className} style={style} {...props}>
@@ -45,7 +45,7 @@ const StatCard = ({
 export const StatItem = ({ 
   value, 
   label, 
-  color = '#6b7280',
+  color = 'var(--muted-foreground)',
   size = 'medium',
   className = '',
   ...props 
@@ -59,7 +59,7 @@ export const StatItem = ({
   return (
     <div style={{ textAlign: 'center' }} className={className} {...props}>
       <div style={{ ...sizes[size], color }}>{value}</div>
-      <div style={{ fontSize: 12, color: '#6b7280' }}>{label}</div>
+      <div style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>{label}</div>
     </div>
   );
 };

@@ -142,8 +142,8 @@ const PriceList = () => {
   if (loading) {
     return (
       <div style={{ padding: '40px', textAlign: 'center' }}>
-        <Package size={48} style={{ margin: '0 auto 16px', color: '#94a3b8' }} />
-        <div style={{ fontSize: '16px', color: '#64748b' }}>Loading price list...</div>
+        <Package size={48} style={{ margin: '0 auto 16px', color: 'var(--muted-foreground)' }} />
+        <div style={{ fontSize: '16px', color: 'var(--muted-foreground)' }}>Loading price list...</div>
       </div>
     );
   }
@@ -158,22 +158,22 @@ const PriceList = () => {
         <SummaryCard
           label="Unique Products" value={stats.total}
           subtitle={`From ${products.length} total entries`}
-          icon={Package} color="#0f172a" bgColor="#f1f5f9"
+          icon={Package} color="var(--foreground)" bgColor="var(--secondary)"
         />
         <SummaryCard
           label="Avg MRP" value={formatCurrency(stats.avgMrp)}
           subtitle="Across all products"
-          icon={Tag} color="#7c3aed" bgColor="#f5f3ff"
+          icon={Tag} color="var(--primary)" bgColor="var(--primary-soft)"
         />
         <SummaryCard
           label="Avg Purchase Price" value={formatCurrency(stats.avgPrice)}
           subtitle="Latest price per piece"
-          icon={IndianRupee} color="#10b981" bgColor="#ecfdf5"
+          icon={IndianRupee} color="var(--success)" bgColor="var(--success-soft)"
         />
         <SummaryCard
           label="Avg Profit/Pc" value={formatCurrency(stats.avgProfit)}
           subtitle="Per unit margin"
-          icon={TrendingUp} color="#f59e0b" bgColor="#fff7ed"
+          icon={TrendingUp} color="var(--warning)" bgColor="var(--warning-soft)"
         />
       </div>
 
@@ -186,7 +186,7 @@ const PriceList = () => {
         <div style={{ position: 'relative', flex: '0 0 280px' }}>
           <Search size={16} style={{
             position: 'absolute', left: '12px', top: '50%',
-            transform: 'translateY(-50%)', color: '#94a3b8',
+            transform: 'translateY(-50%)', color: 'var(--muted-foreground)',
           }} />
           <input
             type="text"
@@ -195,8 +195,8 @@ const PriceList = () => {
             placeholder="Search product, category, vendor..."
             style={{
               width: '100%', padding: '10px 36px 10px 36px',
-              border: '1px solid #e2e8f0', borderRadius: '10px',
-              fontSize: '14px', outline: 'none', background: '#fff',
+              border: '1px solid var(--border)', borderRadius: '10px',
+              fontSize: '14px', outline: 'none', background: 'var(--card)',
               transition: 'border-color 0.15s',
             }}
           />
@@ -206,7 +206,7 @@ const PriceList = () => {
               style={{
                 position: 'absolute', right: '10px', top: '50%',
                 transform: 'translateY(-50%)', background: 'none',
-                border: 'none', cursor: 'pointer', color: '#94a3b8',
+                border: 'none', cursor: 'pointer', color: 'var(--muted-foreground)',
                 display: 'flex', alignItems: 'center',
               }}
             >
@@ -223,9 +223,9 @@ const PriceList = () => {
               padding: '6px 14px', borderRadius: '20px', fontSize: '13px',
               fontWeight: '600', border: '1px solid',
               cursor: 'pointer', transition: 'all 0.15s',
-              background: !filterCategory ? '#0f172a' : '#fff',
-              color: !filterCategory ? '#fff' : '#64748b',
-              borderColor: !filterCategory ? '#0f172a' : '#e2e8f0',
+              background: !filterCategory ? 'var(--foreground)' : 'var(--card)',
+              color: !filterCategory ? 'var(--background)' : 'var(--muted-foreground)',
+              borderColor: !filterCategory ? 'var(--foreground)' : 'var(--border)',
             }}
           >
             All
@@ -238,9 +238,9 @@ const PriceList = () => {
                 padding: '6px 14px', borderRadius: '20px', fontSize: '13px',
                 fontWeight: '600', border: '1px solid',
                 cursor: 'pointer', transition: 'all 0.15s',
-                background: filterCategory === cat ? '#0f172a' : '#fff',
-                color: filterCategory === cat ? '#fff' : '#64748b',
-                borderColor: filterCategory === cat ? '#0f172a' : '#e2e8f0',
+                background: filterCategory === cat ? 'var(--foreground)' : 'var(--card)',
+                color: filterCategory === cat ? 'var(--background)' : 'var(--muted-foreground)',
+                borderColor: filterCategory === cat ? 'var(--foreground)' : 'var(--border)',
               }}
             >
               {cat}
@@ -252,7 +252,7 @@ const PriceList = () => {
       {/* ===== TABLE ===== */}
       {sortedData.length > 0 ? (
         <div style={{
-          background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
+          background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '12px',
           overflow: 'hidden',
         }}>
           <div style={{ overflowX: 'auto' }}>
@@ -273,78 +273,78 @@ const PriceList = () => {
               <tbody>
                 {sortedData.map((row, idx) => (
                   <tr key={row.id} style={{
-                    borderBottom: '1px solid #f1f5f9',
-                    background: idx % 2 === 0 ? '#fff' : '#fafbfc',
+                    borderBottom: '1px solid var(--secondary)',
+                    background: idx % 2 === 0 ? 'var(--card)' : 'var(--muted)',
                     transition: 'background 0.15s',
                   }}>
-                    <td style={{ ...STYLES.tableCell, fontWeight: '600', color: '#1e293b', fontSize: '14px' }}>
+                    <td style={{ ...STYLES.tableCell, fontWeight: '600', color: 'var(--foreground)', fontSize: '14px' }}>
                       {row.productName}
                     </td>
                     <td style={STYLES.tableCell}>
                       <span style={{
-                        fontSize: '12px', fontWeight: '600', color: '#475569',
-                        background: '#f1f5f9', padding: '3px 10px', borderRadius: '10px',
+                        fontSize: '12px', fontWeight: '600', color: 'var(--foreground)',
+                        background: 'var(--secondary)', padding: '3px 10px', borderRadius: '10px',
                       }}>
                         {row.category}
                       </span>
                     </td>
-                    <td style={{ ...STYLES.tableCell, textAlign: 'right', fontWeight: '600', color: '#1e293b', fontSize: '14px' }}>
+                    <td style={{ ...STYLES.tableCell, textAlign: 'right', fontWeight: '600', color: 'var(--foreground)', fontSize: '14px' }}>
                       {formatCurrency(row.mrp)}
                     </td>
-                    <td style={{ ...STYLES.tableCell, textAlign: 'right', fontWeight: '600', color: '#1e293b', fontSize: '14px' }}>
+                    <td style={{ ...STYLES.tableCell, textAlign: 'right', fontWeight: '600', color: 'var(--foreground)', fontSize: '14px' }}>
                       {formatCurrency(row.pricePerPiece)}
                     </td>
                     <td style={{ ...STYLES.tableCell, textAlign: 'right', fontWeight: '700', fontSize: '14px' }}>
-                      <span style={{ color: row.profitPerPiece > 0 ? '#10b981' : row.profitPerPiece < 0 ? '#ef4444' : '#94a3b8' }}>
+                      <span style={{ color: row.profitPerPiece > 0 ? 'var(--success)' : row.profitPerPiece < 0 ? 'var(--danger)' : 'var(--muted-foreground)' }}>
                         {formatCurrency(row.profitPerPiece)}
                       </span>
                     </td>
-                    <td style={{ ...STYLES.tableCell, fontSize: '13px', color: '#475569' }}>
+                    <td style={{ ...STYLES.tableCell, fontSize: '13px', color: 'var(--foreground)' }}>
                       {row.vendor}
                     </td>
-                    <td style={{ ...STYLES.tableCell, fontSize: '13px', color: '#94a3b8' }}>
+                    <td style={{ ...STYLES.tableCell, fontSize: '13px', color: 'var(--muted-foreground)' }}>
                       {row.lastPurchased && row.lastPurchased.getTime() > 0 ? formatDate(row.lastPurchased) : '-'}
                     </td>
-                    <td style={{ ...STYLES.tableCell, textAlign: 'right', fontSize: '14px', fontWeight: '600', color: '#475569' }}>
+                    <td style={{ ...STYLES.tableCell, textAlign: 'right', fontSize: '14px', fontWeight: '600', color: 'var(--foreground)' }}>
                       {row.timesPurchased}
                     </td>
-                    <td style={{ ...STYLES.tableCell, textAlign: 'right', fontSize: '14px', fontWeight: '600', color: '#475569' }}>
+                    <td style={{ ...STYLES.tableCell, textAlign: 'right', fontSize: '14px', fontWeight: '600', color: 'var(--foreground)' }}>
                       {row.totalQty}
                     </td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
-                <tr style={{ borderTop: '2px solid #e2e8f0' }}>
+                <tr style={{ borderTop: '2px solid var(--border)' }}>
                   <td style={{ padding: '12px 16px' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--foreground)' }}>
                       {sortedData.length} product{sortedData.length !== 1 ? 's' : ''}
                     </span>
                   </td>
                   <td style={{ padding: '12px 16px' }} />
                   <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--foreground)' }}>
                       {formatCurrency(sortedData.reduce((s, r) => s + r.mrp, 0) / (sortedData.length || 1))}
                     </span>
                   </td>
                   <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--foreground)' }}>
                       {formatCurrency(sortedData.reduce((s, r) => s + r.pricePerPiece, 0) / (sortedData.length || 1))}
                     </span>
                   </td>
                   <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#10b981' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--success)' }}>
                       {formatCurrency(sortedData.reduce((s, r) => s + r.profitPerPiece, 0) / (sortedData.length || 1))}
                     </span>
                   </td>
                   <td style={{ padding: '12px 16px' }} colSpan={2} />
                   <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#475569' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--foreground)' }}>
                       {sortedData.reduce((s, r) => s + r.timesPurchased, 0)}
                     </span>
                   </td>
                   <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#475569' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--foreground)' }}>
                       {sortedData.reduce((s, r) => s + r.totalQty, 0)}
                     </span>
                   </td>
@@ -355,14 +355,14 @@ const PriceList = () => {
         </div>
       ) : (
         <div style={{
-          background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
+          background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '12px',
           textAlign: 'center', padding: '60px 20px',
         }}>
-          <Package size={48} style={{ margin: '0 auto 16px', color: '#9ca3af' }} />
-          <h3 style={{ fontSize: '18px', color: '#374151', marginBottom: '8px' }}>
+          <Package size={48} style={{ margin: '0 auto 16px', color: 'var(--muted-foreground)' }} />
+          <h3 style={{ fontSize: '18px', color: 'var(--foreground)', marginBottom: '8px' }}>
             No products found
           </h3>
-          <p style={{ color: '#6b7280' }}>
+          <p style={{ color: 'var(--muted-foreground)' }}>
             {search || filterCategory
               ? 'Try adjusting your search or filters'
               : 'Products from bills will appear here automatically'

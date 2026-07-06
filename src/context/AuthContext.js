@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
     return (
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        height: '100vh', fontSize: '16px', color: '#64748b',
+        height: '100vh', fontSize: '16px', color: 'var(--muted-foreground)',
       }}>
         Loading...
       </div>

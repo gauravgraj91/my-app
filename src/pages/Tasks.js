@@ -147,7 +147,7 @@ const Tasks = () => {
 
         {/* Filters */}
         {showFilters && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, paddingTop: 16, borderTop: '1px solid #f3f4f6' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, paddingTop: 16, borderTop: '1px solid var(--secondary)' }}>
             <Select
               label="Category"
               value={filterCategory}
@@ -199,7 +199,7 @@ const Tasks = () => {
       {/* Task List */}
       <Card>
         {filteredAndSortedTodos.length === 0 ? (
-          <div style={{ padding: 48, textAlign: 'center', color: '#6b7280' }}>
+          <div style={{ padding: 48, textAlign: 'center', color: 'var(--muted-foreground)' }}>
             <CheckCircle size={48} style={{ margin: '0 auto 16px', opacity: 0.3 }} />
             <div style={{ fontSize: 18, fontWeight: 500, marginBottom: 8 }}>No tasks found</div>
             <div style={{ fontSize: 14 }}>
@@ -214,7 +214,7 @@ const Tasks = () => {
               key={todo.id}
               style={{
                 padding: 20,
-                borderBottom: index < filteredAndSortedTodos.length - 1 ? '1px solid #f3f4f6' : 'none',
+                borderBottom: index < filteredAndSortedTodos.length - 1 ? '1px solid var(--secondary)' : 'none',
                 display: 'flex',
                 alignItems: 'flex-start',
                 gap: 16
@@ -237,7 +237,7 @@ const Tasks = () => {
                       style={{
                         flex: 1,
                         padding: '8px 12px',
-                        border: '1px solid #d1d5db',
+                        border: '1px solid var(--input)',
                         borderRadius: 6,
                         fontSize: 14
                       }}
@@ -264,7 +264,7 @@ const Tasks = () => {
                     <div style={{
                       fontSize: 16,
                       fontWeight: 500,
-                      color: todo.isCompleted ? '#9ca3af' : '#111827',
+                      color: todo.isCompleted ? 'var(--muted-foreground)' : 'var(--foreground)',
                       textDecoration: todo.isCompleted ? 'line-through' : 'none',
                       marginBottom: 8
                     }}>
@@ -272,7 +272,7 @@ const Tasks = () => {
                     </div>
 
                     {todo.description && (
-                      <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>
+                      <div style={{ fontSize: 14, color: 'var(--muted-foreground)', marginBottom: 8 }}>
                         {todo.description}
                       </div>
                     )}
@@ -282,7 +282,7 @@ const Tasks = () => {
                         variant="primary"
                         icon={getCategoryInfo(todo.category).icon}
                         style={{
-                          background: getCategoryInfo(todo.category).color + '20',
+                          background: `color-mix(in srgb, ${getCategoryInfo(todo.category).color} 12%, transparent)`,
                           color: getCategoryInfo(todo.category).color
                         }}
                       >
@@ -293,7 +293,7 @@ const Tasks = () => {
                         variant="primary"
                         icon={getPriorityInfo(todo.priority).icon}
                         style={{
-                          background: getPriorityInfo(todo.priority).color + '20',
+                          background: `color-mix(in srgb, ${getPriorityInfo(todo.priority).color} 12%, transparent)`,
                           color: getPriorityInfo(todo.priority).color
                         }}
                       >
@@ -302,7 +302,7 @@ const Tasks = () => {
 
                       {todo.dueDate && (
                         <span style={{
-                          color: isOverdue(todo.dueDate) && !todo.isCompleted ? '#ef4444' : '#6b7280',
+                          color: isOverdue(todo.dueDate) && !todo.isCompleted ? 'var(--danger)' : 'var(--muted-foreground)',
                           display: 'flex',
                           alignItems: 'center',
                           gap: 4
@@ -312,7 +312,7 @@ const Tasks = () => {
                       )}
 
                       {todo.estimatedTime && (
-                        <span style={{ color: '#6b7280', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ color: 'var(--muted-foreground)', display: 'flex', alignItems: 'center', gap: 4 }}>
                           <Clock size={12} /> {todo.estimatedTime}
                         </span>
                       )}
@@ -327,7 +327,7 @@ const Tasks = () => {
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: '#6b7280',
+                    color: 'var(--muted-foreground)',
                     cursor: 'pointer',
                     padding: 4
                   }}
@@ -340,7 +340,7 @@ const Tasks = () => {
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: '#6b7280',
+                    color: 'var(--muted-foreground)',
                     cursor: 'pointer',
                     padding: 4
                   }}
@@ -353,7 +353,7 @@ const Tasks = () => {
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: '#ef4444',
+                    color: 'var(--danger)',
                     cursor: 'pointer',
                     padding: 4
                   }}

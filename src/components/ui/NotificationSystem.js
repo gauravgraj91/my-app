@@ -81,7 +81,7 @@ const NotificationItem = ({ notification, onRemove }) => {
       gap: '12px',
       padding: '16px',
       borderRadius: '8px',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+      boxShadow: 'var(--shadow-lg)',
       marginBottom: '12px',
       minWidth: '320px',
       maxWidth: '500px',
@@ -98,20 +98,20 @@ const NotificationItem = ({ notification, onRemove }) => {
 
     const typeStyles = {
       [NOTIFICATION_TYPES.SUCCESS]: {
-        background: 'linear-gradient(135deg, #10b981, #059669)',
-        color: 'white'
+        background: 'var(--success)',
+        color: 'var(--primary-foreground)'
       },
       [NOTIFICATION_TYPES.ERROR]: {
-        background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-        color: 'white'
+        background: 'var(--danger)',
+        color: 'var(--primary-foreground)'
       },
       [NOTIFICATION_TYPES.WARNING]: {
-        background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-        color: 'white'
+        background: 'var(--warning)',
+        color: 'var(--primary-foreground)'
       },
       [NOTIFICATION_TYPES.INFO]: {
-        background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-        color: 'white'
+        background: 'var(--primary)',
+        color: 'var(--primary-foreground)'
       }
     };
 

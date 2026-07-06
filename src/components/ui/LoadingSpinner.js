@@ -2,14 +2,14 @@ import React from 'react';
 
 const LoadingSpinner = ({ 
   size = 24,
-  color = '#3b82f6',
+  color = 'var(--primary)',
   className = '',
   ...props 
 }) => {
   const spinnerStyle = {
     width: size,
     height: size,
-    border: `2px solid ${color}20`,
+    border: `2px solid color-mix(in srgb, ${color} 12%, transparent)`,
     borderTop: `2px solid ${color}`,
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',

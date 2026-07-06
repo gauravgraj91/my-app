@@ -3,31 +3,31 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: #f8fafc;
+  background: var(--background);
   padding: 20px;
 }
 
 .auth-card {
   width: 100%;
   max-width: 420px;
-  background: #fff;
+  background: var(--card);
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   padding: 40px 32px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow);
 }
 
 .auth-title {
   font-size: 24px !important;
   font-weight: 700 !important;
-  color: #1e293b !important;
+  color: var(--foreground) !important;
   margin: 0 0 4px 0 !important;
   text-align: center;
 }
 
 .auth-subtitle {
   font-size: 14px;
-  color: #64748b;
+  color: var(--muted-foreground);
   margin: 0 0 28px 0;
   text-align: center;
 }
@@ -42,26 +42,26 @@
   display: block;
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
+  color: var(--foreground);
   margin-bottom: 6px;
 }
 
 .auth-field input {
   width: 100%;
   padding: 10px 14px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--input);
   border-radius: 8px;
   font-size: 14px;
-  color: #1e293b;
-  background: #fff;
+  color: var(--foreground);
+  background: var(--card);
   transition: border-color 0.15s;
   box-sizing: border-box;
 }
 
 .auth-field input:focus {
   outline: none;
-  border-color: #1e293b;
-  box-shadow: 0 0 0 3px rgba(30, 41, 59, 0.08);
+  border-color: var(--foreground);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 15%, transparent);
 }
 
 .auth-btn {
@@ -73,13 +73,13 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
-  background: #1e293b;
-  color: #fff;
+  background: var(--primary);
+  color: var(--primary-foreground);
   margin-top: 4px;
 }
 
 .auth-btn:hover {
-  background: #334155;
+  background: var(--primary-hover);
 }
 
 .auth-btn:disabled {
@@ -88,23 +88,23 @@
 }
 
 .auth-error {
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--danger-soft);
+  color: var(--danger);
   padding: 10px 14px;
   border-radius: 8px;
   font-size: 13px;
-  border: 1px solid #fecaca;
+  border: 1px solid var(--danger-soft);
 }
 
 .auth-footer {
   text-align: center;
   margin-top: 20px;
   font-size: 13px;
-  color: #64748b;
+  color: var(--muted-foreground);
 }
 
 .auth-footer a {
-  color: #1e293b;
+  color: var(--foreground);
   font-weight: 600;
   text-decoration: none;
 }

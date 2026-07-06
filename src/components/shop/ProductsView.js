@@ -40,13 +40,13 @@ function getDefaultVendor() {
 }
 
 const getCategoryBadge = (cat) => {
-  let bgColor = '#f1f5f9';
-  let textColor = '#475569';
+  let bgColor = 'var(--secondary)';
+  let textColor = 'var(--foreground)';
   switch ((cat || '').toLowerCase()) {
-    case 'groceries': bgColor = '#ecfdf5'; textColor = '#059669'; break;
-    case 'electronics': bgColor = '#eff6ff'; textColor = '#2563eb'; break;
-    case 'clothing': bgColor = '#f5f3ff'; textColor = '#7c3aed'; break;
-    case 'accessories': bgColor = '#fff7ed'; textColor = '#ea580c'; break;
+    case 'groceries': bgColor = 'var(--success-soft)'; textColor = 'var(--success)'; break;
+    case 'electronics': bgColor = 'var(--primary-soft)'; textColor = 'var(--primary)'; break;
+    case 'clothing': bgColor = 'var(--primary-soft)'; textColor = 'var(--primary)'; break;
+    case 'accessories': bgColor = 'var(--warning-soft)'; textColor = 'var(--warning)'; break;
     default: break;
   }
   return (
@@ -370,8 +370,8 @@ const ProductsView = () => {
           onKeyDown={e => handleKeyDown(e, row.id, field, type === 'number' ? parseFloat(tempEditValue) : tempEditValue)}
           onBlur={() => handleCellEdit(row.id, field, type === 'number' ? parseFloat(tempEditValue) : tempEditValue)}
           style={{
-            padding: '6px 8px', border: '1px solid #3b82f6', borderRadius: '6px',
-            fontSize: '13px', width: '100%', outline: 'none', background: '#fff',
+            padding: '6px 8px', border: '1px solid var(--primary)', borderRadius: '6px',
+            fontSize: '13px', width: '100%', outline: 'none', background: 'var(--card)',
           }}
           aria-label={field}
           autoFocus
@@ -387,13 +387,13 @@ const ProductsView = () => {
           ? value
           : type === 'number'
             ? formatCurrency(value)
-            : (value || <span style={{ color: '#94a3b8' }}>&mdash;</span>)}
+            : (value || <span style={{ color: 'var(--muted-foreground)' }}>&mdash;</span>)}
       </span>
     );
   };
 
   if (loading) {
-    return <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>Loading products...</div>;
+    return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--muted-foreground)' }}>Loading products...</div>;
   }
 
   return (
@@ -404,10 +404,10 @@ const ProductsView = () => {
         marginBottom: '24px', flexWrap: 'wrap', gap: '12px',
       }}>
         <div>
-          <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: '0 0 4px 0', letterSpacing: '-0.02em' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--foreground)', margin: '0 0 4px 0', letterSpacing: '-0.02em' }}>
             Products
           </h2>
-          <p style={{ margin: 0, fontSize: '14px', color: '#64748b' }}>
+          <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted-foreground)' }}>
             Manage your shop products and inventory
           </p>
         </div>
@@ -417,8 +417,8 @@ const ProductsView = () => {
             style={{
               display: 'flex', alignItems: 'center', gap: '6px',
               padding: '8px 14px', borderRadius: '8px',
-              border: '1px solid #e2e8f0', background: '#fff',
-              fontSize: '13px', fontWeight: '500', color: '#475569',
+              border: '1px solid var(--border)', background: 'var(--card)',
+              fontSize: '13px', fontWeight: '500', color: 'var(--foreground)',
               cursor: 'pointer', transition: 'all 0.15s',
             }}
           >
@@ -430,10 +430,10 @@ const ProductsView = () => {
             style={{
               display: 'flex', alignItems: 'center', gap: '6px',
               padding: '8px 16px', borderRadius: '8px', border: 'none',
-              background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-              fontSize: '13px', fontWeight: '600', color: '#fff',
+              background: 'var(--primary)',
+              fontSize: '13px', fontWeight: '600', color: 'var(--primary-foreground)',
               cursor: 'pointer', transition: 'all 0.15s',
-              boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
+              boxShadow: 'var(--shadow)',
             }}
           >
             <Plus size={14} />
@@ -447,11 +447,11 @@ const ProductsView = () => {
         <SummaryCard
           label="Total Products" value={data.length} count={data.length}
           subtitle={`${data.filter(p => p.billId).length} linked, ${data.filter(p => !p.billId).length} standalone`}
-          icon={Package} color="#0f172a" bgColor="#f1f5f9"
+          icon={Package} color="var(--foreground)" bgColor="var(--secondary)"
         />
-        <SummaryCard label="Total Value" amount={totals.amount} count={data.length} subtitle="Sum of all nett amounts" icon={IndianRupee} color="#10b981" bgColor="#ecfdf5" />
-        <SummaryCard label="Total Profit" amount={totals.profit} count={data.length} subtitle="Across all products" icon={TrendingUp} color="#f59e0b" bgColor="#fff7ed" />
-        <SummaryCard label="Average MRP" amount={totals.avgMrp} count={data.length} subtitle="Per product average" icon={Tag} color="#7c3aed" bgColor="#f5f3ff" />
+        <SummaryCard label="Total Value" amount={totals.amount} count={data.length} subtitle="Sum of all nett amounts" icon={IndianRupee} color="var(--success)" bgColor="var(--success-soft)" />
+        <SummaryCard label="Total Profit" amount={totals.profit} count={data.length} subtitle="Across all products" icon={TrendingUp} color="var(--warning)" bgColor="var(--warning-soft)" />
+        <SummaryCard label="Average MRP" amount={totals.avgMrp} count={data.length} subtitle="Per product average" icon={Tag} color="var(--primary)" bgColor="var(--primary-soft)" />
       </div>
 
       {/* ===== SEARCH + FILTER BAR ===== */}
@@ -459,7 +459,7 @@ const ProductsView = () => {
         <div style={{ flex: 1, minWidth: '250px', position: 'relative' }}>
           <div style={{
             position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)',
-            color: '#94a3b8', pointerEvents: 'none', display: 'flex', alignItems: 'center',
+            color: 'var(--muted-foreground)', pointerEvents: 'none', display: 'flex', alignItems: 'center',
           }}>
             <Search size={16} />
           </div>
@@ -470,8 +470,8 @@ const ProductsView = () => {
             placeholder="Search products, bills..."
             style={{
               width: '100%', padding: '10px 12px 10px 36px',
-              border: '1px solid #e2e8f0', borderRadius: '8px',
-              fontSize: '13px', background: '#fff', outline: 'none', color: '#1e293b',
+              border: '1px solid var(--border)', borderRadius: '8px',
+              fontSize: '13px', background: 'var(--card)', outline: 'none', color: 'var(--foreground)',
             }}
             aria-label="Search by product name or bill number"
           />
@@ -480,7 +480,7 @@ const ProductsView = () => {
               onClick={() => setSearch('')}
               style={{
                 position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
-                background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8',
+                background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted-foreground)',
                 display: 'flex', alignItems: 'center', padding: '2px',
               }}
               aria-label="Clear search"
@@ -495,8 +495,8 @@ const ProductsView = () => {
           style={{
             display: 'flex', alignItems: 'center', gap: '6px',
             padding: '8px 14px', borderRadius: '8px',
-            border: '1px solid #e2e8f0', background: '#fff',
-            fontSize: '13px', fontWeight: '500', color: '#475569',
+            border: '1px solid var(--border)', background: 'var(--card)',
+            fontSize: '13px', fontWeight: '500', color: 'var(--foreground)',
             cursor: 'pointer', transition: 'all 0.15s',
           }}
         >
@@ -504,14 +504,14 @@ const ProductsView = () => {
           Filters
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f1f5f9', borderRadius: '8px', padding: '3px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--secondary)', borderRadius: '8px', padding: '3px' }}>
           <button
             onClick={() => setFilterCategory('')}
             style={{
               padding: '6px 16px', border: 'none', borderRadius: '6px',
               fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.15s',
-              background: filterCategory === '' ? '#1e293b' : 'transparent',
-              color: filterCategory === '' ? '#fff' : '#64748b',
+              background: filterCategory === '' ? 'var(--foreground)' : 'transparent',
+              color: filterCategory === '' ? 'var(--background)' : 'var(--muted-foreground)',
             }}
           >
             All
@@ -523,8 +523,8 @@ const ProductsView = () => {
               style={{
                 padding: '6px 16px', border: 'none', borderRadius: '6px',
                 fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.15s',
-                background: filterCategory === cat ? '#1e293b' : 'transparent',
-                color: filterCategory === cat ? '#fff' : '#64748b',
+                background: filterCategory === cat ? 'var(--foreground)' : 'transparent',
+                color: filterCategory === cat ? 'var(--background)' : 'var(--muted-foreground)',
               }}
             >
               {cat}
@@ -535,14 +535,14 @@ const ProductsView = () => {
 
       {/* ===== ADVANCED FILTERS PANEL ===== */}
       {showFilters && (
-        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#64748b', marginBottom: '6px' }}>Bill Status</label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--muted-foreground)', marginBottom: '6px' }}>Bill Status</label>
               <select
                 value={filterBillStatus}
                 onChange={e => setFilterBillStatus(e.target.value)}
-                style={{ width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#1e293b', background: '#fff', outline: 'none' }}
+                style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--foreground)', background: 'var(--card)', outline: 'none' }}
                 aria-label="Filter by bill status"
               >
                 <option value="all">All Products</option>
@@ -551,20 +551,20 @@ const ProductsView = () => {
               </select>
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#64748b', marginBottom: '6px' }}>Min Price (MRP)</label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--muted-foreground)', marginBottom: '6px' }}>Min Price (MRP)</label>
               <input
                 type="number" value={filterPriceMin} onChange={e => setFilterPriceMin(e.target.value)}
                 placeholder="0" min="0"
-                style={{ width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#1e293b', background: '#fff', outline: 'none' }}
+                style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--foreground)', background: 'var(--card)', outline: 'none' }}
                 aria-label="Minimum MRP"
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#64748b', marginBottom: '6px' }}>Max Price (MRP)</label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--muted-foreground)', marginBottom: '6px' }}>Max Price (MRP)</label>
               <input
                 type="number" value={filterPriceMax} onChange={e => setFilterPriceMax(e.target.value)}
                 placeholder="100000" min="0"
-                style={{ width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', color: '#1e293b', background: '#fff', outline: 'none' }}
+                style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--foreground)', background: 'var(--card)', outline: 'none' }}
                 aria-label="Maximum MRP"
               />
             </div>
@@ -574,8 +574,8 @@ const ProductsView = () => {
                 style={{
                   display: 'flex', alignItems: 'center', gap: '6px',
                   padding: '8px 14px', borderRadius: '8px',
-                  border: '1px solid #e2e8f0', background: '#fff',
-                  fontSize: '13px', fontWeight: '500', color: '#475569', cursor: 'pointer',
+                  border: '1px solid var(--border)', background: 'var(--card)',
+                  fontSize: '13px', fontWeight: '500', color: 'var(--foreground)', cursor: 'pointer',
                 }}
               >
                 <X size={14} />
@@ -589,13 +589,13 @@ const ProductsView = () => {
       {/* ===== TABLE ===== */}
       <div style={{ marginBottom: '24px' }}>
         {sortedData.length > 0 ? (
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
                   <th style={{
                     padding: '12px 16px', textAlign: 'left', width: '44px',
-                    borderBottom: '1px solid #e2e8f0', background: '#f8fafc',
+                    borderBottom: '1px solid var(--border)', background: 'var(--secondary)',
                   }}>
                     <button
                       onClick={(e) => { e.stopPropagation(); handleSelectAll(); }}
@@ -603,8 +603,8 @@ const ProductsView = () => {
                       title={selectedProducts.size === sortedData.length ? 'Deselect all' : 'Select all'}
                     >
                       {selectedProducts.size === sortedData.length && sortedData.length > 0
-                        ? <CheckSquare size={16} color="#3b82f6" />
-                        : <Square size={16} color="#94a3b8" />}
+                        ? <CheckSquare size={16} color="var(--primary)" />
+                        : <Square size={16} color="var(--muted-foreground)" />}
                     </button>
                   </th>
                   <SortableHeader field="billNumber" label="Bill #" handleSort={handleSort} sortField={sortColumn} sortDirection={sortDirection} />
@@ -615,10 +615,10 @@ const ProductsView = () => {
                   <SortableHeader field="mrp" label="MRP" style={{ textAlign: 'right' }} handleSort={handleSort} sortField={sortColumn} sortDirection={sortDirection} />
                   <SortableHeader field="totalQuantity" label="Qty" style={{ textAlign: 'right' }} handleSort={handleSort} sortField={sortColumn} sortDirection={sortDirection} />
                   <SortableHeader field="totalAmount" label="Nett Amount" style={{ textAlign: 'right' }} handleSort={handleSort} sortField={sortColumn} sortDirection={sortDirection} />
-                  <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--border)', background: 'var(--secondary)' }}>
                     Total Profit
                   </th>
-                  <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
+                  <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: '600', color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--border)', background: 'var(--secondary)' }}>
                     Actions
                   </th>
                 </tr>
@@ -631,8 +631,8 @@ const ProductsView = () => {
                     <tr
                       key={row.id}
                       style={{
-                        borderBottom: '1px solid #f1f5f9',
-                        background: isSelected ? '#eff6ff' : (idx % 2 === 0 ? '#fff' : '#fafbfc'),
+                        borderBottom: '1px solid var(--secondary)',
+                        background: isSelected ? 'var(--primary-soft)' : (idx % 2 === 0 ? 'var(--card)' : 'var(--muted)'),
                         transition: 'background 0.15s',
                       }}
                     >
@@ -642,55 +642,55 @@ const ProductsView = () => {
                           style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', padding: '2px' }}
                           title={isSelected ? 'Deselect' : 'Select'}
                         >
-                          {isSelected ? <CheckSquare size={16} color="#3b82f6" /> : <Square size={16} color="#cbd5e1" />}
+                          {isSelected ? <CheckSquare size={16} color="var(--primary)" /> : <Square size={16} color="var(--border)" />}
                         </button>
                       </td>
                       <td style={{ padding: '12px 16px' }}>
                         {row.billId ? (
                           <button
                             onClick={() => onNavigateToBill(row.billNumber)}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: '14px', fontWeight: '600', color: '#2563eb' }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: '14px', fontWeight: '600', color: 'var(--primary)' }}
                             title={`View Bill ${row.billNumber}`}
                           >
                             {row.billNumber}
                           </button>
                         ) : (
-                          <span style={{ color: '#94a3b8' }}>&mdash;</span>
+                          <span style={{ color: 'var(--muted-foreground)' }}>&mdash;</span>
                         )}
                       </td>
                       <td style={{ padding: '12px 16px' }}>
-                        <span style={{ fontSize: '13px', color: '#64748b' }}>
-                          {formatDate(row.date) || <span style={{ color: '#94a3b8' }}>&mdash;</span>}
+                        <span style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>
+                          {formatDate(row.date) || <span style={{ color: 'var(--muted-foreground)' }}>&mdash;</span>}
                         </span>
                       </td>
                       <td style={{ padding: '12px 16px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#1e293b' }}>
+                        <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--foreground)' }}>
                           {renderEditableCell(row, 'productName')}
                         </span>
                       </td>
                       <td style={{ padding: '12px 16px' }}>{getCategoryBadge(row.category)}</td>
                       <td style={{ padding: '12px 16px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: '500', color: '#475569' }}>
-                          {row.vendor || <span style={{ color: '#94a3b8' }}>&mdash;</span>}
+                        <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--foreground)' }}>
+                          {row.vendor || <span style={{ color: 'var(--muted-foreground)' }}>&mdash;</span>}
                         </span>
                       </td>
                       <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#1e293b' }}>
+                        <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--foreground)' }}>
                           {renderEditableCell(row, 'mrp', 'number')}
                         </span>
                       </td>
                       <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#334155' }}>
+                        <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--foreground)' }}>
                           {renderEditableCell(row, 'totalQuantity', 'number')}
                         </span>
                       </td>
                       <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                        <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
+                        <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--foreground)' }}>
                           {renderEditableCell(row, 'totalAmount', 'number')}
                         </span>
                       </td>
                       <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                        <span style={{ fontSize: '13px', fontWeight: '700', color: rowProfit >= 0 ? '#10b981' : '#ef4444' }}>
+                        <span style={{ fontSize: '13px', fontWeight: '700', color: rowProfit >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                           {formatCurrency(rowProfit)}
                         </span>
                       </td>
@@ -699,7 +699,7 @@ const ProductsView = () => {
                           {row.billId ? (
                             <button
                               onClick={(e) => { e.stopPropagation(); handleRemoveFromBill(row); }}
-                              style={{ width: '30px', height: '30px', borderRadius: '6px', border: '1px solid #fed7aa', background: '#fff7ed', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ea580c', transition: 'all 0.15s' }}
+                              style={{ width: '30px', height: '30px', borderRadius: '6px', border: '1px solid var(--warning-soft)', background: 'var(--warning-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--warning)', transition: 'all 0.15s' }}
                               title={`Remove from ${row.billNumber}`}
                               aria-label="Remove from Bill"
                             >
@@ -708,7 +708,7 @@ const ProductsView = () => {
                           ) : (
                             <button
                               onClick={(e) => { e.stopPropagation(); handleOpenAssignModal(row); }}
-                              style={{ width: '30px', height: '30px', borderRadius: '6px', border: '1px solid #bbf7d0', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#16a34a', transition: 'all 0.15s' }}
+                              style={{ width: '30px', height: '30px', borderRadius: '6px', border: '1px solid var(--success-soft)', background: 'var(--success-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--success)', transition: 'all 0.15s' }}
                               title="Assign to Bill"
                               aria-label="Assign to Bill"
                             >
@@ -717,7 +717,7 @@ const ProductsView = () => {
                           )}
                           <button
                             onClick={() => { setSelectedProduct(row); setModalOpen(true); }}
-                            style={{ width: '30px', height: '30px', borderRadius: '6px', border: '1px solid #e2e8f0', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b', transition: 'all 0.15s' }}
+                            style={{ width: '30px', height: '30px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--muted-foreground)', transition: 'all 0.15s' }}
                             title="Edit Product"
                             aria-label="Edit Product"
                           >
@@ -725,7 +725,7 @@ const ProductsView = () => {
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); handleDeleteRow(row.id); }}
-                            style={{ width: '30px', height: '30px', borderRadius: '6px', border: '1px solid #fecaca', background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ef4444', transition: 'all 0.15s' }}
+                            style={{ width: '30px', height: '30px', borderRadius: '6px', border: '1px solid var(--danger-soft)', background: 'var(--danger-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--danger)', transition: 'all 0.15s' }}
                             title="Delete Product"
                             aria-label="Delete Product"
                           >
@@ -738,27 +738,27 @@ const ProductsView = () => {
                 })}
               </tbody>
               <tfoot>
-                <tr style={{ borderTop: '2px solid #e2e8f0' }}>
+                <tr style={{ borderTop: '2px solid var(--border)' }}>
                   <td style={{ padding: '12px 16px' }} colSpan={6}>
-                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>Total</span>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--foreground)' }}>Total</span>
                   </td>
                   <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--foreground)' }}>
                       {formatCurrency(sortedData.reduce((sum, r) => sum + (r.mrp || 0), 0))}
                     </span>
                   </td>
                   <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#334155' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--foreground)' }}>
                       {sortedData.reduce((sum, r) => sum + (r.totalQuantity || 0), 0)}
                     </span>
                   </td>
                   <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--foreground)' }}>
                       {formatCurrency(sortedData.reduce((sum, r) => sum + (r.totalAmount || 0), 0))}
                     </span>
                   </td>
                   <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#10b981' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--success)' }}>
                       {formatCurrency(sortedData.reduce((sum, r) => sum + (calculateProfitPerPiece(r.mrp || 0, r.pricePerPiece || 0) * (r.totalQuantity || 0)), 0))}
                     </span>
                   </td>
@@ -768,10 +768,10 @@ const ProductsView = () => {
             </table>
           </div>
         ) : (
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', textAlign: 'center', padding: '60px 20px' }}>
-            <Package size={48} style={{ margin: '0 auto 16px', color: '#9ca3af' }} />
-            <h3 style={{ fontSize: '18px', color: '#374151', marginBottom: '8px' }}>No products found</h3>
-            <p style={{ color: '#6b7280', marginBottom: '24px' }}>
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '12px', textAlign: 'center', padding: '60px 20px' }}>
+            <Package size={48} style={{ margin: '0 auto 16px', color: 'var(--muted-foreground)' }} />
+            <h3 style={{ fontSize: '18px', color: 'var(--foreground)', marginBottom: '8px' }}>No products found</h3>
+            <p style={{ color: 'var(--muted-foreground)', marginBottom: '24px' }}>
               {search || filterCategory || filterPriceMin || filterPriceMax || filterBillStatus
                 ? 'Try adjusting your search or filters'
                 : 'Add your first product to get started'}
@@ -782,9 +782,9 @@ const ProductsView = () => {
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: '6px',
                   padding: '10px 20px', borderRadius: '8px', border: 'none',
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  fontSize: '14px', fontWeight: '600', color: '#fff', cursor: 'pointer',
-                  boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
+                  background: 'var(--success)',
+                  fontSize: '14px', fontWeight: '600', color: 'var(--primary-foreground)', cursor: 'pointer',
+                  boxShadow: 'var(--shadow)',
                 }}
               >
                 <Plus size={16} />
@@ -800,34 +800,34 @@ const ProductsView = () => {
         <div style={{
           position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)',
           display: 'flex', alignItems: 'center', gap: '12px',
-          background: '#1e293b', color: 'white',
+          background: 'var(--foreground)', color: 'var(--background)',
           padding: '12px 20px', borderRadius: '14px',
-          boxShadow: '0 12px 40px rgba(0,0,0,0.25)', zIndex: 1000,
+          boxShadow: 'var(--shadow-lg)', zIndex: 1000,
         }}>
           <span style={{ fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ background: '#3b82f6', padding: '2px 8px', borderRadius: '10px', fontSize: '12px', fontWeight: '700' }}>
+            <span style={{ background: 'var(--primary)', padding: '2px 8px', borderRadius: '10px', fontSize: '12px', fontWeight: '700' }}>
               {selectedProducts.size}
             </span>
             selected
           </span>
-          <div style={{ width: '1px', height: '24px', background: '#475569' }} />
+          <div style={{ width: '1px', height: '24px', background: 'var(--foreground)' }} />
           {Array.from(selectedProducts).some(id => !sortedData.find(p => p.id === id)?.billId) && (
             <button
               onClick={handleOpenBulkAssignModal}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#16a34a', border: 'none', color: 'white', cursor: 'pointer', fontSize: '13px', fontWeight: '600', padding: '6px 12px', borderRadius: '8px', transition: 'all 0.15s' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--success)', border: 'none', color: 'var(--primary-foreground)', cursor: 'pointer', fontSize: '13px', fontWeight: '600', padding: '6px 12px', borderRadius: '8px', transition: 'all 0.15s' }}
             >
               <Link2 size={14} /> Assign to Bill
             </button>
           )}
           <button
             onClick={handleBulkDelete}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#dc2626', border: 'none', color: 'white', cursor: 'pointer', fontSize: '13px', fontWeight: '600', padding: '6px 12px', borderRadius: '8px', transition: 'all 0.15s' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--danger)', border: 'none', color: 'var(--primary-foreground)', cursor: 'pointer', fontSize: '13px', fontWeight: '600', padding: '6px 12px', borderRadius: '8px', transition: 'all 0.15s' }}
           >
             <Trash2 size={14} /> Delete
           </button>
           <button
             onClick={handleClearSelection}
-            style={{ display: 'flex', alignItems: 'center', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '6px', borderRadius: '8px', transition: 'all 0.15s', marginLeft: '4px' }}
+            style={{ display: 'flex', alignItems: 'center', background: 'none', border: 'none', color: 'var(--muted-foreground)', cursor: 'pointer', padding: '6px', borderRadius: '8px', transition: 'all 0.15s', marginLeft: '4px' }}
             title="Clear selection"
           >
             <X size={16} />

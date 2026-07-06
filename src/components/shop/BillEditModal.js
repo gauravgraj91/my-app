@@ -210,9 +210,9 @@ const BillEditModal = ({
           {/* Financials Section - Read Only */}
           <div style={{
             padding: '16px',
-            background: '#f9fafb',
+            background: 'var(--secondary)',
             borderRadius: '8px',
-            border: '1px solid #e5e7eb',
+            border: '1px solid var(--border)',
             display: 'flex',
             flexDirection: 'column',
             gap: '16px'
@@ -221,15 +221,15 @@ const BillEditModal = ({
               <h3 style={{
                 fontSize: '14px',
                 fontWeight: '600',
-                color: '#374151',
+                color: 'var(--foreground)',
                 margin: 0
               }}>
                 Financial Summary
               </h3>
               <span style={{
                 fontSize: '11px',
-                color: '#6b7280',
-                background: '#e5e7eb',
+                color: 'var(--muted-foreground)',
+                background: 'var(--border)',
                 padding: '2px 8px',
                 borderRadius: '4px'
               }}>
@@ -241,20 +241,20 @@ const BillEditModal = ({
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '16px',
-              background: '#ffffff',
+              background: 'var(--card)',
               padding: '12px',
               borderRadius: '6px',
-              border: '1px solid #e5e7eb'
+              border: '1px solid var(--border)'
             }}>
               {/* Total Amount */}
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                  <IndianRupee size={14} color="#10b981" />
-                  <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500' }}>
+                  <IndianRupee size={14} color="var(--success)" />
+                  <span style={{ fontSize: '12px', color: 'var(--muted-foreground)', fontWeight: '500' }}>
                     Total Amount
                   </span>
                 </div>
-                <div style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937' }}>
+                <div style={{ fontSize: '18px', fontWeight: '600', color: 'var(--foreground)' }}>
                   ₹{(parseFloat(formData.totalAmount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </div>
               </div>
@@ -262,12 +262,12 @@ const BillEditModal = ({
               {/* Total Quantity */}
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                  <Package size={14} color="#3b82f6" />
-                  <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500' }}>
+                  <Package size={14} color="var(--primary)" />
+                  <span style={{ fontSize: '12px', color: 'var(--muted-foreground)', fontWeight: '500' }}>
                     Total Quantity
                   </span>
                 </div>
-                <div style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937' }}>
+                <div style={{ fontSize: '18px', fontWeight: '600', color: 'var(--foreground)' }}>
                   {parseFloat(formData.totalQuantity) || 0}
                 </div>
               </div>
@@ -275,15 +275,15 @@ const BillEditModal = ({
               {/* Total Profit */}
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                  <TrendingUp size={14} color="#f59e0b" />
-                  <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500' }}>
+                  <TrendingUp size={14} color="var(--warning)" />
+                  <span style={{ fontSize: '12px', color: 'var(--muted-foreground)', fontWeight: '500' }}>
                     Total Profit
                   </span>
                 </div>
                 <div style={{
                   fontSize: '18px',
                   fontWeight: '600',
-                  color: (parseFloat(formData.totalProfit) || 0) >= 0 ? '#10b981' : '#ef4444'
+                  color: (parseFloat(formData.totalProfit) || 0) >= 0 ? 'var(--success)' : 'var(--danger)'
                 }}>
                   ₹{(parseFloat(formData.totalProfit) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </div>
@@ -292,7 +292,7 @@ const BillEditModal = ({
 
             <div style={{
               fontSize: '12px',
-              color: '#6b7280',
+              color: 'var(--muted-foreground)',
               fontStyle: 'italic',
               display: 'flex',
               alignItems: 'center',
@@ -310,7 +310,7 @@ const BillEditModal = ({
               marginBottom: '6px',
               fontSize: '14px',
               fontWeight: '500',
-              color: '#374151'
+              color: 'var(--foreground)'
             }}>
               <FileText size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
               Notes
@@ -326,7 +326,7 @@ const BillEditModal = ({
             <div style={{
               marginTop: '4px',
               fontSize: '12px',
-              color: '#6b7280'
+              color: 'var(--muted-foreground)'
             }}>
               {formData.notes.length}/500 characters
             </div>
@@ -336,10 +336,10 @@ const BillEditModal = ({
           {errors.submit && (
             <div style={{
               padding: '12px',
-              background: '#fef2f2',
-              border: '1px solid #fecaca',
+              background: 'var(--danger-soft)',
+              border: '1px solid var(--danger-soft)',
               borderRadius: '8px',
-              color: '#dc2626',
+              color: 'var(--danger)',
               fontSize: '14px'
             }}>
               {errors.submit}
@@ -352,7 +352,7 @@ const BillEditModal = ({
             gap: '12px',
             justifyContent: 'flex-end',
             paddingTop: '20px',
-            borderTop: '1px solid #e5e7eb'
+            borderTop: '1px solid var(--border)'
           }}>
             <Button
               type="button"

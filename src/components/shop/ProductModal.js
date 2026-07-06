@@ -264,22 +264,22 @@ const ProductModal = ({
           {bill && (
             <div style={{
               padding: '10px 14px',
-              background: 'linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%)',
-              border: '1px solid #bfdbfe',
+              background: 'var(--primary-soft)',
+              border: '1px solid var(--border)',
               borderRadius: '8px',
               fontSize: '13px',
-              color: '#1e40af',
+              color: 'var(--primary-accent)',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
               flexWrap: 'wrap'
             }}>
               <span style={{ fontWeight: 600 }}>📋 {bill.billNumber}</span>
-              <span style={{ color: '#93c5fd' }}>•</span>
+              <span style={{ color: 'var(--primary-accent)' }}>•</span>
               <span>{bill.vendor}</span>
               {bill.date && (
                 <>
-                  <span style={{ color: '#93c5fd' }}>•</span>
+                  <span style={{ color: 'var(--primary-accent)' }}>•</span>
                   <span>{(() => {
                     const date = bill.date?.toDate ? bill.date.toDate() :
                       bill.date instanceof Date ? bill.date :
@@ -293,8 +293,8 @@ const ProductModal = ({
 
           {/* ── Product Details Section ── */}
           <div style={{
-            background: '#fafbfc',
-            border: '1px solid #e5e7eb',
+            background: 'var(--muted)',
+            border: '1px solid var(--border)',
             borderRadius: '10px',
             padding: '16px'
           }}>
@@ -303,7 +303,7 @@ const ProductModal = ({
               fontWeight: 600,
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
-              color: '#6b7280',
+              color: 'var(--muted-foreground)',
               marginBottom: '12px'
             }}>
               Product Details
@@ -312,7 +312,7 @@ const ProductModal = ({
             <Input
               label={
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <Package size={14} /> Product Name <span style={{ color: '#ef4444' }}>*</span>
+                  <Package size={14} /> Product Name <span style={{ color: 'var(--danger)' }}>*</span>
                 </span>
               }
               type="text"
@@ -329,7 +329,7 @@ const ProductModal = ({
                 <Select
                   label={
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                      <Tag size={14} /> Category <span style={{ color: '#ef4444' }}>*</span>
+                      <Tag size={14} /> Category <span style={{ color: 'var(--danger)' }}>*</span>
                     </span>
                   }
                   value={formData.category}
@@ -344,7 +344,7 @@ const ProductModal = ({
                 <Select
                   label={
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                      <User size={14} /> Vendor <span style={{ color: '#ef4444' }}>*</span>
+                      <User size={14} /> Vendor <span style={{ color: 'var(--danger)' }}>*</span>
                     </span>
                   }
                   value={formData.vendor}
@@ -363,7 +363,7 @@ const ProductModal = ({
               <Input
                 label={
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <Calendar size={14} /> Date <span style={{ color: '#ef4444' }}>*</span>
+                    <Calendar size={14} /> Date <span style={{ color: 'var(--danger)' }}>*</span>
                   </span>
                 }
                 type="date"
@@ -378,8 +378,8 @@ const ProductModal = ({
 
           {/* ── Pricing Section ── */}
           <div style={{
-            background: '#fafbfc',
-            border: '1px solid #e5e7eb',
+            background: 'var(--muted)',
+            border: '1px solid var(--border)',
             borderRadius: '10px',
             padding: '16px'
           }}>
@@ -388,7 +388,7 @@ const ProductModal = ({
               fontWeight: 600,
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
-              color: '#6b7280',
+              color: 'var(--muted-foreground)',
               marginBottom: '12px'
             }}>
               Pricing & Quantity
@@ -400,7 +400,7 @@ const ProductModal = ({
                 <Input
                   label={
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                      <IndianRupee size={14} /> MRP <span style={{ color: '#ef4444' }}>*</span>
+                      <IndianRupee size={14} /> MRP <span style={{ color: 'var(--danger)' }}>*</span>
                     </span>
                   }
                   type="number"
@@ -418,7 +418,7 @@ const ProductModal = ({
                 <Input
                   label={
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                      <IndianRupee size={14} /> Cost/pc <span style={{ color: '#ef4444' }}>*</span>
+                      <IndianRupee size={14} /> Cost/pc <span style={{ color: 'var(--danger)' }}>*</span>
                     </span>
                   }
                   type="number"
@@ -436,7 +436,7 @@ const ProductModal = ({
                 <Input
                   label={
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                      <Hash size={14} /> Qty <span style={{ color: '#ef4444' }}>*</span>
+                      <Hash size={14} /> Qty <span style={{ color: 'var(--danger)' }}>*</span>
                     </span>
                   }
                   type="number"
@@ -457,14 +457,14 @@ const ProductModal = ({
               display: 'flex',
               gap: '12px',
               padding: '12px',
-              background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)',
-              border: '1px solid #bbf7d0',
+              background: 'var(--success-soft)',
+              border: '1px solid var(--success-soft)',
               borderRadius: '8px'
             }}>
               <div style={{ flex: 1 }}>
                 <div style={{
                   fontSize: '11px',
-                  color: '#15803d',
+                  color: 'var(--success)',
                   fontWeight: 500,
                   marginBottom: '4px',
                   display: 'flex',
@@ -474,8 +474,8 @@ const ProductModal = ({
                   <IndianRupee size={12} /> Profit/pc
                   <span style={{
                     fontSize: '10px',
-                    color: '#86efac',
-                    background: '#166534',
+                    color: 'var(--primary-foreground)',
+                    background: 'var(--success)',
                     padding: '1px 6px',
                     borderRadius: '4px',
                     fontWeight: 600,
@@ -485,24 +485,24 @@ const ProductModal = ({
                 <div style={{
                   fontSize: '18px',
                   fontWeight: 600,
-                  color: parseFloat(formData.profitPerPiece) >= 0 ? '#166534' : '#dc2626',
+                  color: parseFloat(formData.profitPerPiece) >= 0 ? 'var(--success)' : 'var(--danger)',
                   fontVariantNumeric: 'tabular-nums'
                 }}>
                   ₹{formData.profitPerPiece || '0.00'}
                 </div>
-                <div style={{ fontSize: '10px', color: '#6b7280', marginTop: '2px' }}>
+                <div style={{ fontSize: '10px', color: 'var(--muted-foreground)', marginTop: '2px' }}>
                   MRP − Cost/pc
                 </div>
               </div>
               <div style={{
                 width: '1px',
-                background: '#bbf7d0',
+                background: 'var(--success-soft)',
                 alignSelf: 'stretch'
               }} />
               <div style={{ flex: 1 }}>
                 <div style={{
                   fontSize: '11px',
-                  color: '#15803d',
+                  color: 'var(--success)',
                   fontWeight: 500,
                   marginBottom: '4px',
                   display: 'flex',
@@ -512,8 +512,8 @@ const ProductModal = ({
                   <IndianRupee size={12} /> Total Amount
                   <span style={{
                     fontSize: '10px',
-                    color: '#86efac',
-                    background: '#166534',
+                    color: 'var(--primary-foreground)',
+                    background: 'var(--success)',
                     padding: '1px 6px',
                     borderRadius: '4px',
                     fontWeight: 600,
@@ -523,12 +523,12 @@ const ProductModal = ({
                 <div style={{
                   fontSize: '18px',
                   fontWeight: 600,
-                  color: '#166534',
+                  color: 'var(--success)',
                   fontVariantNumeric: 'tabular-nums'
                 }}>
                   ₹{formData.totalAmount || '0.00'}
                 </div>
-                <div style={{ fontSize: '10px', color: '#6b7280', marginTop: '2px' }}>
+                <div style={{ fontSize: '10px', color: 'var(--muted-foreground)', marginTop: '2px' }}>
                   Cost/pc × Qty
                 </div>
               </div>
@@ -539,10 +539,10 @@ const ProductModal = ({
           {errors.submit && (
             <div style={{
               padding: '10px 14px',
-              background: '#fef2f2',
-              border: '1px solid #fecaca',
+              background: 'var(--danger-soft)',
+              border: '1px solid var(--danger-soft)',
               borderRadius: '8px',
-              color: '#dc2626',
+              color: 'var(--danger)',
               fontSize: '13px',
               display: 'flex',
               alignItems: 'center',
@@ -558,7 +558,7 @@ const ProductModal = ({
             gap: '12px',
             justifyContent: 'flex-end',
             paddingTop: '12px',
-            borderTop: '1px solid #e5e7eb'
+            borderTop: '1px solid var(--border)'
           }}>
             <Button
               type="button"

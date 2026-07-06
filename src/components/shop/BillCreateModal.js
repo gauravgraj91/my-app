@@ -251,8 +251,8 @@ const BillCreateModal = ({
 
           {/* ── Bill Info Section ── */}
           <div style={{
-            background: '#fafbfc',
-            border: '1px solid #e5e7eb',
+            background: 'var(--muted)',
+            border: '1px solid var(--border)',
             borderRadius: '10px',
             padding: '16px'
           }}>
@@ -261,7 +261,7 @@ const BillCreateModal = ({
               fontWeight: 600,
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
-              color: '#6b7280',
+              color: 'var(--muted-foreground)',
               marginBottom: '12px'
             }}>
               Bill Info
@@ -272,11 +272,11 @@ const BillCreateModal = ({
                 <Input
                   label={
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                      <Tag size={14} /> Bill # <span style={{ color: '#ef4444' }}>*</span>
+                      <Tag size={14} /> Bill # <span style={{ color: 'var(--danger)' }}>*</span>
                       <span style={{
                         fontSize: '10px',
-                        color: '#6b7280',
-                        background: '#f3f4f6',
+                        color: 'var(--muted-foreground)',
+                        background: 'var(--secondary)',
                         padding: '1px 6px',
                         borderRadius: '4px',
                         fontWeight: 500
@@ -296,7 +296,7 @@ const BillCreateModal = ({
                 <Input
                   label={
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                      <Calendar size={14} /> Date <span style={{ color: '#ef4444' }}>*</span>
+                      <Calendar size={14} /> Date <span style={{ color: 'var(--danger)' }}>*</span>
                     </span>
                   }
                   type="date"
@@ -314,7 +314,7 @@ const BillCreateModal = ({
                 <Select
                   label={
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                      <User size={14} /> Vendor <span style={{ color: '#ef4444' }}>*</span>
+                      <User size={14} /> Vendor <span style={{ color: 'var(--danger)' }}>*</span>
                     </span>
                   }
                   value={formData.vendor}
@@ -347,8 +347,8 @@ const BillCreateModal = ({
 
           {/* ── Product Details Section ── */}
           <div style={{
-            background: '#fafbfc',
-            border: '1px solid #e5e7eb',
+            background: 'var(--muted)',
+            border: '1px solid var(--border)',
             borderRadius: '10px',
             padding: '16px'
           }}>
@@ -357,7 +357,7 @@ const BillCreateModal = ({
               fontWeight: 600,
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
-              color: '#6b7280',
+              color: 'var(--muted-foreground)',
               marginBottom: '12px',
               display: 'flex',
               justifyContent: 'space-between',
@@ -369,8 +369,8 @@ const BillCreateModal = ({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {products.map((product, index) => (
                 <div key={index} style={{
-                  background: '#fff',
-                  border: '1px solid #e5e7eb',
+                  background: 'var(--card)',
+                  border: '1px solid var(--border)',
                   borderRadius: '8px',
                   padding: '12px',
                   position: 'relative'
@@ -388,15 +388,15 @@ const BillCreateModal = ({
                         background: 'none',
                         border: 'none',
                         cursor: 'pointer',
-                        color: '#9ca3af',
+                        color: 'var(--muted-foreground)',
                         padding: '2px',
                         borderRadius: '4px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center'
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.background = '#fef2f2'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = '#9ca3af'; e.currentTarget.style.background = 'none'; }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--danger)'; e.currentTarget.style.background = 'var(--danger-soft)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--muted-foreground)'; e.currentTarget.style.background = 'none'; }}
                     >
                       <X size={14} />
                     </button>
@@ -475,33 +475,33 @@ const BillCreateModal = ({
                     display: 'flex',
                     gap: '0',
                     padding: '8px',
-                    background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)',
-                    border: '1px solid #bbf7d0',
+                    background: 'var(--success-soft)',
+                    border: '1px solid var(--success-soft)',
                     borderRadius: '6px'
                   }}>
                     <div style={{ flex: 1, textAlign: 'center' }}>
-                      <div style={{ fontSize: '9px', color: '#15803d', fontWeight: 500, marginBottom: '2px' }}>
+                      <div style={{ fontSize: '9px', color: 'var(--success)', fontWeight: 500, marginBottom: '2px' }}>
                         Cost/Unit
                       </div>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#166534', fontVariantNumeric: 'tabular-nums' }}>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--success)', fontVariantNumeric: 'tabular-nums' }}>
                         ₹{productCalcs[index].costPerUnit.toFixed(2)}
                       </div>
                     </div>
-                    <div style={{ width: '1px', background: '#bbf7d0', alignSelf: 'stretch' }} />
+                    <div style={{ width: '1px', background: 'var(--success-soft)', alignSelf: 'stretch' }} />
                     <div style={{ flex: 1, textAlign: 'center' }}>
-                      <div style={{ fontSize: '9px', color: '#15803d', fontWeight: 500, marginBottom: '2px' }}>
+                      <div style={{ fontSize: '9px', color: 'var(--success)', fontWeight: 500, marginBottom: '2px' }}>
                         Profit/Unit
                       </div>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: productCalcs[index].profitPerPiece >= 0 ? '#166534' : '#dc2626', fontVariantNumeric: 'tabular-nums' }}>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: productCalcs[index].profitPerPiece >= 0 ? 'var(--success)' : 'var(--danger)', fontVariantNumeric: 'tabular-nums' }}>
                         ₹{productCalcs[index].profitPerPiece.toFixed(2)}
                       </div>
                     </div>
-                    <div style={{ width: '1px', background: '#bbf7d0', alignSelf: 'stretch' }} />
+                    <div style={{ width: '1px', background: 'var(--success-soft)', alignSelf: 'stretch' }} />
                     <div style={{ flex: 1, textAlign: 'center' }}>
-                      <div style={{ fontSize: '9px', color: '#15803d', fontWeight: 500, marginBottom: '2px' }}>
+                      <div style={{ fontSize: '9px', color: 'var(--success)', fontWeight: 500, marginBottom: '2px' }}>
                         Total Profit
                       </div>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: productCalcs[index].totalProfit >= 0 ? '#166534' : '#dc2626', fontVariantNumeric: 'tabular-nums' }}>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: productCalcs[index].totalProfit >= 0 ? 'var(--success)' : 'var(--danger)', fontVariantNumeric: 'tabular-nums' }}>
                         ₹{productCalcs[index].totalProfit.toFixed(2)}
                       </div>
                     </div>
@@ -522,17 +522,17 @@ const BillCreateModal = ({
                 marginTop: '12px',
                 padding: '8px 14px',
                 background: 'none',
-                border: '1px dashed #d1d5db',
+                border: '1px dashed var(--input)',
                 borderRadius: '6px',
-                color: '#6b7280',
+                color: 'var(--muted-foreground)',
                 fontSize: '13px',
                 fontWeight: 500,
                 cursor: 'pointer',
                 width: '100%',
                 justifyContent: 'center'
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#9ca3af'; e.currentTarget.style.color = '#374151'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#d1d5db'; e.currentTarget.style.color = '#6b7280'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--muted-foreground)'; e.currentTarget.style.color = 'var(--foreground)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--input)'; e.currentTarget.style.color = 'var(--muted-foreground)'; }}
             >
               <Plus size={14} /> Add Product
             </button>
@@ -544,33 +544,33 @@ const BillCreateModal = ({
                 gap: '0',
                 padding: '12px',
                 marginTop: '12px',
-                background: 'linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%)',
-                border: '1px solid #bfdbfe',
+                background: 'var(--primary-soft)',
+                border: '1px solid var(--border)',
                 borderRadius: '8px'
               }}>
                 <div style={{ flex: 1, textAlign: 'center' }}>
-                  <div style={{ fontSize: '10px', color: '#1d4ed8', fontWeight: 500, marginBottom: '4px' }}>
+                  <div style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: 500, marginBottom: '4px' }}>
                     Total Items
                   </div>
-                  <div style={{ fontSize: '16px', fontWeight: 600, color: '#1e40af', fontVariantNumeric: 'tabular-nums' }}>
+                  <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--primary-accent)', fontVariantNumeric: 'tabular-nums' }}>
                     {grandTotals.totalItems}
                   </div>
                 </div>
-                <div style={{ width: '1px', background: '#bfdbfe', alignSelf: 'stretch' }} />
+                <div style={{ width: '1px', background: 'var(--border)', alignSelf: 'stretch' }} />
                 <div style={{ flex: 1, textAlign: 'center' }}>
-                  <div style={{ fontSize: '10px', color: '#1d4ed8', fontWeight: 500, marginBottom: '4px' }}>
+                  <div style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: 500, marginBottom: '4px' }}>
                     Total Amount
                   </div>
-                  <div style={{ fontSize: '16px', fontWeight: 600, color: '#1e40af', fontVariantNumeric: 'tabular-nums' }}>
+                  <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--primary-accent)', fontVariantNumeric: 'tabular-nums' }}>
                     ₹{grandTotals.totalAmount.toFixed(2)}
                   </div>
                 </div>
-                <div style={{ width: '1px', background: '#bfdbfe', alignSelf: 'stretch' }} />
+                <div style={{ width: '1px', background: 'var(--border)', alignSelf: 'stretch' }} />
                 <div style={{ flex: 1, textAlign: 'center' }}>
-                  <div style={{ fontSize: '10px', color: '#1d4ed8', fontWeight: 500, marginBottom: '4px' }}>
+                  <div style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: 500, marginBottom: '4px' }}>
                     Total Profit
                   </div>
-                  <div style={{ fontSize: '16px', fontWeight: 600, color: grandTotals.totalProfit >= 0 ? '#166534' : '#dc2626', fontVariantNumeric: 'tabular-nums' }}>
+                  <div style={{ fontSize: '16px', fontWeight: 600, color: grandTotals.totalProfit >= 0 ? 'var(--success)' : 'var(--danger)', fontVariantNumeric: 'tabular-nums' }}>
                     ₹{grandTotals.totalProfit.toFixed(2)}
                   </div>
                 </div>
@@ -580,8 +580,8 @@ const BillCreateModal = ({
 
           {/* ── Extra Charges Section ── */}
           <div style={{
-            background: '#fafbfc',
-            border: '1px solid #e5e7eb',
+            background: 'var(--muted)',
+            border: '1px solid var(--border)',
             borderRadius: '10px',
             padding: '16px'
           }}>
@@ -590,7 +590,7 @@ const BillCreateModal = ({
               fontWeight: 600,
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
-              color: '#6b7280',
+              color: 'var(--muted-foreground)',
               marginBottom: '12px'
             }}>
               Extra Charges
@@ -650,40 +650,40 @@ const BillCreateModal = ({
                 gap: '0',
                 padding: '10px',
                 marginTop: '12px',
-                background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
-                border: '1px solid #fde68a',
+                background: 'var(--warning-soft)',
+                border: '1px solid var(--border)',
                 borderRadius: '6px'
               }}>
                 {extraCharges.discountAmount > 0 && (
                   <>
                     <div style={{ flex: 1, textAlign: 'center' }}>
-                      <div style={{ fontSize: '9px', color: '#92400e', fontWeight: 500, marginBottom: '2px' }}>Discount</div>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#166534' }}>-₹{extraCharges.discountAmount.toFixed(2)}</div>
+                      <div style={{ fontSize: '9px', color: 'var(--warning)', fontWeight: 500, marginBottom: '2px' }}>Discount</div>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--success)' }}>-₹{extraCharges.discountAmount.toFixed(2)}</div>
                     </div>
-                    <div style={{ width: '1px', background: '#fde68a', alignSelf: 'stretch' }} />
+                    <div style={{ width: '1px', background: 'var(--border)', alignSelf: 'stretch' }} />
                   </>
                 )}
                 {extraCharges.surchargeAmount > 0 && (
                   <>
                     <div style={{ flex: 1, textAlign: 'center' }}>
-                      <div style={{ fontSize: '9px', color: '#92400e', fontWeight: 500, marginBottom: '2px' }}>Surcharge</div>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#dc2626' }}>+₹{extraCharges.surchargeAmount.toFixed(2)}</div>
+                      <div style={{ fontSize: '9px', color: 'var(--warning)', fontWeight: 500, marginBottom: '2px' }}>Surcharge</div>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--danger)' }}>+₹{extraCharges.surchargeAmount.toFixed(2)}</div>
                     </div>
-                    <div style={{ width: '1px', background: '#fde68a', alignSelf: 'stretch' }} />
+                    <div style={{ width: '1px', background: 'var(--border)', alignSelf: 'stretch' }} />
                   </>
                 )}
                 {extraCharges.transportCost > 0 && (
                   <>
                     <div style={{ flex: 1, textAlign: 'center' }}>
-                      <div style={{ fontSize: '9px', color: '#92400e', fontWeight: 500, marginBottom: '2px' }}>Transport</div>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#dc2626' }}>+₹{extraCharges.transportCost.toFixed(2)}</div>
+                      <div style={{ fontSize: '9px', color: 'var(--warning)', fontWeight: 500, marginBottom: '2px' }}>Transport</div>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--danger)' }}>+₹{extraCharges.transportCost.toFixed(2)}</div>
                     </div>
-                    <div style={{ width: '1px', background: '#fde68a', alignSelf: 'stretch' }} />
+                    <div style={{ width: '1px', background: 'var(--border)', alignSelf: 'stretch' }} />
                   </>
                 )}
                 <div style={{ flex: 1, textAlign: 'center' }}>
-                  <div style={{ fontSize: '9px', color: '#92400e', fontWeight: 500, marginBottom: '2px' }}>Final Amount</div>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#92400e' }}>₹{grandTotals.finalAmount.toFixed(2)}</div>
+                  <div style={{ fontSize: '9px', color: 'var(--warning)', fontWeight: 500, marginBottom: '2px' }}>Final Amount</div>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--warning)' }}>₹{grandTotals.finalAmount.toFixed(2)}</div>
                 </div>
               </div>
             )}
@@ -695,7 +695,7 @@ const BillCreateModal = ({
               label={
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                   <FileText size={14} /> Notes
-                  <span style={{ fontSize: '11px', color: '#9ca3af', fontWeight: 400 }}>
+                  <span style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontWeight: 400 }}>
                     ({formData.notes.length}/500)
                   </span>
                 </span>
@@ -714,10 +714,10 @@ const BillCreateModal = ({
           {errors.submit && (
             <div style={{
               padding: '10px 14px',
-              background: '#fef2f2',
-              border: '1px solid #fecaca',
+              background: 'var(--danger-soft)',
+              border: '1px solid var(--danger-soft)',
               borderRadius: '8px',
-              color: '#dc2626',
+              color: 'var(--danger)',
               fontSize: '13px',
               display: 'flex',
               alignItems: 'center',
@@ -733,7 +733,7 @@ const BillCreateModal = ({
             gap: '12px',
             justifyContent: 'flex-end',
             paddingTop: '12px',
-            borderTop: '1px solid #e5e7eb'
+            borderTop: '1px solid var(--border)'
           }}>
             <Button
               type="button"

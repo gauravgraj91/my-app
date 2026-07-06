@@ -71,20 +71,20 @@ class ErrorBoundary extends React.Component {
             <div style={{ marginBottom: '20px' }}>
               <AlertTriangle 
                 size={48} 
-                color="#ef4444" 
+                color="var(--danger)" 
                 style={{ margin: '0 auto 16px' }}
               />
               <h2 style={{ 
                 margin: '0 0 12px 0', 
                 fontSize: '20px', 
                 fontWeight: '600',
-                color: '#1f2937'
+                color: 'var(--foreground)'
               }}>
                 {this.props.title || 'Something went wrong'}
               </h2>
               <p style={{ 
                 margin: '0 0 20px 0', 
-                color: '#6b7280',
+                color: 'var(--muted-foreground)',
                 lineHeight: '1.5'
               }}>
                 {this.props.message || 
@@ -120,10 +120,10 @@ class ErrorBoundary extends React.Component {
               <details style={{ 
                 marginTop: '20px', 
                 textAlign: 'left',
-                background: '#f9fafb',
+                background: 'var(--secondary)',
                 padding: '12px',
                 borderRadius: '8px',
-                border: '1px solid #e5e7eb'
+                border: '1px solid var(--border)'
               }}>
                 <summary style={{ 
                   cursor: 'pointer', 
@@ -134,7 +134,7 @@ class ErrorBoundary extends React.Component {
                 </summary>
                 <pre style={{ 
                   fontSize: '12px', 
-                  color: '#374151',
+                  color: 'var(--foreground)',
                   whiteSpace: 'pre-wrap',
                   wordBreak: 'break-word'
                 }}>
@@ -148,7 +148,7 @@ class ErrorBoundary extends React.Component {
               <div style={{
                 marginTop: '12px',
                 fontSize: '12px',
-                color: '#6b7280'
+                color: 'var(--muted-foreground)'
               }}>
                 Retry attempts: {this.state.retryCount}
               </div>

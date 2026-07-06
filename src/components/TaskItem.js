@@ -17,7 +17,7 @@ const TaskItem = memo(({
   return (
     <div style={{
       padding: 20,
-      borderBottom: '1px solid #f3f4f6',
+      borderBottom: '1px solid var(--secondary)',
       display: 'flex',
       alignItems: 'flex-start',
       gap: 16
@@ -39,7 +39,7 @@ const TaskItem = memo(({
               style={{
                 flex: 1,
                 padding: '8px 12px',
-                border: '1px solid #d1d5db',
+                border: '1px solid var(--input)',
                 borderRadius: 6,
                 fontSize: 14
               }}
@@ -49,8 +49,8 @@ const TaskItem = memo(({
             <button
               onClick={onSaveEdit}
               style={{
-                background: '#10b981',
-                color: 'white',
+                background: 'var(--success)',
+                color: 'var(--primary-foreground)',
                 border: 'none',
                 borderRadius: 6,
                 padding: '8px 12px',
@@ -63,8 +63,8 @@ const TaskItem = memo(({
             <button
               onClick={onCancelEdit}
               style={{
-                background: '#6b7280',
-                color: 'white',
+                background: 'var(--muted-foreground)',
+                color: 'var(--primary-foreground)',
                 border: 'none',
                 borderRadius: 6,
                 padding: '8px 12px',
@@ -80,7 +80,7 @@ const TaskItem = memo(({
             <div style={{
               fontSize: 16,
               fontWeight: 500,
-              color: todo.isCompleted ? '#9ca3af' : '#111827',
+              color: todo.isCompleted ? 'var(--muted-foreground)' : 'var(--foreground)',
               textDecoration: todo.isCompleted ? 'line-through' : 'none',
               marginBottom: 8
             }}>
@@ -88,14 +88,14 @@ const TaskItem = memo(({
             </div>
             
             {todo.description && (
-              <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>
+              <div style={{ fontSize: 14, color: 'var(--muted-foreground)', marginBottom: 8 }}>
                 {todo.description}
               </div>
             )}
             
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 12 }}>
               <span style={{
-                background: getCategoryInfo(todo.category).color + '20',
+                background: `color-mix(in srgb, ${getCategoryInfo(todo.category).color} 12%, transparent)`,
                 color: getCategoryInfo(todo.category).color,
                 padding: '4px 8px',
                 borderRadius: 12,
@@ -107,7 +107,7 @@ const TaskItem = memo(({
               </span>
               
               <span style={{
-                background: getPriorityInfo(todo.priority).color + '20',
+                background: `color-mix(in srgb, ${getPriorityInfo(todo.priority).color} 12%, transparent)`,
                 color: getPriorityInfo(todo.priority).color,
                 padding: '4px 8px',
                 borderRadius: 12,
@@ -120,7 +120,7 @@ const TaskItem = memo(({
               
               {todo.dueDate && (
                 <span style={{
-                  color: isOverdue(todo.dueDate) && !todo.isCompleted ? '#ef4444' : '#6b7280',
+                  color: isOverdue(todo.dueDate) && !todo.isCompleted ? 'var(--danger)' : 'var(--muted-foreground)',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 4
@@ -130,7 +130,7 @@ const TaskItem = memo(({
               )}
               
               {todo.estimatedTime && (
-                <span style={{ color: '#6b7280', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ color: 'var(--muted-foreground)', display: 'flex', alignItems: 'center', gap: 4 }}>
                   <Clock size={12} /> {todo.estimatedTime}
                 </span>
               )}
@@ -145,7 +145,7 @@ const TaskItem = memo(({
           style={{
             background: 'none',
             border: 'none',
-            color: '#6b7280',
+            color: 'var(--muted-foreground)',
             cursor: 'pointer',
             padding: 4
           }}
@@ -158,7 +158,7 @@ const TaskItem = memo(({
           style={{
             background: 'none',
             border: 'none',
-            color: '#6b7280',
+            color: 'var(--muted-foreground)',
             cursor: 'pointer',
             padding: 4
           }}
@@ -171,7 +171,7 @@ const TaskItem = memo(({
           style={{
             background: 'none',
             border: 'none',
-            color: '#ef4444',
+            color: 'var(--danger)',
             cursor: 'pointer',
             padding: 4
           }}

@@ -47,9 +47,9 @@ import { formatCurrency, formatDate } from '../../utils/formatters';
 const STYLES = {
   headerCell: {
     padding: '12px 16px', textAlign: 'left',
-    fontSize: '12px', fontWeight: '600', color: '#64748b',
+    fontSize: '12px', fontWeight: '600', color: 'var(--muted-foreground)',
     textTransform: 'uppercase', letterSpacing: '0.05em',
-    borderBottom: '1px solid #e2e8f0', background: '#f8fafc',
+    borderBottom: '1px solid var(--border)', background: 'var(--secondary)',
   },
   tableCell: { padding: '12px 16px' },
 };
@@ -424,11 +424,11 @@ const BillsView = () => {
         }}>
           <Card style={{ maxWidth: '500px', textAlign: 'center' }}>
             <div style={{ marginBottom: '20px' }}>
-              <AlertTriangle size={48} color="#ef4444" style={{ margin: '0 auto 16px' }} />
-              <h2 style={{ margin: '0 0 12px 0', fontSize: '20px', fontWeight: '600', color: '#1f2937' }}>
+              <AlertTriangle size={48} color="var(--danger)" style={{ margin: '0 auto 16px' }} />
+              <h2 style={{ margin: '0 0 12px 0', fontSize: '20px', fontWeight: '600', color: 'var(--foreground)' }}>
                 {errorMessage.title}
               </h2>
-              <p style={{ margin: '0 0 20px 0', color: '#6b7280', lineHeight: '1.5' }}>
+              <p style={{ margin: '0 0 20px 0', color: 'var(--muted-foreground)', lineHeight: '1.5' }}>
                 {errorMessage.message}
               </p>
             </div>
@@ -448,7 +448,7 @@ const BillsView = () => {
               ))}
             </div>
             {retryCount > 0 && (
-              <div style={{ marginTop: '12px', fontSize: '12px', color: '#6b7280' }}>
+              <div style={{ marginTop: '12px', fontSize: '12px', color: 'var(--muted-foreground)' }}>
                 Retry attempts: {retryCount}
               </div>
             )}
@@ -496,12 +496,12 @@ const BillsView = () => {
         }}>
           <div>
             <h2 style={{
-              fontSize: '24px', fontWeight: '800', color: '#0f172a',
+              fontSize: '24px', fontWeight: '800', color: 'var(--foreground)',
               margin: '0 0 4px 0', letterSpacing: '-0.02em'
             }}>
               Bills
             </h2>
-            <p style={{ margin: 0, fontSize: '14px', color: '#64748b' }}>
+            <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted-foreground)' }}>
               Manage and track all your bills in one place
             </p>
           </div>
@@ -512,7 +512,7 @@ const BillsView = () => {
                 size="small"
                 icon={<AlertTriangle size={14} />}
                 onClick={() => setShowConflictModal(true)}
-                style={{ borderColor: '#f59e0b', color: '#f59e0b', backgroundColor: '#fef3c7' }}
+                style={{ borderColor: 'var(--warning)', color: 'var(--warning)', backgroundColor: 'var(--warning-soft)' }}
               >
                 {conflicts.length} Conflict{conflicts.length !== 1 ? 's' : ''}
               </Button>
@@ -545,10 +545,10 @@ const BillsView = () => {
           gap: '16px',
           marginBottom: '24px',
         }}>
-          <SummaryCard label="Total Bills" amount={summaryStats.total.amount} subtitle={`${summaryStats.total.count} bill${summaryStats.total.count !== 1 ? 's' : ''}`} icon={IndianRupee} color="#0f172a" bgColor="#f1f5f9" />
-          <SummaryCard label="Paid" amount={summaryStats.paid.amount} subtitle={`${summaryStats.paid.count} bill${summaryStats.paid.count !== 1 ? 's' : ''}`} icon={CheckCircle} color="#10b981" bgColor="#ecfdf5" />
-          <SummaryCard label="Pending" amount={summaryStats.pending.amount} subtitle={`${summaryStats.pending.count} bill${summaryStats.pending.count !== 1 ? 's' : ''}`} icon={Clock} color="#f59e0b" bgColor="#fff7ed" />
-          <SummaryCard label="Overdue" amount={summaryStats.overdue.amount} subtitle={`${summaryStats.overdue.count} bill${summaryStats.overdue.count !== 1 ? 's' : ''}`} icon={AlertTriangle} color="#ef4444" bgColor="#fef2f2" />
+          <SummaryCard label="Total Bills" amount={summaryStats.total.amount} subtitle={`${summaryStats.total.count} bill${summaryStats.total.count !== 1 ? 's' : ''}`} icon={IndianRupee} color="var(--foreground)" bgColor="var(--secondary)" />
+          <SummaryCard label="Paid" amount={summaryStats.paid.amount} subtitle={`${summaryStats.paid.count} bill${summaryStats.paid.count !== 1 ? 's' : ''}`} icon={CheckCircle} color="var(--success)" bgColor="var(--success-soft)" />
+          <SummaryCard label="Pending" amount={summaryStats.pending.amount} subtitle={`${summaryStats.pending.count} bill${summaryStats.pending.count !== 1 ? 's' : ''}`} icon={Clock} color="var(--warning)" bgColor="var(--warning-soft)" />
+          <SummaryCard label="Overdue" amount={summaryStats.overdue.amount} subtitle={`${summaryStats.overdue.count} bill${summaryStats.overdue.count !== 1 ? 's' : ''}`} icon={AlertTriangle} color="var(--danger)" bgColor="var(--danger-soft)" />
         </div>
 
         {/* ===== SEARCH BAR + STATUS TABS ===== */}
@@ -563,7 +563,7 @@ const BillsView = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               containerStyle={{ marginBottom: 0 }}
-              style={{ background: '#fff', border: '1px solid #e2e8f0', fontSize: '13px', padding: '10px 12px' }}
+              style={{ background: 'var(--card)', border: '1px solid var(--border)', fontSize: '13px', padding: '10px 12px' }}
             />
           </div>
 
@@ -580,7 +580,7 @@ const BillsView = () => {
           {/* Status Tabs */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: '4px',
-            background: '#f1f5f9', borderRadius: '8px', padding: '3px',
+            background: 'var(--secondary)', borderRadius: '8px', padding: '3px',
           }}>
             {[
               { key: 'all', label: 'All' },
@@ -599,8 +599,8 @@ const BillsView = () => {
                   fontWeight: '600',
                   cursor: 'pointer',
                   transition: 'all 0.15s',
-                  background: activeStatusTab === tab.key ? '#1e293b' : 'transparent',
-                  color: activeStatusTab === tab.key ? '#fff' : '#64748b',
+                  background: activeStatusTab === tab.key ? 'var(--foreground)' : 'transparent',
+                  color: activeStatusTab === tab.key ? 'var(--background)' : 'var(--muted-foreground)',
                 }}
               >
                 {tab.label}
@@ -618,7 +618,7 @@ const BillsView = () => {
         <div style={{ marginBottom: '24px' }}>
           {paginatedBills.length > 0 ? (
             <div style={{
-              background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
+              background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '12px',
               overflow: 'hidden',
             }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -626,7 +626,7 @@ const BillsView = () => {
                   <tr>
                     <th style={{
                       padding: '12px 16px', textAlign: 'left', width: '44px',
-                      borderBottom: '1px solid #e2e8f0', background: '#f8fafc',
+                      borderBottom: '1px solid var(--border)', background: 'var(--secondary)',
                     }}>
                       <button
                         onClick={onSelectAll}
@@ -636,14 +636,14 @@ const BillsView = () => {
                         }}
                       >
                         {selectedBills.size === paginatedBills.length && paginatedBills.length > 0 ?
-                          <CheckSquare size={16} color="#3b82f6" /> :
-                          <Square size={16} color="#94a3b8" />
+                          <CheckSquare size={16} color="var(--primary)" /> :
+                          <Square size={16} color="var(--muted-foreground)" />
                         }
                       </button>
                     </th>
                     <th style={{
                       padding: '12px 8px', textAlign: 'left', width: '32px',
-                      borderBottom: '1px solid #e2e8f0', background: '#f8fafc',
+                      borderBottom: '1px solid var(--border)', background: 'var(--secondary)',
                     }} />
                     <SortableHeader field="billNumber" label="Bill #" sortField={sortField} sortDirection={sortDirection} handleSort={handleSort} />
                     <SortableHeader field="vendor" label="Vendor" sortField={sortField} sortDirection={sortDirection} handleSort={handleSort} />
@@ -672,8 +672,8 @@ const BillsView = () => {
                       <React.Fragment key={bill.id}>
                         {/* Bill Row */}
                         <tr style={{
-                          borderBottom: isExpanded ? 'none' : '1px solid #f1f5f9',
-                          background: isSelected ? '#eff6ff' : (idx % 2 === 0 ? '#fff' : '#fafbfc'),
+                          borderBottom: isExpanded ? 'none' : '1px solid var(--secondary)',
+                          background: isSelected ? 'var(--primary-soft)' : (idx % 2 === 0 ? 'var(--card)' : 'var(--muted)'),
                           transition: 'background 0.15s',
                         }}>
                           {/* Checkbox */}
@@ -686,8 +686,8 @@ const BillsView = () => {
                               }}
                             >
                               {isSelected ?
-                                <CheckSquare size={16} color="#3b82f6" /> :
-                                <Square size={16} color="#cbd5e1" />
+                                <CheckSquare size={16} color="var(--primary)" /> :
+                                <Square size={16} color="var(--border)" />
                               }
                             </button>
                           </td>
@@ -699,7 +699,7 @@ const BillsView = () => {
                               style={{
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 background: 'none', border: 'none', cursor: 'pointer', padding: '2px',
-                                color: '#94a3b8', transition: 'color 0.15s',
+                                color: 'var(--muted-foreground)', transition: 'color 0.15s',
                               }}
                             >
                               {isExpanded ?
@@ -711,28 +711,28 @@ const BillsView = () => {
 
                           {/* Bill # */}
                           <td style={STYLES.tableCell}>
-                            <span style={{ fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>
+                            <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--foreground)' }}>
                               {bill.billNumber}
                             </span>
                           </td>
 
                           {/* Vendor */}
                           <td style={STYLES.tableCell}>
-                            <span style={{ fontSize: '13px', fontWeight: '500', color: '#475569' }}>
+                            <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--foreground)' }}>
                               {bill.vendor || 'Unknown'}
                             </span>
                           </td>
 
                           {/* Date */}
                           <td style={STYLES.tableCell}>
-                            <span style={{ fontSize: '13px', color: '#64748b' }}>
+                            <span style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>
                               {formatDate(bill.date)}
                             </span>
                           </td>
 
                           {/* Due Date */}
                           <td style={STYLES.tableCell}>
-                            <span style={{ fontSize: '13px', color: '#64748b' }}>
+                            <span style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>
                               {formatDate(bill.dueDate)}
                             </span>
                           </td>
@@ -740,8 +740,8 @@ const BillsView = () => {
                           {/* Items */}
                           <td style={STYLES.tableCell}>
                             <span style={{
-                              fontSize: '12px', fontWeight: '500', color: '#64748b',
-                              background: '#f1f5f9', padding: '2px 8px', borderRadius: '10px',
+                              fontSize: '12px', fontWeight: '500', color: 'var(--muted-foreground)',
+                              background: 'var(--secondary)', padding: '2px 8px', borderRadius: '10px',
                             }}>
                               {itemCount} item{itemCount !== 1 ? 's' : ''}
                             </span>
@@ -749,11 +749,11 @@ const BillsView = () => {
 
                           {/* Amount */}
                           <td style={{ ...STYLES.tableCell, textAlign: 'right' }}>
-                            <span style={{ fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>
+                            <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--foreground)' }}>
                               {formatCurrency(bill.finalAmount || bill.totalAmount)}
                             </span>
                             {bill.finalAmount && bill.finalAmount !== bill.totalAmount && (
-                              <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+                              <div style={{ fontSize: '11px', color: 'var(--muted-foreground)', marginTop: '2px' }}>
                                 Base: {formatCurrency(bill.totalAmount)}
                               </div>
                             )}
@@ -775,19 +775,19 @@ const BillsView = () => {
                                 }}
                                 style={{
                                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                                  background: 'none', border: '1px solid #e2e8f0', cursor: 'pointer',
-                                  padding: '6px', borderRadius: '6px', color: '#64748b',
+                                  background: 'none', border: '1px solid var(--border)', cursor: 'pointer',
+                                  padding: '6px', borderRadius: '6px', color: 'var(--muted-foreground)',
                                   transition: 'all 0.15s',
                                 }}
                                 onMouseEnter={e => {
-                                  e.currentTarget.style.background = '#f1f5f9';
-                                  e.currentTarget.style.color = '#1e293b';
-                                  e.currentTarget.style.borderColor = '#cbd5e1';
+                                  e.currentTarget.style.background = 'var(--secondary)';
+                                  e.currentTarget.style.color = 'var(--foreground)';
+                                  e.currentTarget.style.borderColor = 'var(--border)';
                                 }}
                                 onMouseLeave={e => {
                                   e.currentTarget.style.background = 'none';
-                                  e.currentTarget.style.color = '#64748b';
-                                  e.currentTarget.style.borderColor = '#e2e8f0';
+                                  e.currentTarget.style.color = 'var(--muted-foreground)';
+                                  e.currentTarget.style.borderColor = 'var(--border)';
                                 }}
                                 title="Edit bill"
                               >
@@ -804,19 +804,19 @@ const BillsView = () => {
                                 }}
                                 style={{
                                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                                  background: 'none', border: '1px solid #e2e8f0', cursor: 'pointer',
-                                  padding: '6px', borderRadius: '6px', color: '#64748b',
+                                  background: 'none', border: '1px solid var(--border)', cursor: 'pointer',
+                                  padding: '6px', borderRadius: '6px', color: 'var(--muted-foreground)',
                                   transition: 'all 0.15s',
                                 }}
                                 onMouseEnter={e => {
-                                  e.currentTarget.style.background = '#fef2f2';
-                                  e.currentTarget.style.color = '#dc2626';
-                                  e.currentTarget.style.borderColor = '#fecaca';
+                                  e.currentTarget.style.background = 'var(--danger-soft)';
+                                  e.currentTarget.style.color = 'var(--danger)';
+                                  e.currentTarget.style.borderColor = 'var(--danger-soft)';
                                 }}
                                 onMouseLeave={e => {
                                   e.currentTarget.style.background = 'none';
-                                  e.currentTarget.style.color = '#64748b';
-                                  e.currentTarget.style.borderColor = '#e2e8f0';
+                                  e.currentTarget.style.color = 'var(--muted-foreground)';
+                                  e.currentTarget.style.borderColor = 'var(--border)';
                                 }}
                                 title="Delete bill"
                               >
@@ -838,11 +838,11 @@ const BillsView = () => {
             </div>
           ) : (
             <Card style={{ textAlign: 'center', padding: '60px 20px' }}>
-              <Package size={48} style={{ margin: '0 auto 16px', color: '#9ca3af' }} />
-              <h3 style={{ fontSize: '18px', color: '#374151', marginBottom: '8px' }}>
+              <Package size={48} style={{ margin: '0 auto 16px', color: 'var(--muted-foreground)' }} />
+              <h3 style={{ fontSize: '18px', color: 'var(--foreground)', marginBottom: '8px' }}>
                 No bills found
               </h3>
-              <p style={{ color: '#6b7280', marginBottom: '24px' }}>
+              <p style={{ color: 'var(--muted-foreground)', marginBottom: '24px' }}>
                 {searchTerm || Object.values(filters).some(f => f) ?
                   'Try adjusting your search or filters' :
                   'Create your first bill to get started'
@@ -875,7 +875,7 @@ const BillsView = () => {
             >
               Previous
             </Button>
-            <span style={{ fontSize: '14px', color: '#6b7280' }}>
+            <span style={{ fontSize: '14px', color: 'var(--muted-foreground)' }}>
               Page {currentPage} of {totalPages} ({filteredAndSortedBills.length} bills)
             </span>
             <Button

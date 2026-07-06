@@ -49,12 +49,12 @@ export const getTaskStatus = (task) => {
 export const getTaskStatusColor = (task) => {
   const status = getTaskStatus(task);
   const colors = {
-    'completed': '#10b981',
-    'overdue': '#ef4444',
-    'due-today': '#f59e0b',
-    'due-tomorrow': '#3b82f6',
-    'due-this-week': '#8b5cf6',
-    'pending': '#6b7280'
+    'completed': 'var(--success)',
+    'overdue': 'var(--danger)',
+    'due-today': 'var(--warning)',
+    'due-tomorrow': 'var(--primary)',
+    'due-this-week': 'var(--primary)',
+    'pending': 'var(--muted-foreground)'
   };
   return colors[status] || colors.pending;
 };

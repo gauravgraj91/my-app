@@ -5,12 +5,12 @@ const Office = () => {
     <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
       <h1 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 24px 0' }}>Office Tasks</h1>
       <div style={{ 
-        background: '#fff', 
+        background: 'var(--card)', 
         borderRadius: 12, 
-        boxShadow: '0 2px 12px rgba(0,0,0,0.08)', 
+        boxShadow: 'var(--shadow)', 
         padding: 48, 
         textAlign: 'center',
-        color: '#6b7280'
+        color: 'var(--muted-foreground)'
       }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>🏢</div>
         <div style={{ fontSize: 18, fontWeight: 500, marginBottom: 8 }}>Office Tasks Coming Soon!</div>

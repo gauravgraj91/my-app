@@ -1,5 +1,5 @@
 .dashboard-container {
-  background: #f8fafc;
+  background: var(--background);
   min-height: 100vh;
   padding: 32px 0;
   display: flex;
@@ -8,9 +8,9 @@
 }
 
 .dashboard-card {
-  background: #fff;
+  background: var(--card);
   border-radius: 18px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  box-shadow: var(--shadow);
   padding: 24px;
   margin-bottom: 24px;
   width: 100%;
@@ -30,13 +30,13 @@
 .dashboard-title {
   font-size: 2.2rem;
   font-weight: 700;
-  color: #22223b;
+  color: var(--foreground);
   letter-spacing: 1px;
   margin: 0 auto;
 }
 
 .dashboard-dark-toggle {
-  background: #e0e7ef;
+  background: var(--border);
   border: none;
   border-radius: 50%;
   width: 44px;
@@ -44,12 +44,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition: background 0.2s;
 }
 .dashboard-dark-toggle:hover {
-  background: #c7d2fe;
+  background: var(--primary-soft);
 }
 
 .dashboard-charts {
@@ -73,7 +73,7 @@
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 12px;
-  color: #374151;
+  color: var(--foreground);
 }
 
 /* Chart container styles */
@@ -96,25 +96,25 @@
 }
 
 .dashboard-btn-primary {
-  background: #2563eb;
-  color: #fff;
+  background: var(--primary);
+  color: var(--primary-foreground);
   font-weight: 600;
   border: none;
   border-radius: 8px;
   padding: 10px 28px;
   font-size: 1rem;
-  box-shadow: 0 2px 8px rgba(37,99,235,0.08);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition: background 0.2s;
 }
 .dashboard-btn-primary:hover {
-  background: #1e40af;
+  background: var(--primary-hover);
 }
 
 .dashboard-btn-secondary {
-  background: #fff;
-  color: #2563eb;
-  border: 1.5px solid #2563eb;
+  background: var(--card);
+  color: var(--primary);
+  border: 1.5px solid var(--primary);
   border-radius: 8px;
   padding: 10px 28px;
   font-size: 1rem;
@@ -126,14 +126,14 @@
   align-items: center;
 }
 .dashboard-btn-secondary:hover {
-  background: #2563eb;
-  color: #fff;
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .dashboard-btn-danger {
-  background: #fff;
-  color: #ef4444;
-  border: 1.5px solid #ef4444;
+  background: var(--card);
+  color: var(--danger);
+  border: 1.5px solid var(--danger);
   border-radius: 8px;
   padding: 6px 12px;
   font-size: 1rem;
@@ -144,13 +144,13 @@
   justify-content: center;
 }
 .dashboard-btn-danger:hover {
-  background: #ef4444;
-  color: #fff;
+  background: var(--danger);
+  color: var(--primary-foreground);
 }
 
 .dashboard-save-check {
   margin-left: 8px;
-  color: #22c55e;
+  color: var(--success);
 }
 
 .dashboard-table-container {
@@ -161,45 +161,45 @@
   width: 100%;
   border-collapse: collapse;
   margin-top: 0;
-  background: #f8fafc;
+  background: var(--secondary);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: var(--shadow-sm);
 }
 .dashboard-table th, .dashboard-table td {
-  border: 1px solid #e5e7ef;
+  border: 1px solid var(--border);
   padding: 0.75rem 0.5rem;
   text-align: center;
 }
 .dashboard-table th {
-  background: #2563eb;
-  color: #fff;
+  background: var(--primary);
+  color: var(--primary-foreground);
   font-weight: 600;
   font-size: 1rem;
 }
 .dashboard-table tr:nth-child(even) {
-  background: #f1f5f9;
+  background: var(--secondary);
 }
 .dashboard-table tr:hover {
-  background: #e0e7ef;
+  background: var(--border);
 }
 .dashboard-table tfoot td {
-  background: #e0e7ef;
+  background: var(--border);
   font-weight: 700;
-  color: #22223b;
+  color: var(--foreground);
 }
 
 .dashboard-input {
   width: 100%;
   padding: 6px 8px;
   border-radius: 6px;
-  border: 1.5px solid #e0e7ef;
+  border: 1.5px solid var(--input);
   font-size: 1rem;
-  background: #fff;
+  background: var(--card);
   transition: border 0.2s;
 }
 .dashboard-input:focus {
-  border: 1.5px solid #2563eb;
+  border: 1.5px solid var(--primary);
   outline: none;
 }
 
