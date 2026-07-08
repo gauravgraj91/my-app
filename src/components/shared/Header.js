@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Moon, Sun, LayoutDashboard, LogOut, User } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Moon, Sun, LayoutDashboard, LogOut, Settings, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { logout } from '../../firebase/authService';
@@ -9,8 +9,14 @@ const Header = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [darkMode, setDarkMode] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  const firstName = (user?.displayName || user?.email || '').split(/[\s@]/)[0];
+  const initial = firstName.charAt(0).toUpperCase();
 
   const handleLogout = async () => {
+    setMenuOpen(false);
     try {
       await logout();
     } catch (err) {
@@ -25,6 +31,17 @@ const Header = () => {
     setDarkMode(savedDarkMode);
     document.body.classList.toggle('dark', savedDarkMode);
   }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [menuOpen]);
 
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode;
@@ -52,23 +69,51 @@ const Header = () => {
             {darkMode ? <Sun size={20} /> : <Moon size={20} />}
           </button>
           {user && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '8px' }}>
-              <span style={{ fontSize: '13px', color: 'var(--muted-foreground)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <User size={14} />
-                {user.displayName || user.email}
-              </span>
+            <div className="profile-menu-container" ref={menuRef}>
               <button
-                onClick={handleLogout}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '4px',
-                  padding: '6px 12px', border: '1px solid var(--border)', borderRadius: '6px',
-                  background: 'var(--card)', fontSize: '13px', color: 'var(--muted-foreground)',
-                  cursor: 'pointer',
-                }}
+                className="profile-pill"
+                onClick={() => setMenuOpen(!menuOpen)}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
               >
-                <LogOut size={14} />
-                Logout
+                <span className="profile-avatar">{initial}</span>
+                <span className="profile-name">{firstName}</span>
+                <ChevronDown size={16} className={`profile-chevron ${menuOpen ? 'open' : ''}`} />
               </button>
+              {menuOpen && (
+                <div className="profile-menu" role="menu">
+                  <div className="profile-menu-identity">
+                    <span className="profile-avatar profile-avatar-lg">{initial}</span>
+                    <div>
+                      <div className="profile-menu-name">{user.displayName || firstName}</div>
+                      <div className="profile-menu-email">{user.email}</div>
+                    </div>
+                  </div>
+                  <div className="profile-menu-section">
+                    <button
+                      className="profile-menu-item"
+                      role="menuitem"
+                      onClick={() => { setMenuOpen(false); navigate('/settings'); }}
+                    >
+                      <Settings size={16} />
+                      <span>Settings</span>
+                    </button>
+                    <button className="profile-menu-item" role="menuitem" onClick={toggleDarkMode}>
+                      <Moon size={16} />
+                      <span>Dark mode</span>
+                      <span className={`menu-switch ${darkMode ? 'on' : ''}`}>
+                        <span className="menu-switch-knob" />
+                      </span>
+                    </button>
+                  </div>
+                  <div className="profile-menu-section">
+                    <button className="profile-menu-item profile-menu-danger" role="menuitem" onClick={handleLogout}>
+                      <LogOut size={16} />
+                      <span>Log out</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -77,4 +122,4 @@ const Header = () => {
   );
 };
 
-export default Header; 
+export default Header;
