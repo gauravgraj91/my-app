@@ -37,8 +37,8 @@
 }
 
 .nav-item.active {
-  color: var(--success);
-  background: var(--success-soft);
+  color: var(--primary);
+  background: var(--primary-soft);
 }
 
 .nav-item.active::after {
@@ -49,7 +49,7 @@
   transform: translateX(-50%);
   width: 60%;
   height: 3px;
-  background: var(--success);
+  background: var(--primary);
   border-radius: 3px 3px 0 0;
 }
 
@@ -117,8 +117,8 @@
 }
 
 .dropdown-item.active {
-  background: var(--success-soft);
-  color: var(--success);
+  background: var(--primary-soft);
+  color: var(--primary);
 }
 
 /* ===== Mobile Navigation ===== */
@@ -155,11 +155,11 @@
 
 .mobile-nav-item:hover,
 .mobile-nav-item:active {
-  color: var(--success);
+  color: var(--primary);
 }
 
 .mobile-nav-item.active {
-  color: var(--success);
+  color: var(--primary);
 }
 
 .mobile-nav-item.active svg {
@@ -255,8 +255,8 @@
 }
 
 .more-menu-item.active {
-  background: var(--success-soft);
-  color: var(--success);
+  background: var(--primary-soft);
+  color: var(--primary);
 }
 
 /* ===== Responsive ===== */
