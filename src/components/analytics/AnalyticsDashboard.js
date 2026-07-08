@@ -19,6 +19,17 @@ export const getGreeting = (date = new Date()) => {
   return 'Good evening';
 };
 
+const BigCurrency = ({ value }) => {
+  const [before, after] = formatCurrency(value).split('₹');
+  return (
+    <>
+      {before}
+      <span style={{ fontSize: '0.7em' }}>₹</span>
+      {after}
+    </>
+  );
+};
+
 const AnalyticsDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -170,7 +181,7 @@ const AnalyticsDashboard = () => {
 
           <div className="main-stat">
             <div className="main-stat-value">
-              {currentAnalytics ? formatCurrency(currentAnalytics.totalAmount) : formatCurrency(shopStats.totalSales)}
+              <BigCurrency value={currentAnalytics ? currentAnalytics.totalAmount : shopStats.totalSales} />
             </div>
             <div className="stat-label">
               {viewMode === 'bills' ? 'Total bill value' : 'Total product value'}
@@ -218,7 +229,7 @@ const AnalyticsDashboard = () => {
               className="main-stat-value"
               style={transactionStats.netBalance < 0 ? { color: 'var(--danger)' } : undefined}
             >
-              {formatCurrency(transactionStats.netBalance)}
+              <BigCurrency value={transactionStats.netBalance} />
             </div>
             <div className="stat-label">Net balance</div>
           </div>
