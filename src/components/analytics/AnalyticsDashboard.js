@@ -12,10 +12,18 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import './analytics_theme_1.css';
 
+export const getGreeting = (date = new Date()) => {
+  const hour = date.getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+};
+
 const AnalyticsDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const tenantId = user?.tenantId;
+  const firstName = (user?.displayName || user?.email || '').split(/[\s@]/)[0];
   const { stats: taskStats } = useTasks();
   const [transactions, setTransactions] = useState([]);
   const [analytics, setAnalytics] = useState(null);
@@ -68,7 +76,9 @@ const AnalyticsDashboard = () => {
     <div className="analytics-dashboard">
       <div className="analytics-header">
         <div>
-          <h1 className="analytics-title">Analytics Dashboard</h1>
+          <h1 className="analytics-title">
+            {getGreeting()}{firstName ? `, ${firstName}` : ''}
+          </h1>
           <p className="analytics-subtitle">Here's where your shop stands today</p>
         </div>
 

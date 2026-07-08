@@ -136,7 +136,7 @@ describe('AnalyticsDashboard', () => {
   it('should render the analytics dashboard', async () => {
     renderWithRouter(<AnalyticsDashboard />);
     
-    expect(screen.getByText('Analytics Dashboard')).toBeInTheDocument();
+    expect(screen.getByText(/Good (morning|afternoon|evening)/)).toBeInTheDocument();
     expect(screen.getByText('Analytics View:')).toBeInTheDocument();
   });
 
@@ -311,7 +311,7 @@ describe('AnalyticsDashboard', () => {
     renderWithRouter(<AnalyticsDashboard />);
     
     // Should still render basic structure even during loading
-    expect(screen.getByText('Analytics Dashboard')).toBeInTheDocument();
+    expect(screen.getByText(/Good (morning|afternoon|evening)/)).toBeInTheDocument();
     expect(screen.getByText('Analytics View:')).toBeInTheDocument();
   });
 });
