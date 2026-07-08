@@ -119,13 +119,6 @@ const Navigation = () => {
           )}
         </div>
 
-        <Link
-          to="/settings"
-          className={`nav-item ${isActive('/settings') ? 'active' : ''}`}
-        >
-          <Settings size={18} />
-          <span>Settings</span>
-        </Link>
       </div>
     </nav>
   );
