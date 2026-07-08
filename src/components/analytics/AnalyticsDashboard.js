@@ -195,7 +195,10 @@ const AnalyticsDashboard = () => {
           </div>
 
           <div className="main-stat">
-            <div className="main-stat-value">
+            <div
+              className="main-stat-value"
+              style={transactionStats.netBalance < 0 ? { color: 'var(--danger)' } : undefined}
+            >
               {formatCurrency(transactionStats.netBalance)}
             </div>
             <div className="stat-label">Net balance</div>
@@ -203,11 +206,21 @@ const AnalyticsDashboard = () => {
 
           <div className="stat-grid">
             <div className="stat-item">
-              <div className="stat-value" style={{ color: 'var(--success)' }}>{formatCurrency(transactionStats.cashIn)}</div>
+              <div
+                className="stat-value"
+                style={{ color: transactionStats.cashIn > 0 ? 'var(--success)' : 'var(--muted-foreground)' }}
+              >
+                {formatCurrency(transactionStats.cashIn)}
+              </div>
               <div className="stat-label">Cash in</div>
             </div>
             <div className="stat-item">
-              <div className="stat-value" style={{ color: 'var(--danger)' }}>{formatCurrency(transactionStats.cashOut)}</div>
+              <div
+                className="stat-value"
+                style={{ color: transactionStats.cashOut > 0 ? 'var(--danger)' : 'var(--muted-foreground)' }}
+              >
+                {formatCurrency(transactionStats.cashOut)}
+              </div>
               <div className="stat-label">Cash out</div>
             </div>
           </div>
