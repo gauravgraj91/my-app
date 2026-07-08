@@ -72,6 +72,8 @@ const AnalyticsDashboard = () => {
       transactions.filter(t => t.type === 'cashOut').reduce((sum, t) => sum + (t.amount || 0), 0)
   };
 
+  const hasTasks = (taskStats.completed + taskStats.pending + taskStats.overdue + taskStats.dueToday) > 0;
+
   return (
     <div className="analytics-dashboard">
       <div className="analytics-header">
@@ -110,28 +112,45 @@ const AnalyticsDashboard = () => {
               <CheckSquare size={18} color="var(--primary)" />
               Tasks
             </div>
-            <button className="view-all-link" onClick={() => navigate('/tasks')}>
-              View all
-            </button>
+            {hasTasks && (
+              <button className="view-all-link" onClick={() => navigate('/tasks')}>
+                View all
+              </button>
+            )}
           </div>
-          <div className="stat-grid">
-            <div className="stat-item">
-              <div className="stat-value">{taskStats.completed}</div>
-              <div className="stat-label">Completed</div>
+          {hasTasks ? (
+            <div className="stat-grid">
+              <div className="stat-item">
+                <div className="stat-value">{taskStats.completed}</div>
+                <div className="stat-label">Completed</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-value">{taskStats.pending}</div>
+                <div className="stat-label">Pending</div>
+              </div>
+              <div className="stat-item" style={taskStats.overdue > 0 ? { background: 'var(--danger-soft)' } : undefined}>
+                <div className="stat-value" style={taskStats.overdue > 0 ? { color: 'var(--danger)' } : undefined}>{taskStats.overdue}</div>
+                <div className="stat-label">Overdue</div>
+              </div>
+              <div className="stat-item" style={taskStats.dueToday > 0 ? { background: 'var(--warning-soft)' } : undefined}>
+                <div className="stat-value" style={taskStats.dueToday > 0 ? { color: 'var(--warning)' } : undefined}>{taskStats.dueToday}</div>
+                <div className="stat-label">Due today</div>
+              </div>
             </div>
-            <div className="stat-item">
-              <div className="stat-value">{taskStats.pending}</div>
-              <div className="stat-label">Pending</div>
+          ) : (
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '0.5rem 0' }}>
+              <span style={{ fontSize: '0.875rem', color: 'var(--muted-foreground)' }}>
+                No tasks yet —{' '}
+                <button
+                  className="view-all-link"
+                  style={{ fontSize: '0.875rem' }}
+                  onClick={() => navigate('/tasks')}
+                >
+                  Add your first
+                </button>
+              </span>
             </div>
-            <div className="stat-item" style={{ background: 'var(--danger-soft)' }}>
-              <div className="stat-value" style={{ color: 'var(--danger)' }}>{taskStats.overdue}</div>
-              <div className="stat-label">Overdue</div>
-            </div>
-            <div className="stat-item" style={{ background: 'var(--warning-soft)' }}>
-              <div className="stat-value" style={{ color: 'var(--warning)' }}>{taskStats.dueToday}</div>
-              <div className="stat-label">Due today</div>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Enhanced Shop Analytics Widget */}
