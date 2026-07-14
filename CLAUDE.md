@@ -6,6 +6,7 @@ Your goal is to write clean, minimal, production-quality code that fits the exis
 # Instructions
 - HTML design mockups live in `.superdesign/design_iterations/`
 - Design-preview tooling (design-sync) is documented in `.design-sync/NOTES.md` — read it before touching `.design-sync/` or adding components to `src/components/ui/`
+- Design language is "Dukaan Clay" — source package at `~/Downloads/App design improvement clay/` (readme.md = rules, Clay Prototype v2.dc.html = visual ground truth)
 
 # Project Conventions
 
@@ -40,6 +41,7 @@ Your goal is to write clean, minimal, production-quality code that fits the exis
 - Reuse `SortableHeader` from `src/components/ui/SortableHeader.js` (props: `sortField`, `sortDirection`, `handleSort`)
 - New components in `src/components/ui/` must also be registered in `.design-sync/config.json` (`componentSrcMap`) and `.design-sync/entry.js`, or design previews silently omit them
 - Keep components in `src/components/shop/` unless clearly cross-cutting
+- Clay shadow policy: no shadows on cards; `var(--shadow-accent)` only on primary buttons, `var(--shadow-lg)` only on overlays/modals. Everything interactive is a pill (`var(--radius-pill)`)
 - Prefer editing existing files over creating new ones
 - Don't add comments, docstrings, or type annotations to code you didn't change
 
