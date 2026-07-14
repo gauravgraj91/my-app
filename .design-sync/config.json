@@ -1,0 +1,50 @@
+{
+  "projectId": "dbe8af00-f113-41cf-948b-c1f1ffb6b0d2",
+  "shape": "package",
+  "pkg": "my-app",
+  "globalName": "TodoShopUI",
+  "srcDir": "src",
+  "libOverrides": {
+    "bundle.mjs": "CRA repo: JSX in .js files — loader '.js': 'jsx' + automatic jsx runtime"
+  },
+  "componentSrcMap": {
+    "Button": "src/components/ui/Button.js",
+    "Card": "src/components/ui/Card.js",
+    "Input": "src/components/ui/Input.js",
+    "Select": "src/components/ui/Select.js",
+    "Textarea": "src/components/ui/Textarea.js",
+    "Modal": "src/components/ui/Modal.js",
+    "Badge": "src/components/ui/Badge.js",
+    "LoadingSpinner": "src/components/ui/LoadingSpinner.js",
+    "StatCard": "src/components/ui/StatCard.js",
+    "StatItem": "src/components/ui/StatCard.js",
+    "StatGrid": "src/components/ui/StatCard.js",
+    "SummaryCard": "src/components/ui/SummaryCard.js",
+    "SortableHeader": "src/components/ui/SortableHeader.js",
+    "ConfirmDialog": "src/components/ui/ConfirmDialog.js"
+  },
+  "guidelinesGlob": [],
+  "overrides": {
+    "Modal": {
+      "cardMode": "single",
+      "viewport": "760x700"
+    },
+    "ConfirmDialog": {
+      "cardMode": "single",
+      "viewport": "640x420"
+    },
+    "Card": {
+      "cardMode": "column"
+    },
+    "Input": {
+      "cardMode": "column"
+    },
+    "SortableHeader": {
+      "cardMode": "column"
+    },
+    "Textarea": {
+      "cardMode": "column"
+    }
+  },
+  "readmeHeader": ".design-sync/conventions.md"
+}

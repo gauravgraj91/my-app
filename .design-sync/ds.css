@@ -1,0 +1,10 @@
+/* Brand font — same Google Fonts load as the app's public/index.html <link>. */
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&display=swap');
+/* Theme tokens — the app's single source of truth. */
+@import '../src/styles/theme.css';
+
+body {
+  font-family: var(--font-sans);
+  background: var(--background);
+  color: var(--foreground);
+}
