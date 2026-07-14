@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Moon, Sun, LayoutDashboard, LogOut, Settings, ChevronDown } from 'lucide-react';
+import { Moon, Sun, LogOut, Settings, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { logout } from '../../firebase/authService';
@@ -54,10 +54,7 @@ const Header = () => {
     <header className="app-header">
       <div className="header-content">
         <div className="header-brand">
-          <div className="brand-logo">
-            <LayoutDashboard size={24} />
-          </div>
-          <h1 className="app-title">Personal Dashboard</h1>
+          <h1 className="app-title">dukaan<span className="brand-asterisk">*</span></h1>
         </div>
         <div className="header-controls">
           <button
