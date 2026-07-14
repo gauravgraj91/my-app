@@ -95,6 +95,5 @@
 
 /* Summary card hover */
 .summary-card:hover {
-  box-shadow: var(--shadow-lg) !important;
   transform: translateY(-1px);
 }

@@ -118,9 +118,6 @@
   margin-bottom: 14px;
   transition: box-shadow 0.2s;
 }
-.todo-item:hover {
-  box-shadow: var(--shadow-lg);
-}
 
 .todo-checkbox {
   accent-color: var(--primary);
@@ -270,7 +267,6 @@
 
 .todo-stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
 }
 
 .todo-filters-panel {
@@ -310,7 +306,6 @@
 
 .todo-task-card:hover {
   transform: translateY(-1px);
-  box-shadow: var(--shadow-lg);
 }
 
 .todo-task-content {

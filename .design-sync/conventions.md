@@ -2,7 +2,7 @@
 
 ## Setup
 
-No provider or wrapper is required — every component renders standalone. Import everything from the bundle root (`window.TodoShopUI` exports: Badge, Button, Card, ConfirmDialog, Input, LoadingSpinner, Modal, Select, SortableHeader, StatCard, StatGrid, StatItem, SummaryCard, Textarea). Dark mode works by adding the `dark` class to `<body>` — the CSS custom properties flip automatically; never write per-component dark styles.
+No provider or wrapper is required — every component renders standalone. Import everything from the bundle root (`window.TodoShopUI` exports: Avatar, Badge, Button, Card, ConfirmDialog, Input, LoadingSpinner, Modal, PillTabs, Select, SortableHeader, StatCard, StatGrid, StatItem, SummaryCard, Textarea, Toast, Toggle). Dark mode works by adding the `dark` class to `<body>` — the CSS custom properties flip automatically; never write per-component dark styles.
 
 ## Styling idiom: inline styles + theme tokens
 
@@ -13,7 +13,7 @@ This system uses **inline styles as JS objects** — no CSS classes, no utility 
 - Neutrals: `var(--secondary)`, `var(--muted)`, `var(--border)`, `var(--border-subtle)`, `var(--input)`, `var(--ring)`
 - Status (status ONLY, never decoration): `var(--success)` / `var(--success-soft)`, `var(--warning)` / `var(--warning-soft)`, `var(--danger)` / `var(--danger-soft)`, `var(--overdue)` / `var(--overdue-foreground)`
 - Shape/depth: `var(--radius-sm)` 12px, `var(--radius)` 14px, `var(--radius-lg)` 20px, `var(--radius-pill)` 999px, `var(--radius-modal)` 24px; `var(--shadow-sm)`, `var(--shadow)`, `var(--shadow-lg)`, `var(--shadow-accent)` (clay glow on primary button only)
-- Font: `var(--font-sans)` — Hanken Grotesk (400/600/700), `var(--font-display)` — Bricolage Grotesque (headings), loaded by the stylesheet
+- Font: `var(--font-sans)` — Hanken Grotesk (400/500/600/700/800), `var(--font-display)` — Bricolage Grotesque (400/600/700/800, headings), loaded by the stylesheet
 
 Tinting: hex-alpha appends (`` `${color}20` ``) break with `var()` — use `color-mix(in srgb, ${color} 12%, transparent)` instead (LoadingSpinner does this).
 
@@ -21,7 +21,7 @@ Icons come from `lucide-react` (the app's icon library) — pass them as element
 
 ## Component gotchas
 
-- **Never pass a `style` prop to `Card` or `StatCard`** — Card spreads `{...props}` after its own `style`, so any `style` prop *replaces all card styling* (background, border, radius). Size cards with a wrapper div instead: `<div style={{ maxWidth: 360 }}><Card>…</Card></div>`.
+- `Card`/`StatCard` now merge a `style` prop with the card's own chrome (background, border, radius) rather than replacing it — prefer theme tokens over ad-hoc overrides, but passing `style` is safe.
 - `Modal` / `ConfirmDialog` render `position: fixed` full-screen overlays; render them at the page root with `isOpen`.
 - `SortableHeader` is a `<th>` — it must live inside `<table><thead><tr>`. Props: `field`, `label`, `sortField`, `sortDirection` (`'asc'|'desc'`), `handleSort`.
 - `SummaryCard` with the `amount` prop formats Indian rupees (₹ with Indian digit grouping) automatically; use `value` for pre-formatted strings.
