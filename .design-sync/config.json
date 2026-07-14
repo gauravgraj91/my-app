@@ -21,7 +21,11 @@
     "StatGrid": "src/components/ui/StatCard.js",
     "SummaryCard": "src/components/ui/SummaryCard.js",
     "SortableHeader": "src/components/ui/SortableHeader.js",
-    "ConfirmDialog": "src/components/ui/ConfirmDialog.js"
+    "ConfirmDialog": "src/components/ui/ConfirmDialog.js",
+    "Toggle": "src/components/ui/Toggle.js",
+    "PillTabs": "src/components/ui/PillTabs.js",
+    "Avatar": "src/components/ui/Avatar.js",
+    "Toast": "src/components/ui/Toast.js"
   },
   "guidelinesGlob": [],
   "overrides": {
@@ -44,6 +48,10 @@
     },
     "Textarea": {
       "cardMode": "column"
+    },
+    "Toast": {
+      "cardMode": "single",
+      "viewport": "480x160"
     }
   },
   "readmeHeader": ".design-sync/conventions.md"

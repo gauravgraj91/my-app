@@ -10,3 +10,7 @@ export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as StatCard, StatItem, StatGrid } from './StatCard';
 export { default as SummaryCard } from './SummaryCard';
 export { default as SortableHeader } from './SortableHeader';
+export { default as Toggle } from './Toggle';
+export { default as PillTabs } from './PillTabs';
+export { default as Avatar } from './Avatar';
+export { default as Toast } from './Toast';
