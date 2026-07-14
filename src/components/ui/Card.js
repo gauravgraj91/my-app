@@ -1,35 +1,35 @@
 import React from 'react';
 
-const Card = ({ 
-  children, 
-  className = '', 
-  padding = 24, 
+const Card = ({
+  children,
+  className = '',
+  padding = 24,
   shadow = 'default',
-  ...props 
+  style,
+  ...props
 }) => {
   const shadowStyles = {
     none: 'none',
-    sm: '0 1px 3px rgba(0,0,0,0.12)',
-    default: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-    lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+    sm: 'none',
+    default: 'none',
+    lg: 'var(--shadow-lg)'
   };
 
   const cardStyle = {
     background: 'var(--card)',
     color: 'var(--card-foreground)',
-    borderRadius: 12,
+    borderRadius: 'var(--radius-lg)',
     boxShadow: shadowStyles[shadow],
     padding: padding,
     border: '1px solid var(--border)',
-    transition: 'box-shadow 0.2s ease-in-out',
-    ...props.style
+    ...style
   };
 
   return (
-    <div 
+    <div
       className={`card ${className}`}
-      style={cardStyle}
       {...props}
+      style={cardStyle}
     >
       {children}
     </div>

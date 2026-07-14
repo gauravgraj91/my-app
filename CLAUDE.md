@@ -64,7 +64,6 @@ When debugging Firestore errors, check in this order:
 ## Gotchas
 - Firebase config reads from `.env` — never hardcode keys; all vars prefixed `REACT_APP_`
 - Product categories are stored in `localStorage` (`shopCategories`), not Firestore; vendors ARE in Firestore (`vendorService.js`)
-- Never pass a `style` prop to `Card`/`StatCard` — `Card` spreads `{...props}` after `style={cardStyle}`, so any `style` prop replaces ALL card styling (see backlog)
 - MUI has been removed — inline styles only, no MUI/Emotion imports
 - Deployed on Vercel; `vercel.json` has SPA rewrites — don't modify it without good reason
 - `react-scripts` (Create React App) is the build tool — no custom webpack config
@@ -77,7 +76,7 @@ When debugging Firestore errors, check in this order:
 - [ ] **PDF invoice generation + share** — top feature gap from competitive research; prerequisite for invoice status tracking, payment reminders, UPI QR.
 
 ### P2 — Medium (nice to have)
-- [ ] **Fix `Card` prop-spread order** — `{...props}` comes after `style={cardStyle}` in `src/components/ui/Card.js`, so a `style` prop wipes all card chrome; `StatCard` always passes `style` (default `{}`) and thus renders with no card styling. Fix: stop spreading `style` via `{...props}` (merge is already done in `cardStyle` line 25), then remove the gotcha note.
+- [x] **Fix `Card` prop-spread order** — `{...props}` comes after `style={cardStyle}` in `src/components/ui/Card.js`, so a `style` prop wipes all card chrome; `StatCard` always passes `style` (default `{}`) and thus renders with no card styling. Fix: stop spreading `style` via `{...props}` (merge is already done in `cardStyle` line 25), then remove the gotcha note. — DONE 2026-07-15 as part of Clay adoption.
 - [ ] **Remove or commit to Tailwind** — `tailwindcss` is in devDeps but used across 15 files; too entrenched to remove quickly
 - [ ] **Limit HomeView product subscription** — `subscribeToShopProducts` loads all products for the dashboard; create a lightweight stats query or limit the subscription
 
