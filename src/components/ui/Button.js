@@ -14,10 +14,11 @@ const Button = ({
     primary: {
       background: 'var(--primary)',
       color: 'var(--primary-foreground)',
-      border: 'none'
+      border: 'none',
+      boxShadow: 'var(--shadow-accent)'
     },
     secondary: {
-      background: 'var(--secondary)',
+      background: 'var(--card)',
       color: 'var(--foreground)',
       border: '1px solid var(--border)'
     },
@@ -39,16 +40,16 @@ const Button = ({
   };
 
   const sizes = {
-    small: { padding: '8px 16px', fontSize: 12 },
-    medium: { padding: '12px 24px', fontSize: 14 },
-    large: { padding: '16px 32px', fontSize: 16 }
+    small: { padding: '8px 14px', fontSize: 12 },
+    medium: { padding: '11px 22px', fontSize: 14 },
+    large: { padding: '14px 28px', fontSize: 15 }
   };
 
   const buttonStyle = {
     ...variants[variant],
     ...sizes[size],
-    borderRadius: 8,
-    fontWeight: 600,
+    borderRadius: 'var(--radius-pill)',
+    fontWeight: 700,
     cursor: loading ? 'not-allowed' : 'pointer',
     display: 'flex',
     alignItems: 'center',
