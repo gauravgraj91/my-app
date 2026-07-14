@@ -1,56 +1,46 @@
-/* ===== Desktop Navigation ===== */
+/* ===== Desktop Navigation — Clay segmented pill bar ===== */
 .desktop-nav {
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
+  background: transparent;
   display: block;
+  padding: 12px 0 4px;
 }
 
 .nav-container {
-  max-width: 1200px;
-  margin: 0 auto;
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 0 16px;
+  gap: 2px;
+  width: fit-content;
+  margin: 0 auto;
+  background: var(--secondary);
+  border-radius: var(--radius-pill);
+  padding: 4px;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 14px 18px;
+  padding: 8px 18px;
   color: var(--muted-foreground);
   text-decoration: none;
   font-size: 0.9rem;
-  font-weight: 500;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  transition: background 0.2s ease, color 0.2s ease;
   border: none;
   background: transparent;
   cursor: pointer;
   position: relative;
+  white-space: nowrap;
 }
 
 .nav-item:hover {
   color: var(--foreground);
-  background: var(--secondary);
 }
 
 .nav-item.active {
-  color: var(--primary);
-  background: var(--primary-soft);
-}
-
-.nav-item.active::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60%;
-  height: 3px;
-  background: var(--primary);
-  border-radius: 3px 3px 0 0;
+  color: var(--background);
+  background: var(--foreground);
 }
 
 /* Dropdown Styles */
@@ -79,7 +69,7 @@
   left: 0;
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   min-width: 200px;
   padding: 8px;
@@ -107,7 +97,7 @@
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 500;
-  border-radius: 8px;
+  border-radius: var(--radius);
   transition: all 0.15s ease;
 }
 
@@ -186,7 +176,7 @@
   left: 16px;
   right: 16px;
   background: var(--card);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   overflow: hidden;
   animation: moreMenuSlideUp 0.25s ease;
@@ -246,7 +236,7 @@
   text-decoration: none;
   font-size: 0.95rem;
   font-weight: 500;
-  border-radius: 10px;
+  border-radius: var(--radius);
   transition: all 0.15s ease;
 }
 
