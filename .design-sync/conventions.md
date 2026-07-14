@@ -9,11 +9,11 @@ No provider or wrapper is required — every component renders standalone. Impor
 This system uses **inline styles as JS objects** — no CSS classes, no utility framework, no styled-components. All colors, radii, and shadows come from CSS custom properties defined in the stylesheet. Always use tokens, never hardcoded hex:
 
 - Surfaces/text: `var(--background)`, `var(--card)`, `var(--foreground)`, `var(--foreground-body)`, `var(--muted-foreground)`, `var(--card-foreground)`
-- Brand (indigo): `var(--primary)`, `var(--primary-hover)`, `var(--primary-foreground)`, `var(--primary-soft)`, `var(--primary-accent)`
+- Brand (clay orange): `var(--primary)`, `var(--primary-hover)`, `var(--primary-foreground)`, `var(--primary-soft)`, `var(--primary-accent)`
 - Neutrals: `var(--secondary)`, `var(--muted)`, `var(--border)`, `var(--border-subtle)`, `var(--input)`, `var(--ring)`
-- Status (status ONLY, never decoration): `var(--success)` / `var(--success-soft)`, `var(--warning)` / `var(--warning-soft)`, `var(--danger)` / `var(--danger-soft)`
-- Shape/depth: `var(--radius-sm)` 8px, `var(--radius)` 12px, `var(--radius-lg)` 16px; `var(--shadow-sm)`, `var(--shadow)`, `var(--shadow-lg)`
-- Font: `var(--font-sans)` — Hanken Grotesk (400/600/700), loaded by the stylesheet
+- Status (status ONLY, never decoration): `var(--success)` / `var(--success-soft)`, `var(--warning)` / `var(--warning-soft)`, `var(--danger)` / `var(--danger-soft)`, `var(--overdue)` / `var(--overdue-foreground)`
+- Shape/depth: `var(--radius-sm)` 12px, `var(--radius)` 14px, `var(--radius-lg)` 20px, `var(--radius-pill)` 999px, `var(--radius-modal)` 24px; `var(--shadow-sm)`, `var(--shadow)`, `var(--shadow-lg)`, `var(--shadow-accent)` (clay glow on primary button only)
+- Font: `var(--font-sans)` — Hanken Grotesk (400/600/700), `var(--font-display)` — Bricolage Grotesque (headings), loaded by the stylesheet
 
 Tinting: hex-alpha appends (`` `${color}20` ``) break with `var()` — use `color-mix(in srgb, ${color} 12%, transparent)` instead (LoadingSpinner does this).
 
