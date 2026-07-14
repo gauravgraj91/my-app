@@ -32,20 +32,24 @@ const Badge = ({
     info: {
       background: 'var(--primary-soft)',
       color: 'var(--primary)'
+    },
+    overdue: {
+      background: 'var(--overdue)',
+      color: 'var(--overdue-foreground)'
     }
   };
 
   const sizes = {
     small: { padding: '2px 6px', fontSize: 10 },
-    medium: { padding: '4px 8px', fontSize: 12 },
+    medium: { padding: '4px 12px', fontSize: 12 },
     large: { padding: '6px 12px', fontSize: 14 }
   };
 
   const badgeStyle = {
     ...variants[variant],
     ...sizes[size],
-    borderRadius: 12,
-    fontWeight: 500,
+    borderRadius: 'var(--radius-pill)',
+    fontWeight: 700,
     display: 'inline-flex',
     alignItems: 'center',
     gap: icon ? 4 : 0,
