@@ -15,15 +15,15 @@ const ConfirmDialog = ({ isOpen, title, message, onConfirm, onCancel, confirmLab
     >
       <div
         style={{
-          background: 'var(--card)', color: 'var(--card-foreground)', borderRadius: '12px', padding: '28px',
+          background: 'var(--card)', color: 'var(--card-foreground)', borderRadius: 'var(--radius-modal)', padding: '28px',
           width: '420px', maxWidth: '90vw',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          boxShadow: 'var(--shadow-lg)',
         }}
         onClick={e => e.stopPropagation()}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
           <div style={{
-            width: '40px', height: '40px', borderRadius: '10px',
+            width: '40px', height: '40px', borderRadius: 'var(--radius-sm)',
             background: 'var(--danger-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
             <AlertTriangle size={20} color="var(--danger)" />
@@ -35,7 +35,7 @@ const ConfirmDialog = ({ isOpen, title, message, onConfirm, onCancel, confirmLab
           <button
             onClick={onCancel}
             style={{
-              padding: '8px 20px', borderRadius: '8px', border: '1px solid var(--border)',
+              padding: '8px 20px', borderRadius: 'var(--radius-pill)', border: '1px solid var(--border)',
               background: 'var(--card)', color: 'var(--foreground)', fontSize: '14px', fontWeight: '500',
               cursor: 'pointer',
             }}
@@ -45,7 +45,7 @@ const ConfirmDialog = ({ isOpen, title, message, onConfirm, onCancel, confirmLab
           <button
             onClick={onConfirm}
             style={{
-              padding: '8px 20px', borderRadius: '8px', border: 'none',
+              padding: '8px 20px', borderRadius: 'var(--radius-pill)', border: 'none',
               background: 'var(--danger)', color: 'var(--primary-foreground)', fontSize: '14px', fontWeight: '600',
               cursor: 'pointer',
             }}

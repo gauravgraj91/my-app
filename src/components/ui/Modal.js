@@ -27,14 +27,14 @@ const Modal = ({
   const modalStyle = {
     background: 'var(--card)',
     color: 'var(--card-foreground)',
-    borderRadius: 16,
+    borderRadius: 'var(--radius-modal)',
     padding: 0,
     width: '90%',
     maxWidth: maxWidth,
     maxHeight: '90vh',
     overflowY: 'auto',
     position: 'relative',
-    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+    boxShadow: 'var(--shadow-lg)',
     border: '1px solid var(--border)'
   };
 
@@ -45,7 +45,7 @@ const Modal = ({
     padding: '20px 24px',
     borderBottom: '1px solid var(--border)',
     background: 'var(--secondary)',
-    borderRadius: '16px 16px 0 0'
+    borderRadius: 'var(--radius-modal) var(--radius-modal) 0 0'
   };
 
   const closeButtonStyle = {

@@ -3,7 +3,7 @@ import { formatCurrency } from '../../utils/formatters';
 
 const SummaryCard = ({ label, value, amount, count, subtitle, icon: Icon, color, bgColor }) => (
   <div style={{
-    background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '12px',
+    background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)',
     padding: '20px', position: 'relative', overflow: 'hidden',
   }}>
     <div style={{

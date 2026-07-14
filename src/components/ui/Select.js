@@ -15,7 +15,7 @@ const Select = ({
     width: '100%',
     padding: '12px',
     border: `1px solid ${error ? 'var(--danger)' : 'var(--input)'}`,
-    borderRadius: 8,
+    borderRadius: 'var(--radius-sm)',
     fontSize: 14,
     outline: 'none',
     background: 'var(--card)',
