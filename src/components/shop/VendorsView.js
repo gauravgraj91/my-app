@@ -10,6 +10,7 @@ import Card from '../ui/Card';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Badge from '../ui/Badge';
+import Avatar from '../ui/Avatar';
 import ErrorBoundary from '../ui/ErrorBoundary';
 import SummaryCard from '../ui/SummaryCard';
 import { useVendors } from '../../context/VendorsContext';
@@ -559,7 +560,8 @@ const VendorsView = () => {
                               </button>
                             </td>
                             <td style={STYLES.tableCell}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <Avatar name={vendor.name || '?'} size={36} />
                                 <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--foreground)' }}>
                                   {vendor.name}
                                 </span>
