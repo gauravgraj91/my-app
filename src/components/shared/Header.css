@@ -11,9 +11,27 @@
 .header-content {
   max-width: 1200px;
   margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px;
   align-items: center;
+}
+
+.header-nav {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .header-content {
+    grid-template-columns: auto auto;
+    justify-content: space-between;
+  }
+
+  .header-nav {
+    display: none;
+  }
 }
 
 .header-brand {

@@ -1,8 +1,19 @@
-/* ===== Desktop Navigation — Clay segmented pill bar ===== */
+/* ===== Desktop Navigation — Clay segmented pill bar (inline in header) ===== */
 .desktop-nav {
   background: transparent;
   display: block;
-  padding: 12px 0 4px;
+  padding: 0;
+}
+
+/* Mid widths: drop pill labels to icons so the single header row never wraps */
+@media (max-width: 1100px) {
+  .desktop-nav .nav-item span {
+    display: none;
+  }
+
+  .desktop-nav .nav-item {
+    padding: 8px 14px;
+  }
 }
 
 .nav-container {

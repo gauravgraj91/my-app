@@ -3,6 +3,7 @@ import { Moon, Sun, LogOut, Settings, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { logout } from '../../firebase/authService';
+import { DesktopNav } from './Navigation';
 import './Header.css';
 
 const Header = () => {
@@ -55,6 +56,9 @@ const Header = () => {
       <div className="header-content">
         <div className="header-brand">
           <h1 className="app-title">dukaan<span className="brand-asterisk">*</span></h1>
+        </div>
+        <div className="header-nav">
+          <DesktopNav />
         </div>
         <div className="header-controls">
           <button

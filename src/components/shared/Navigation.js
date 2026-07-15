@@ -17,65 +17,56 @@ import {
 } from 'lucide-react';
 import './Navigation.css';
 
-const Navigation = () => {
-  const location = useLocation();
-  const [shopDropdownOpen, setShopDropdownOpen] = useState(false);
-  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
-  const dropdownRef = useRef(null);
-  const moreMenuRef = useRef(null);
+const navItems = [
+  { path: '/', label: 'Home', icon: Home },
+  { path: '/tasks', label: 'Tasks', icon: CheckSquare },
+  { path: '/office', label: 'Office', icon: Briefcase },
+];
 
-  // Close dropdowns when clicking outside
+const shopItems = [
+  { path: '/shop', label: 'Overview', icon: ShoppingCart },
+  { path: '/shop/bills', label: 'Bills', icon: FileText },
+  { path: '/shop/products', label: 'Products', icon: Package },
+  { path: '/shop/price-list', label: 'Price List', icon: DollarSign },
+  { path: '/shop/vendors', label: 'Vendors', icon: Users2 },
+];
+
+const moreItems = [
+  { path: '/office', label: 'Office', icon: Briefcase },
+  ...shopItems,
+  { path: '/transactions', label: 'Transactions', icon: CreditCard },
+];
+
+const useIsActive = () => {
+  const location = useLocation();
+  return (path) => {
+    if (path === '/' || path === '/shop') return location.pathname === path;
+    return location.pathname.startsWith(path);
+  };
+};
+
+// Desktop pill bar — rendered inside the header (see Header.js)
+export const DesktopNav = () => {
+  const location = useLocation();
+  const isActive = useIsActive();
+  const [shopDropdownOpen, setShopDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShopDropdownOpen(false);
       }
-      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target)) {
-        setMoreMenuOpen(false);
-      }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Close menus on route change
   useEffect(() => {
     setShopDropdownOpen(false);
-    setMoreMenuOpen(false);
   }, [location.pathname]);
 
-  const isActive = (path) => {
-    if (path === '/' || path === '/shop') return location.pathname === path;
-    return location.pathname.startsWith(path);
-  };
-
-  const isShopActive = () => {
-    return location.pathname.startsWith('/shop');
-  };
-
-  const navItems = [
-    { path: '/', label: 'Home', icon: Home },
-    { path: '/tasks', label: 'Tasks', icon: CheckSquare },
-    { path: '/office', label: 'Office', icon: Briefcase },
-  ];
-
-  const shopItems = [
-    { path: '/shop', label: 'Overview', icon: ShoppingCart },
-    { path: '/shop/bills', label: 'Bills', icon: FileText },
-    { path: '/shop/products', label: 'Products', icon: Package },
-    { path: '/shop/price-list', label: 'Price List', icon: DollarSign },
-    { path: '/shop/vendors', label: 'Vendors', icon: Users2 },
-  ];
-
-  const moreItems = [
-    { path: '/office', label: 'Office', icon: Briefcase },
-    ...shopItems,
-    { path: '/transactions', label: 'Transactions', icon: CreditCard },
-  ];
-
-  // Desktop Navigation
-  const DesktopNav = () => (
+  return (
     <nav className="desktop-nav">
       <div className="nav-container">
         {navItems.map((item) => (
@@ -83,6 +74,7 @@ const Navigation = () => {
             key={item.path}
             to={item.path}
             className={`nav-item ${isActive(item.path) ? 'active' : ''}`}
+            aria-label={item.label}
           >
             <item.icon size={18} />
             <span>{item.label}</span>
@@ -92,8 +84,9 @@ const Navigation = () => {
         {/* Shop Dropdown */}
         <div className="nav-dropdown" ref={dropdownRef}>
           <button
-            className={`nav-item dropdown-trigger ${isShopActive() ? 'active' : ''}`}
+            className={`nav-item dropdown-trigger ${location.pathname.startsWith('/shop') ? 'active' : ''}`}
             onClick={() => setShopDropdownOpen(!shopDropdownOpen)}
+            aria-label="Shop"
           >
             <ShoppingCart size={18} />
             <span>Shop</span>
@@ -122,6 +115,7 @@ const Navigation = () => {
         <Link
           to="/transactions"
           className={`nav-item ${isActive('/transactions') ? 'active' : ''}`}
+          aria-label="Transactions"
         >
           <CreditCard size={18} />
           <span>Transactions</span>
@@ -130,6 +124,31 @@ const Navigation = () => {
       </div>
     </nav>
   );
+};
+
+const Navigation = () => {
+  const location = useLocation();
+  const isActive = useIsActive();
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const moreMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target)) {
+        setMoreMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    setMoreMenuOpen(false);
+  }, [location.pathname]);
+
+  const isShopActive = () => {
+    return location.pathname.startsWith('/shop');
+  };
 
   // Mobile Bottom Navigation
   const MobileNav = () => (
@@ -200,12 +219,7 @@ const Navigation = () => {
     </>
   );
 
-  return (
-    <>
-      <DesktopNav />
-      <MobileNav />
-    </>
-  );
+  return <MobileNav />;
 };
 
 export default Navigation;
