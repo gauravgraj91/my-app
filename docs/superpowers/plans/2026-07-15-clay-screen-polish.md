@@ -38,7 +38,7 @@
 - Consumes: theme tokens `--secondary`, `--radius-pill`.
 - Produces: `MeterBar` (default export + barrel named export). Props: `segments` (array of `{ value: number, color: string }`), `total` (number — when segment sum < total, the remainder stays track-colored; denominator is `max(total, sum(segments))`), `height = 10`. Extra props spread onto the outer div. Tasks 2 and 5 import it.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `src/components/ui/__tests__/MeterBar.test.js`:
 
@@ -70,12 +70,12 @@ describe('MeterBar', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `CI=true npx react-scripts test --watchAll=false src/components/ui/__tests__/MeterBar.test.js`
 Expected: FAIL — `Cannot find module '../MeterBar'`.
 
-- [ ] **Step 3: Create `src/components/ui/MeterBar.js`**
+- [x] **Step 3: Create `src/components/ui/MeterBar.js`**
 
 ```js
 import React from 'react';
@@ -112,7 +112,7 @@ const MeterBar = ({ segments = [], total = 0, height = 10, style, ...props }) =>
 export default MeterBar;
 ```
 
-- [ ] **Step 4: Register in the barrel and design-sync**
+- [x] **Step 4: Register in the barrel and design-sync**
 
 Append to `src/components/ui/index.js`:
 
@@ -126,12 +126,12 @@ In `.design-sync/config.json`, add to `componentSrcMap` (after the `"Toast"` ent
     "MeterBar": "src/components/ui/MeterBar.js"
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `CI=true npx react-scripts test --watchAll=false src/components/ui/__tests__/MeterBar.test.js`
 Expected: PASS (2 tests).
 
-- [ ] **Step 6: Verify build and commit**
+- [x] **Step 6: Verify build and commit**
 
 Run: `npm run build` → expected `Compiled successfully` (pre-existing warnings OK).
 
@@ -152,7 +152,7 @@ git commit -m "feat(ui): MeterBar chunky pill meter for Clay data viz"
 - Consumes: `MeterBar` (Task 1), `Avatar`/`Badge` from the ui barrel, existing `getShopProducts(tenantId)` one-time fetch from `src/firebase/shopProductService.js` (already exists — returns a Promise of product array), `useBills()` → `{ bills }`, `useAuth()` → `user.tenantId`.
 - Produces: no exported API changes — `HomeView` default export, same route usage. `useVendors` and `subscribeToShopProducts` imports are REMOVED (the new layout derives everything from bills + a one-time product fetch).
 
-- [ ] **Step 1: Replace the contents of `src/components/shop/HomeView.js`**
+- [x] **Step 1: Replace the contents of `src/components/shop/HomeView.js`**
 
 ```js
 import React, { useState, useEffect, useMemo } from 'react';
@@ -478,7 +478,7 @@ const HomeView = () => {
 export default HomeView;
 ```
 
-- [ ] **Step 2: Tick the P2 backlog item in `CLAUDE.md`**
+- [x] **Step 2: Tick the P2 backlog item in `CLAUDE.md`**
 
 In `### P2 — Medium`, change the `Limit HomeView product subscription` item to:
 
@@ -486,16 +486,16 @@ In `### P2 — Medium`, change the `Limit HomeView product subscription` item to
 - [x] **Limit HomeView product subscription** — DONE 2026-07-15: HomeView now does a one-time `getShopProducts` fetch (no realtime full-collection listener).
 ```
 
-- [ ] **Step 3: Verify build**
+- [x] **Step 3: Verify build**
 
 Run: `npm run build`
 Expected: `Compiled successfully`. If it warns about unused imports in HomeView, the rewrite in Step 1 was applied incompletely — fix before proceeding.
 
-- [ ] **Step 4: Visual smoke-check**
+- [x] **Step 4: Visual smoke-check**
 
 `npm start` → http://localhost:3000/shop. Confirm vs prototype Home: ink hero card with clay circle + month total; "To collect / pay" card with two-segment meter; stock-value card; recent-bills rows with initials tiles and status pills (overdue = solid clay); light AND dark mode (full reload after toggling).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/components/shop/HomeView.js CLAUDE.md
@@ -513,7 +513,7 @@ git commit -m "feat(shop): Clay Home layout with ink hero, meter bar, avatar row
 - Consumes: `PillTabs` (props: `items` array of `{value,label}`, `value`, `onChange`, `size`), `Avatar` (props: `name`, `size`), `Badge` `variant="overdue"` — all from `src/components/ui/`.
 - Produces: no API changes; `activeStatusTab` state and `handleStatusTabClick(key)` handler are reused as-is.
 
-- [ ] **Step 1: Add imports and an overdue helper**
+- [x] **Step 1: Add imports and an overdue helper**
 
 Near the existing ui imports (around line 25, next to `import Badge from '../ui/Badge';`), add:
 
@@ -535,7 +535,7 @@ const isBillOverdue = (bill) => {
 };
 ```
 
-- [ ] **Step 2: Swap the hand-rolled status tabs for PillTabs**
+- [x] **Step 2: Swap the hand-rolled status tabs for PillTabs**
 
 Replace the whole "Status Tabs" block (lines 580–609: the `<div style={{ display: 'flex', ... background: 'var(--secondary)', borderRadius: '8px' ...}}>` containing the `.map(tab => <button …>)`) with:
 
@@ -554,7 +554,7 @@ Replace the whole "Status Tabs" block (lines 580–609: the `<div style={{ displ
           />
 ```
 
-- [ ] **Step 3: Use the overdue Badge variant and the helper in `getStatusBadge` (~line 391)**
+- [x] **Step 3: Use the overdue Badge variant and the helper in `getStatusBadge` (~line 391)**
 
 Rewrite `getStatusBadge` to:
 
@@ -572,7 +572,7 @@ Rewrite `getStatusBadge` to:
 
 (Keep whatever other logic the current function body has ONLY if it affects non-status output; the current implementation at lines 391–408 is purely paid/overdue/pending and is fully replaced.)
 
-- [ ] **Step 4: Avatar in the vendor cell + persistent overdue row fill**
+- [x] **Step 4: Avatar in the vendor cell + persistent overdue row fill**
 
 In the bill row `<tr>` (line 674), change the `background` line from:
 
@@ -611,12 +611,12 @@ with:
                           </td>
 ```
 
-- [ ] **Step 5: Verify build and visual check**
+- [x] **Step 5: Verify build and visual check**
 
 Run: `npm run build` → expected `Compiled successfully`.
 `npm start` → /shop/bills: status filter is a Clay pill bar (ink active pill); overdue rows have a persistent peach fill and solid-clay Overdue pills; vendor cells show initials tiles; filtering by each tab still works; row selection still shows.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/components/shop/BillsView.js
@@ -634,7 +634,7 @@ git commit -m "feat(bills): PillTabs status filter, solid overdue badges, vendor
 - Consumes: `Avatar` from `src/components/ui/Avatar.js` (`name`, `size` props; default square-ish `--radius-sm` tile per Clay vendor spec).
 - Produces: no API changes.
 
-- [ ] **Step 1: Import Avatar**
+- [x] **Step 1: Import Avatar**
 
 Next to the existing `import Badge from '../ui/Badge';` (line 12), add:
 
@@ -642,7 +642,7 @@ Next to the existing `import Badge from '../ui/Badge';` (line 12), add:
 import Avatar from '../ui/Avatar';
 ```
 
-- [ ] **Step 2: Add the initials tile to the vendor name cell**
+- [x] **Step 2: Add the initials tile to the vendor name cell**
 
 In the vendor row name cell (lines 561–575), replace:
 
@@ -667,12 +667,12 @@ with:
 
 (The rest of the cell — the `isUnregistered` chip and closing tags — is unchanged.)
 
-- [ ] **Step 3: Verify build and visual check**
+- [x] **Step 3: Verify build and visual check**
 
 Run: `npm run build` → expected `Compiled successfully`.
 `npm start` → /shop/vendors: every vendor row leads with a peach initials tile (clay text); expanding rows still works; dark mode shows the dark `--primary-soft` tile.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/components/shop/VendorsView.js
@@ -690,7 +690,7 @@ git commit -m "feat(vendors): Clay avatar initials tiles on vendor rows"
 - Consumes: `MeterBar` (Task 1). `taskStats` (`{ completed, pending, overdue, dueToday }`) and `transactionStats` (`{ cashIn, cashOut, netBalance }`) already exist in the component.
 - Produces: no API changes; `getGreeting` export untouched.
 
-- [ ] **Step 1: Import MeterBar**
+- [x] **Step 1: Import MeterBar**
 
 With the other imports at the top of the file:
 
@@ -698,7 +698,7 @@ With the other imports at the top of the file:
 import MeterBar from '../ui/MeterBar';
 ```
 
-- [ ] **Step 2: Task completion meter**
+- [x] **Step 2: Task completion meter**
 
 In the Tasks widget, directly after the closing `</div>` of the `stat-grid` (line 150, inside the `hasTasks ? (...)` branch — the meter must NOT render in the empty state), add:
 
@@ -715,7 +715,7 @@ In the Tasks widget, directly after the closing `</div>` of the `stat-grid` (lin
 
 Note: this requires wrapping the existing `stat-grid` div and the new MeterBar in a fragment (`<>…</>`) since the ternary branch must stay a single expression.
 
-- [ ] **Step 3: Cash in/out meter**
+- [x] **Step 3: Cash in/out meter**
 
 In the Transactions widget, directly after the closing `</div>` of its `stat-grid` (line 256), add (no fragment needed here — it's inside the widget's outer div):
 
@@ -730,16 +730,16 @@ In the Transactions widget, directly after the closing `</div>` of its `stat-gri
           />
 ```
 
-- [ ] **Step 4: Copy pass**
+- [x] **Step 4: Copy pass**
 
 In this file only, replace every visible `View all` button label with `See all →` (the `view-all-link` class names stay). Do not touch other strings.
 
-- [ ] **Step 5: Verify build and visual check**
+- [x] **Step 5: Verify build and visual check**
 
 Run: `npm run build` → expected `Compiled successfully`.
 `npm start` → `/`: Tasks card shows a green/clay completion meter (hidden when no tasks); Transactions card shows the in/out meter; links read "See all →"; both themes look right.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/components/analytics/AnalyticsDashboard.js
@@ -758,7 +758,7 @@ git commit -m "feat(dashboard): Clay meter bars for tasks and cash flow, See all
 - Consumes: nothing new.
 - Produces: identical route tree; all page-level components lazy-loaded behind one Suspense fallback. Auth components (`LoginPage`, `SignupPage`, `ProtectedRoute`), `Layout`, and `ErrorBoundary` stay eager (they're needed on first paint of every entry path).
 
-- [ ] **Step 1: Convert page imports to `React.lazy`**
+- [x] **Step 1: Convert page imports to `React.lazy`**
 
 In `src/App.js`, replace the page-component imports (lines 6–16, keeping `Layout`, `ErrorBoundary`, `LoginPage`, `SignupPage`, `ProtectedRoute`, context imports as-is):
 
@@ -778,7 +778,7 @@ const ShopTransactions = React.lazy(() => import('./pages/ShopTransactions'));
 const Settings = React.lazy(() => import('./pages/Settings'));
 ```
 
-- [ ] **Step 2: Wrap the routes in Suspense**
+- [x] **Step 2: Wrap the routes in Suspense**
 
 Wrap the existing `<Routes>…</Routes>` block (inside `NotificationProvider`) in:
 
@@ -797,7 +797,7 @@ Wrap the existing `<Routes>…</Routes>` block (inside `NotificationProvider`) i
             </Suspense>
 ```
 
-- [ ] **Step 3: Tick the P3 backlog item in `CLAUDE.md`**
+- [x] **Step 3: Tick the P3 backlog item in `CLAUDE.md`**
 
 In `### P3 — Low`, change the `Add React.lazy() for route code splitting` item to:
 
@@ -805,16 +805,16 @@ In `### P3 — Low`, change the `Add React.lazy() for route code splitting` item
 - [x] **Add React.lazy() for route code splitting** — DONE 2026-07-15: all pages lazy in `App.js` behind one Suspense fallback.
 ```
 
-- [ ] **Step 4: Verify build shows split chunks**
+- [x] **Step 4: Verify build shows split chunks**
 
 Run: `npm run build`
 Expected: `Compiled successfully` and the "File sizes after gzip" list now shows multiple numbered chunk files (e.g. `build/static/js/xxx.chunk.js`) instead of one main bundle.
 
-- [ ] **Step 5: Smoke-check navigation**
+- [x] **Step 5: Smoke-check navigation**
 
 `npm start` → log in, click through Home → Tasks → Shop → Bills → Settings. Each first visit may flash the "Loading…" fallback; nothing errors.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/App.js CLAUDE.md
@@ -831,7 +831,7 @@ git commit -m "perf(routes): lazy-load pages with React.lazy + Suspense"
 
 **Interfaces:** none — these files are imported nowhere (verified 2026-07-15; re-verify in Step 1).
 
-- [ ] **Step 1: Re-verify nothing imports them**
+- [x] **Step 1: Re-verify nothing imports them**
 
 Run:
 
@@ -841,14 +841,14 @@ grep -rn "VirtualizedBillsList\|TestChart\|components/migration" src | grep -v "
 
 Expected: no output (exit code 1). If anything prints, STOP — that reference must be removed first or the file kept.
 
-- [ ] **Step 2: Delete**
+- [x] **Step 2: Delete**
 
 ```bash
 git rm src/components/shop/VirtualizedBillsList.js src/components/shop/TestChart.js
 git rm -r src/components/migration
 ```
 
-- [ ] **Step 3: Tick the P3 backlog item in `CLAUDE.md`**
+- [x] **Step 3: Tick the P3 backlog item in `CLAUDE.md`**
 
 Change the `Delete dead code` item to:
 
@@ -856,7 +856,7 @@ Change the `Delete dead code` item to:
 - [x] **Delete dead code** — DONE 2026-07-15: removed `VirtualizedBillsList.js`, `TestChart.js`, `src/components/migration/`.
 ```
 
-- [ ] **Step 4: Verify build and commit**
+- [x] **Step 4: Verify build and commit**
 
 Run: `npm run build` → expected `Compiled successfully`.
 
@@ -874,7 +874,7 @@ git commit -m "chore: delete dead code (VirtualizedBillsList, TestChart, migrati
 
 **Interfaces:** consumes everything above.
 
-- [ ] **Step 1: Run all Clay-related test files together**
+- [x] **Step 1: Run all Clay-related test files together**
 
 Run:
 
@@ -884,7 +884,7 @@ CI=true npx react-scripts test --watchAll=false src/components/ui/__tests__/Mete
 
 Expected: PASS (13 tests). Do NOT gate on the full suite (~191-failure baseline).
 
-- [ ] **Step 2: Full visual pass vs prototype**
+- [x] **Step 2: Full visual pass vs prototype**
 
 `npm start` side-by-side with `Clay Prototype v2.dc.html`. Walk `/` → Tasks → Shop (Home, Bills, Products, Price List, Vendors, Transactions) → Settings in light AND dark (full reload after toggling). Checklist:
 - Shop Home: ink hero with clay circle, two-segment collect/pay meter, avatar bill rows.
@@ -893,7 +893,7 @@ Expected: PASS (13 tests). Do NOT gate on the full suite (~191-failure baseline)
 - Dashboard: task + cash meters, "See all →" links.
 - No console errors; lazy-route "Loading…" flashes are brief and unstyled screens never appear.
 
-- [ ] **Step 3: Verify build one last time and hand off**
+- [x] **Step 3: Verify build one last time and hand off**
 
 Run: `npm run build` → expected `Compiled successfully`.
 
