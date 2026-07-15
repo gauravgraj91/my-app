@@ -84,5 +84,5 @@ When debugging Firestore errors, check in this order:
 
 ### P3 — Low (future)
 - [x] **Add React.lazy() for route code splitting** — DONE 2026-07-15: all pages lazy in `App.js` behind one Suspense fallback.
-- [ ] **Delete dead code** — `VirtualizedBillsList.js`, `TestChart.js`, and `src/components/migration/` are never imported anywhere
+- [x] **Delete dead code** — DONE 2026-07-15: removed `VirtualizedBillsList.js`, `TestChart.js`, `src/components/migration/`.
 - [ ] **Consider IndexedDB for activity logs** — localStorage has ~5MB shared limit
