@@ -1,41 +1,79 @@
-# Getting Started with Create React App
+# Shop & Tasks App
 
-This project is a React-based web application that includes several features:
+A multi-tenant React + Firebase web app for running a small shop and keeping personal/office tasks in one place.
 
-1. Todo List: A simple task management system where users can add, edit, and delete tasks.
+## Features
 
-2. Shop Transactions: A feature to track cash inflows and outflows for a shop, allowing users to add transactions, filter them, and view totals.
+- **Shop dashboard** — cash flow overview, recent activity, quick links
+- **Bills** — create, edit, filter, and bulk-manage vendor bills with overdue tracking
+- **Vendors** — vendor directory with per-vendor products and bill history
+- **Products & price list** — product catalog with categories and pricing
+- **Shop transactions** — cash inflow/outflow ledger with filters and totals
+- **Tasks & office** — simple todo/task management
+- **Auth & multi-tenancy** — Firebase email/password auth; all data is tenant-scoped and enforced by Firestore security rules
+- **Dark mode** — theme-token based, toggled from the profile menu
 
-3. Price List: (Assumed based on the imports in TodoList.js) A component to display and manage prices for items.
+## Tech Stack
 
-The application uses Material-UI components for styling and layout, and incorporates Tailwind CSS for additional styling capabilities. It also utilizes React hooks for state management and UUID for generating unique identifiers.
+- [React 18](https://react.dev/) (Create React App, JavaScript — no TypeScript)
+- [Firebase](https://firebase.google.com/) — Auth + Firestore
+- [react-router](https://reactrouter.com/) v6 with lazy-loaded routes
+- Inline styles with CSS custom-property theme tokens (`src/styles/theme.css`) — "Dukaan Clay" design language
+- [Recharts](https://recharts.org/) for charts, [lucide-react](https://lucide.dev/) for icons
+- Deployed on [Vercel](https://vercel.com/) (SPA rewrites in `vercel.json`)
 
-Key technologies and libraries used:
-- React
-- Material-UI
-- Tailwind CSS
-- UUID
+## Getting Started
 
-This project demonstrates the implementation of common web application features and showcases the integration of popular React libraries and styling solutions.
+1. Install dependencies:
 
-## Available Scripts
+   ```bash
+   npm install
+   ```
 
-In the project directory, you can run:
+2. Configure Firebase. Copy `.env.example` to `.env` and fill in your Firebase project config (all vars are `REACT_APP_`-prefixed):
 
-### `npm start`
+   ```
+   REACT_APP_FIREBASE_API_KEY=
+   REACT_APP_FIREBASE_AUTH_DOMAIN=
+   REACT_APP_FIREBASE_PROJECT_ID=
+   REACT_APP_FIREBASE_STORAGE_BUCKET=
+   REACT_APP_FIREBASE_MESSAGING_SENDER_ID=
+   REACT_APP_FIREBASE_APP_ID=
+   REACT_APP_FIREBASE_MEASUREMENT_ID=
+   ```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+3. Start the dev server:
 
-### `npm test`
+   ```bash
+   npm start
+   ```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+   Opens at [http://localhost:3000](http://localhost:3000).
 
-### `npm run build`
+## Scripts
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+| Command | Description |
+| --- | --- |
+| `npm start` | Run the dev server on port 3000 |
+| `npm test` | Run tests (Jest + React Testing Library) in watch mode |
+| `npm run build` | Production build to `/build` |
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Project Structure
+
+```
+src/
+  App.js                 # Route definitions (lazy-loaded pages)
+  pages/                 # Dashboard, Tasks, Office, Settings, ShopBills, ...
+  components/
+    shop/                # Bills, vendors, products, transactions views
+    shared/              # Header, Navigation
+    ui/                  # Reusable primitives (Card, SummaryCard, MeterBar, ...)
+  context/               # AuthContext, BillsContext, VendorsContext
+  firebase/              # One service file per Firestore collection
+  utils/formatters.js    # formatCurrency, formatDate
+  styles/theme.css       # Theme tokens (light/dark)
+```
+
+Firestore security rules live in `firestore.rules`; every list query must be tenant-scoped with `where('tenantId', '==', tenantId)`.
+
+See `CLAUDE.md` for detailed coding conventions and `FEATURES.md` for the feature inventory.

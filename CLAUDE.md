@@ -4,7 +4,6 @@ You are a senior full-stack engineer helping build and maintain a React + Fireba
 Your goal is to write clean, minimal, production-quality code that fits the existing codebase patterns.
 
 # Instructions
-- HTML design mockups live in `.superdesign/design_iterations/`
 - Design-preview tooling (design-sync) is documented in `.design-sync/NOTES.md` — read it before touching `.design-sync/` or adding components to `src/components/ui/`
 - Design language is "Dukaan Clay" — source package at `~/Downloads/App design improvement clay/` (readme.md = rules, Clay Prototype v2.dc.html = visual ground truth)
 
@@ -74,15 +73,12 @@ When debugging Firestore errors, check in this order:
 
 ### P1 — High (do soon)
 - [ ] **Bump Vercel Node.js version to 24.x** — project is pinned to deprecated Node 20.x; deployments on or after 2026-10-01 will fail to build. One-click: Vercel → Project Settings → Node.js Version.
-- [x] **Add Firebase Authentication** — DONE: email/password auth (`AuthContext`, `authService`, `ProtectedRoute`) + tenant-scoped `firestore.rules`, deployed to `todo-shop-app` 2026-07-07. All list queries must include `where('tenantId', '==', tenantId)` or the rules deny them.
 - [ ] **PDF invoice generation + share** — top feature gap from competitive research; prerequisite for invoice status tracking, payment reminders, UPI QR.
 
 ### P2 — Medium (nice to have)
-- [x] **Fix `Card` prop-spread order** — `{...props}` comes after `style={cardStyle}` in `src/components/ui/Card.js`, so a `style` prop wipes all card chrome; `StatCard` always passes `style` (default `{}`) and thus renders with no card styling. Fix: stop spreading `style` via `{...props}` (merge is already done in `cardStyle` line 25), then remove the gotcha note. — DONE 2026-07-15 as part of Clay adoption.
 - [ ] **Remove or commit to Tailwind** — `tailwindcss` is in devDeps but used across 15 files; too entrenched to remove quickly
-- [x] **Limit HomeView product subscription** — DONE 2026-07-15: HomeView now does a one-time `getShopProducts` fetch (no realtime full-collection listener).
 
 ### P3 — Low (future)
-- [x] **Add React.lazy() for route code splitting** — DONE 2026-07-15: all pages lazy in `App.js` behind one Suspense fallback.
-- [x] **Delete dead code** — DONE 2026-07-15: removed `VirtualizedBillsList.js`, `TestChart.js`, `src/components/migration/`.
 - [ ] **Consider IndexedDB for activity logs** — localStorage has ~5MB shared limit
+
+(Completed items — Firebase Auth, Card prop-spread fix, HomeView one-time fetch, route code splitting, dead-code deletion — are recorded in git history and project memory.)
