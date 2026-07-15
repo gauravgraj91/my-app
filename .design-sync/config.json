@@ -25,7 +25,8 @@
     "Toggle": "src/components/ui/Toggle.js",
     "PillTabs": "src/components/ui/PillTabs.js",
     "Avatar": "src/components/ui/Avatar.js",
-    "Toast": "src/components/ui/Toast.js"
+    "Toast": "src/components/ui/Toast.js",
+    "MeterBar": "src/components/ui/MeterBar.js"
   },
   "guidelinesGlob": [],
   "overrides": {

@@ -14,3 +14,4 @@ export { default as Toggle } from './Toggle';
 export { default as PillTabs } from './PillTabs';
 export { default as Avatar } from './Avatar';
 export { default as Toast } from './Toast';
+export { default as MeterBar } from './MeterBar';
