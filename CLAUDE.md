@@ -83,6 +83,6 @@ When debugging Firestore errors, check in this order:
 - [x] **Limit HomeView product subscription** — DONE 2026-07-15: HomeView now does a one-time `getShopProducts` fetch (no realtime full-collection listener).
 
 ### P3 — Low (future)
-- [ ] **Add React.lazy() for route code splitting** — all pages load eagerly in `App.js`
+- [x] **Add React.lazy() for route code splitting** — DONE 2026-07-15: all pages lazy in `App.js` behind one Suspense fallback.
 - [ ] **Delete dead code** — `VirtualizedBillsList.js`, `TestChart.js`, and `src/components/migration/` are never imported anywhere
 - [ ] **Consider IndexedDB for activity logs** — localStorage has ~5MB shared limit

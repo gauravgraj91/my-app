@@ -1,24 +1,25 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import Layout from './components/Layout';
 import ErrorBoundary from './components/shared/ErrorBoundary';
-import Dashboard from './pages/Dashboard';
-import Tasks from './pages/Tasks';
-import Office from './pages/Office';
-import Shop from './components/shop/shop';
-import HomeView from './components/shop/HomeView';
-import BillsView from './components/shop/BillsView';
-import ProductsView from './components/shop/ProductsView';
-import PriceList from './components/shop/PriceList';
-import VendorsView from './components/shop/VendorsView';
-import ShopTransactions from './pages/ShopTransactions';
-import Settings from './pages/Settings';
 import LoginPage from './components/auth/LoginPage';
 import SignupPage from './components/auth/SignupPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './components/ui/NotificationSystem';
+
+const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+const Tasks = React.lazy(() => import('./pages/Tasks'));
+const Office = React.lazy(() => import('./pages/Office'));
+const Shop = React.lazy(() => import('./components/shop/shop'));
+const HomeView = React.lazy(() => import('./components/shop/HomeView'));
+const BillsView = React.lazy(() => import('./components/shop/BillsView'));
+const ProductsView = React.lazy(() => import('./components/shop/ProductsView'));
+const PriceList = React.lazy(() => import('./components/shop/PriceList'));
+const VendorsView = React.lazy(() => import('./components/shop/VendorsView'));
+const ShopTransactions = React.lazy(() => import('./pages/ShopTransactions'));
+const Settings = React.lazy(() => import('./pages/Settings'));
 
 function App() {
   return (
@@ -26,28 +27,37 @@ function App() {
       <Router>
         <AuthProvider>
           <NotificationProvider maxNotifications={5}>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignupPage />} />
+            <Suspense fallback={
+              <div style={{
+                minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--muted-foreground)', fontSize: 14, fontWeight: 600
+              }}>
+                Loading…
+              </div>
+            }>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/signup" element={<SignupPage />} />
 
-              {/* Protected routes */}
-              <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/tasks" element={<Tasks />} />
-                <Route path="/office" element={<Office />} />
-                <Route path="/shop" element={<Shop />}>
-                  <Route index element={<HomeView />} />
-                  <Route path="bills" element={<BillsView />} />
-                  <Route path="products" element={<ProductsView />} />
-                  <Route path="price-list" element={<PriceList />} />
-                  <Route path="vendors" element={<VendorsView />} />
-                  <Route path="transactions" element={<ShopTransactions />} />
+                {/* Protected routes */}
+                <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/tasks" element={<Tasks />} />
+                  <Route path="/office" element={<Office />} />
+                  <Route path="/shop" element={<Shop />}>
+                    <Route index element={<HomeView />} />
+                    <Route path="bills" element={<BillsView />} />
+                    <Route path="products" element={<ProductsView />} />
+                    <Route path="price-list" element={<PriceList />} />
+                    <Route path="vendors" element={<VendorsView />} />
+                    <Route path="transactions" element={<ShopTransactions />} />
+                  </Route>
+                  <Route path="/settings" element={<Settings />} />
                 </Route>
-                <Route path="/settings" element={<Settings />} />
-              </Route>
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
           </NotificationProvider>
         </AuthProvider>
       </Router>
