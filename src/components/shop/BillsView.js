@@ -60,7 +60,8 @@ const STYLES = {
 const isBillOverdue = (bill) => {
   if (bill.status === 'returned') return true;
   if (bill.status !== 'active' || !bill.dueDate) return false;
-  const due = new Date(bill.dueDate);
+  const due = bill.dueDate?.toDate ? bill.dueDate.toDate() :
+    bill.dueDate instanceof Date ? bill.dueDate : new Date(bill.dueDate);
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   return due < today;
@@ -168,9 +169,6 @@ const BillsView = () => {
 
   // Compute summary stats
   const summaryStats = useMemo(() => {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-
     let paidBills = [];
     let pendingBills = [];
     let overdueBills = [];
@@ -182,14 +180,8 @@ const BillsView = () => {
         overdueBills.push(bill);
       } else if (bill.status === 'active') {
         // Check if overdue
-        if (bill.dueDate) {
-          const dueDate = bill.dueDate?.toDate ? bill.dueDate.toDate() :
-            bill.dueDate instanceof Date ? bill.dueDate : new Date(bill.dueDate);
-          if (dueDate < now) {
-            overdueBills.push(bill);
-          } else {
-            pendingBills.push(bill);
-          }
+        if (isBillOverdue(bill)) {
+          overdueBills.push(bill);
         } else {
           pendingBills.push(bill);
         }
@@ -279,17 +271,7 @@ const BillsView = () => {
     if (filters.status && filters.status !== '') {
       if (activeStatusTab === 'overdue') {
         // For overdue tab, show returned + overdue active bills
-        const now = new Date();
-        now.setHours(0, 0, 0, 0);
-        result = result.filter(bill => {
-          if (bill.status === 'returned') return true;
-          if (bill.status === 'active' && bill.dueDate) {
-            const dueDate = bill.dueDate?.toDate ? bill.dueDate.toDate() :
-              bill.dueDate instanceof Date ? bill.dueDate : new Date(bill.dueDate);
-            return dueDate < now;
-          }
-          return false;
-        });
+        result = result.filter(bill => isBillOverdue(bill));
       } else {
         result = result.filter(bill => bill.status === filters.status);
       }
