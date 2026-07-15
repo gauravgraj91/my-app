@@ -10,6 +10,7 @@ import {
   ArrowUpRight, CreditCard
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import MeterBar from '../ui/MeterBar';
 import './analytics_theme_1.css';
 
 export const getGreeting = (date = new Date()) => {
@@ -125,29 +126,39 @@ const AnalyticsDashboard = () => {
             </div>
             {hasTasks && (
               <button className="view-all-link" onClick={() => navigate('/tasks')}>
-                View all
+                See all →
               </button>
             )}
           </div>
           {hasTasks ? (
-            <div className="stat-grid">
-              <div className="stat-item">
-                <div className="stat-value">{taskStats.completed}</div>
-                <div className="stat-label">Completed</div>
+            <>
+              <div className="stat-grid">
+                <div className="stat-item">
+                  <div className="stat-value">{taskStats.completed}</div>
+                  <div className="stat-label">Completed</div>
+                </div>
+                <div className="stat-item">
+                  <div className="stat-value">{taskStats.pending}</div>
+                  <div className="stat-label">Pending</div>
+                </div>
+                <div className="stat-item" style={taskStats.overdue > 0 ? { background: 'var(--danger-soft)' } : undefined}>
+                  <div className="stat-value" style={taskStats.overdue > 0 ? { color: 'var(--danger)' } : undefined}>{taskStats.overdue}</div>
+                  <div className="stat-label">Overdue</div>
+                </div>
+                <div className="stat-item" style={taskStats.dueToday > 0 ? { background: 'var(--warning-soft)' } : undefined}>
+                  <div className="stat-value" style={taskStats.dueToday > 0 ? { color: 'var(--warning)' } : undefined}>{taskStats.dueToday}</div>
+                  <div className="stat-label">Due today</div>
+                </div>
               </div>
-              <div className="stat-item">
-                <div className="stat-value">{taskStats.pending}</div>
-                <div className="stat-label">Pending</div>
-              </div>
-              <div className="stat-item" style={taskStats.overdue > 0 ? { background: 'var(--danger-soft)' } : undefined}>
-                <div className="stat-value" style={taskStats.overdue > 0 ? { color: 'var(--danger)' } : undefined}>{taskStats.overdue}</div>
-                <div className="stat-label">Overdue</div>
-              </div>
-              <div className="stat-item" style={taskStats.dueToday > 0 ? { background: 'var(--warning-soft)' } : undefined}>
-                <div className="stat-value" style={taskStats.dueToday > 0 ? { color: 'var(--warning)' } : undefined}>{taskStats.dueToday}</div>
-                <div className="stat-label">Due today</div>
-              </div>
-            </div>
+              <MeterBar
+                style={{ marginTop: 12 }}
+                total={taskStats.completed + taskStats.pending + taskStats.overdue}
+                segments={[
+                  { value: taskStats.completed, color: 'var(--success)' },
+                  { value: taskStats.overdue, color: 'var(--overdue)' }
+                ]}
+              />
+            </>
           ) : (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '0.5rem 0' }}>
               <span style={{ fontSize: '0.875rem', color: 'var(--muted-foreground)' }}>
@@ -175,7 +186,7 @@ const AnalyticsDashboard = () => {
               className="view-all-link"
               onClick={() => navigate(viewMode === 'bills' ? '/shop/bills' : '/shop')}
             >
-              View all
+              See all →
             </button>
           </div>
 
@@ -220,7 +231,7 @@ const AnalyticsDashboard = () => {
               className="view-all-link"
               onClick={() => navigate('/shop/transactions')}
             >
-              View all
+              See all →
             </button>
           </div>
 
@@ -254,6 +265,14 @@ const AnalyticsDashboard = () => {
               <div className="stat-label">Cash out</div>
             </div>
           </div>
+          <MeterBar
+            style={{ marginTop: 12 }}
+            total={transactionStats.cashIn + transactionStats.cashOut}
+            segments={[
+              { value: transactionStats.cashIn, color: 'var(--success)' },
+              { value: transactionStats.cashOut, color: 'var(--overdue)' }
+            ]}
+          />
         </div>
 
         {/* Price List Widget */}
@@ -267,7 +286,7 @@ const AnalyticsDashboard = () => {
               className="view-all-link"
               onClick={() => navigate('/shop/price-list')}
             >
-              View all
+              See all →
             </button>
           </div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0.5rem 0' }}>
