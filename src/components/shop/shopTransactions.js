@@ -1,316 +1,297 @@
-import React, { useState, useEffect } from "react"
-import { addTransaction, subscribeToTransactions, deleteTransaction } from '../../firebase/transactionService'
-import { format } from 'date-fns';
+import React, { useState, useEffect, useMemo } from 'react';
+import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
+import { addTransaction, subscribeToTransactions, deleteTransaction } from '../../firebase/transactionService';
 import { useNotifications } from '../ui/NotificationSystem';
 import { useAuth } from '../../context/AuthContext';
+import { formatCurrency, formatDate } from '../../utils/formatters';
+import SummaryCard from '../ui/SummaryCard';
+import PillTabs from '../ui/PillTabs';
+import Button from '../ui/Button';
+import Input from '../ui/Input';
+import ConfirmDialog from '../ui/ConfirmDialog';
+import MonthBar from '../transactions/MonthBar';
+import RecurringCard from '../transactions/RecurringCard';
+import { isInMonth, monthTotals, monthLabel, exportCsv, txDate } from '../transactions/transactionHelpers';
+
+const CARD = {
+  background: 'var(--card)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-lg)',
+  padding: 22
+};
+
+const TH = {
+  textAlign: 'left', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
+  textTransform: 'uppercase', color: 'var(--muted-foreground)',
+  background: 'var(--secondary)', padding: '12px 18px'
+};
+
+const TD = { padding: '13px 18px', borderBottom: '1px solid var(--border-subtle)', fontSize: 14 };
+
+const typePillStyle = (active, tone) => ({
+  font: 'inherit',
+  fontSize: 13,
+  fontWeight: 700,
+  padding: '10px 18px',
+  borderRadius: 'var(--radius-pill)',
+  cursor: 'pointer',
+  background: active ? `var(--${tone}-soft)` : 'var(--secondary)',
+  color: active ? `var(--${tone})` : 'var(--muted-foreground)',
+  border: active ? `1px solid var(--${tone})` : '1px solid transparent'
+});
+
+const typeBadge = (type) => (
+  <span style={{
+    display: 'inline-block', fontSize: 12, fontWeight: 700, padding: '4px 12px',
+    borderRadius: 'var(--radius-pill)',
+    background: type === 'cashIn' ? 'var(--success-soft)' : 'var(--danger-soft)',
+    color: type === 'cashIn' ? 'var(--success)' : 'var(--danger)'
+  }}>
+    {type === 'cashIn' ? 'Cash In' : 'Cash Out'}
+  </span>
+);
 
 const ShopTransactions = () => {
   const { user } = useAuth();
   const tenantId = user?.tenantId;
-  const [transactions, setTransactions] = useState([])
-  const [amount, setAmount] = useState("")
-  const [type, setType] = useState("cashIn")
-  const [comment, setComment] = useState("")
-  const [filter, setFilter] = useState("all")
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [submitting, setSubmitting] = useState(false)
-  const { showSuccess, showError } = useNotifications()
+  const [transactions, setTransactions] = useState([]);
+  const [amount, setAmount] = useState('');
+  const [type, setType] = useState('cashIn');
+  const [comment, setComment] = useState('');
+  const [filter, setFilter] = useState('all');
+  const now = new Date();
+  const [month, setMonth] = useState({ year: now.getFullYear(), monthIndex: now.getMonth() });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const { showSuccess, showError } = useNotifications();
 
-  // Subscribe to real-time updates
   useEffect(() => {
     if (!tenantId) {
-      setLoading(false)
-      return
+      setLoading(false);
+      return;
     }
-    setError(null)
+    setError(null);
     const unsubscribe = subscribeToTransactions(
       tenantId,
-      (transactions) => {
-        setTransactions(transactions)
-        setLoading(false)
+      (items) => {
+        setTransactions(items);
+        setLoading(false);
       },
       (err) => {
-        console.error('Transaction subscription error:', err)
-        setError(err.message || 'Failed to load transactions')
-        setLoading(false)
+        console.error('Transaction subscription error:', err);
+        setError(err.message || 'Failed to load transactions');
+        setLoading(false);
       }
-    )
+    );
+    return () => unsubscribe();
+  }, [tenantId]);
 
-    return () => unsubscribe()
-  }, [tenantId])
+  const monthTransactions = useMemo(
+    () => transactions.filter(tx => isInMonth(tx, month)),
+    [transactions, month]
+  );
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR'
-    }).format(amount)
-  }
+  const filteredTransactions = useMemo(
+    () => monthTransactions.filter(tx => filter === 'all' || tx.type === filter),
+    [monthTransactions, filter]
+  );
 
-  const formatDate = (date) => {
-    if (date?.toDate) {
-      return format(date.toDate(), 'dd MMM yyyy');
-    }
-    return format(new Date(date), 'dd MMM yyyy');
-  }
+  const totals = useMemo(() => monthTotals(monthTransactions), [monthTransactions]);
 
   const handleTransaction = async () => {
-    if (amount === "" || Number(amount) === 0) {
-      showError("Amount cannot be zero")
-      return
+    if (amount === '' || Number(amount) === 0) {
+      showError('Amount cannot be zero');
+      return;
     }
-
     if (!comment.trim()) {
-      showError("Please add a comment for the transaction")
-      return
+      showError('Please add a comment for the transaction');
+      return;
     }
-
-    setSubmitting(true)
+    setSubmitting(true);
     try {
-      const newTransaction = {
+      await addTransaction({
         type,
         amount: Number(amount),
         date: new Date(),
         comment: comment.trim()
-      }
-
-      await addTransaction(newTransaction, tenantId)
-      setAmount("")
-      setComment("")
-      showSuccess("Transaction added successfully!")
-    } catch (error) {
-      console.error('Error adding transaction:', error)
-      showError('Failed to add transaction. Please try again.')
+      }, tenantId);
+      setAmount('');
+      setComment('');
+      showSuccess('Transaction added successfully!');
+    } catch (err) {
+      console.error('Error adding transaction:', err);
+      showError('Failed to add transaction. Please try again.');
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
-  const handleDeleteTransaction = async (transactionId) => {
-    if (window.confirm("Are you sure you want to delete this transaction?")) {
-      try {
-        await deleteTransaction(transactionId)
-        showSuccess("Transaction deleted successfully!")
-      } catch (error) {
-        console.error('Error deleting transaction:', error)
-        showError('Failed to delete transaction. Please try again.')
-      }
+  const handleDelete = async () => {
+    try {
+      await deleteTransaction(deleteTarget.id);
+      showSuccess('Transaction deleted successfully!');
+    } catch (err) {
+      console.error('Error deleting transaction:', err);
+      showError('Failed to delete transaction. Please try again.');
+    } finally {
+      setDeleteTarget(null);
     }
-  }
+  };
 
-  const filteredTransactions = transactions.filter(transaction => {
-    if (filter === "all") return true
-    return transaction.type === filter
-  })
-
-  const totalCashIn = filteredTransactions
-    .filter(transaction => transaction.type === "cashIn")
-    .reduce((acc, transaction) => acc + transaction.amount, 0)
-
-  const totalCashOut = filteredTransactions
-    .filter(transaction => transaction.type === "cashOut")
-    .reduce((acc, transaction) => acc + transaction.amount, 0)
-
-  const netAmount = totalCashIn - totalCashOut
+  const handleExport = () => {
+    exportCsv(
+      `shop-transactions-${monthLabel(month).replace(' ', '-').toLowerCase()}.csv`,
+      ['Date', 'Type', 'Amount', 'Comment'],
+      filteredTransactions.map(tx => [
+        formatDate(txDate(tx)),
+        tx.type === 'cashIn' ? 'Cash In' : 'Cash Out',
+        tx.amount,
+        tx.comment || ''
+      ])
+    );
+  };
 
   if (loading) {
-    return (
-      <div className="max-w-4xl mx-auto p-4">
-        <div className="text-center text-lg">Loading transactions...</div>
-      </div>
-    )
+    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted-foreground)', fontSize: 15 }}>Loading transactions…</div>;
   }
 
   if (error) {
     return (
-      <div className="max-w-4xl mx-auto p-4">
-        <div className="text-center p-6 bg-red-50 rounded-lg">
-          <h3 className="text-lg font-semibold text-red-800 mb-2">Failed to load transactions</h3>
-          <p className="text-sm text-red-600 mb-4">{error}</p>
-          <button
-            onClick={() => { setError(null); setLoading(true); }}
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
-          >
-            Retry
-          </button>
-        </div>
+      <div style={{ ...CARD, background: 'var(--danger-soft)', textAlign: 'center' }}>
+        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--danger)', marginBottom: 6 }}>Failed to load transactions</div>
+        <div style={{ fontSize: 13, color: 'var(--muted-foreground)', marginBottom: 16 }}>{error}</div>
+        <Button variant="secondary" onClick={() => { setError(null); setLoading(true); }}>Retry</Button>
       </div>
-    )
+    );
   }
 
   if (!tenantId) {
-    return (
-      <div className="max-w-4xl mx-auto p-4">
-        <div className="text-center text-lg text-gray-500">Unable to load transactions — no tenant found.</div>
-      </div>
-    )
+    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted-foreground)', fontSize: 15 }}>Unable to load transactions — no tenant found.</div>;
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6 text-center">Shop Transactions</h1>
-      
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-green-100 p-4 rounded-lg">
-          <h3 className="text-lg font-semibold text-green-800">Total Cash In</h3>
-          <p className="text-2xl font-bold text-green-600">{formatCurrency(totalCashIn)}</p>
-        </div>
-        <div className="bg-red-100 p-4 rounded-lg">
-          <h3 className="text-lg font-semibold text-red-800">Total Cash Out</h3>
-          <p className="text-2xl font-bold text-red-600">{formatCurrency(totalCashOut)}</p>
-        </div>
-        <div className={`p-4 rounded-lg ${netAmount >= 0 ? 'bg-blue-100' : 'bg-orange-100'}`}>
-          <h3 className="text-lg font-semibold">Net Amount</h3>
-          <p className={`text-2xl font-bold ${netAmount >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-            {formatCurrency(netAmount)}
-          </p>
-        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <MonthBar value={month} onChange={setMonth} />
+        <Button variant="secondary" onClick={handleExport}>Export CSV</Button>
       </div>
 
-      {/* Add Transaction Form */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-        <h2 className="text-xl font-semibold mb-4">Add New Transaction</h2>
-        <form className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Amount
-              </label>
-              <input
-                type="number"
-                value={amount}
-                onChange={e => setAmount(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter amount"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Transaction Type
-              </label>
-              <div className="flex">
-                <button
-                  type="button"
-                  onClick={() => setType("cashIn")}
-                  className={`flex-1 py-3 px-4 font-semibold text-white rounded-l-md transition-colors ${
-                    type === "cashIn" ? "bg-green-500" : "bg-gray-300 hover:bg-gray-400"
-                  }`}
-                >
-                  Cash In
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setType("cashOut")}
-                  className={`flex-1 py-3 px-4 font-semibold text-white rounded-r-md transition-colors ${
-                    type === "cashOut" ? "bg-red-500" : "bg-gray-300 hover:bg-gray-400"
-                  }`}
-                >
-                  Cash Out
-                </button>
-              </div>
-            </div>
-          </div>
-          
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
+        <SummaryCard
+          label={`Cash In · ${monthLabel(month).split(' ')[0]}`}
+          value={formatCurrency(totals.cashIn)}
+          subtitle={`${totals.inCount} transaction${totals.inCount !== 1 ? 's' : ''} this month`}
+          icon={TrendingUp}
+          color="var(--success)"
+          bgColor="var(--success-soft)"
+        />
+        <SummaryCard
+          label={`Cash Out · ${monthLabel(month).split(' ')[0]}`}
+          value={formatCurrency(totals.cashOut)}
+          subtitle={`${totals.outCount} transaction${totals.outCount !== 1 ? 's' : ''} this month`}
+          icon={TrendingDown}
+          color="var(--danger)"
+          bgColor="var(--danger-soft)"
+        />
+        <SummaryCard
+          label={`Net · ${monthLabel(month).split(' ')[0]}`}
+          value={formatCurrency(totals.net)}
+          subtitle="cash flow this month"
+          icon={Wallet}
+          color={totals.net >= 0 ? 'var(--success)' : 'var(--danger)'}
+          bgColor={totals.net >= 0 ? 'var(--success-soft)' : 'var(--danger-soft)'}
+        />
+      </div>
+
+      <div style={CARD}>
+        <h2 style={{ margin: '0 0 16px', fontSize: 18, fontWeight: 700 }}>Add transaction</h2>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+          <Input
+            label="Amount"
+            type="number"
+            value={amount}
+            onChange={e => setAmount(e.target.value)}
+            placeholder="0"
+            containerStyle={{ flex: 1, minWidth: 140, marginBottom: 0 }}
+          />
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Comment
-            </label>
-            <input
-              type="text"
-              value={comment}
-              onChange={e => setComment(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter transaction comment"
-            />
+            <span style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Type</span>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button style={typePillStyle(type === 'cashIn', 'success')} onClick={() => setType('cashIn')}>Cash In</button>
+              <button style={typePillStyle(type === 'cashOut', 'danger')} onClick={() => setType('cashOut')}>Cash Out</button>
+            </div>
           </div>
-          
-          <button
-            type="button"
-            onClick={handleTransaction}
-            disabled={submitting}
-            className="w-full py-3 px-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {submitting ? "Adding Transaction..." : "Add Transaction"}
-          </button>
-        </form>
-      </div>
-
-      {/* Filter Buttons */}
-      <div className="flex justify-center mb-6">
-        <div className="flex bg-gray-100 rounded-lg p-1">
-          {["all", "cashIn", "cashOut"].map((filterType) => (
-            <button
-              key={filterType}
-              type="button"
-              onClick={() => setFilter(filterType)}
-              className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                filter === filterType
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-800"
-              }`}
-            >
-              {filterType === "all" ? "All" : filterType === "cashIn" ? "Cash In" : "Cash Out"}
-            </button>
-          ))}
+          <Input
+            label="Comment"
+            type="text"
+            value={comment}
+            onChange={e => setComment(e.target.value)}
+            placeholder="What was this for?"
+            containerStyle={{ flex: 2, minWidth: 200, marginBottom: 0 }}
+          />
+          <Button variant="primary" onClick={handleTransaction} disabled={submitting}>
+            {submitting ? 'Adding…' : 'Add'}
+          </Button>
         </div>
       </div>
 
-      {/* Transactions Table */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
+      <div>
+        <PillTabs
+          items={[
+            { value: 'all', label: 'All' },
+            { value: 'cashIn', label: 'Cash In' },
+            { value: 'cashOut', label: 'Cash Out' }
+          ]}
+          value={filter}
+          onChange={setFilter}
+          size="sm"
+        />
+      </div>
+
+      <div style={{ ...CARD, padding: 0, overflow: 'hidden' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date & Time
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Amount
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Comment
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
+                <th style={TH}>Date</th>
+                <th style={TH}>Type</th>
+                <th style={{ ...TH, textAlign: 'right' }}>Amount</th>
+                <th style={TH}>Comment</th>
+                <th style={TH}></th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody>
               {filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
-                    No transactions found
+                  <td colSpan="5" style={{ ...TD, textAlign: 'center', color: 'var(--muted-foreground)', borderBottom: 'none' }}>
+                    No transactions in {monthLabel(month)}
                   </td>
                 </tr>
               ) : (
-                filteredTransactions.map(transaction => (
-                  <tr key={transaction.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatDate(transaction.date)}
+                filteredTransactions.map((tx, i) => (
+                  <tr key={tx.id}>
+                    <td style={{ ...TD, whiteSpace: 'nowrap', borderBottom: i === filteredTransactions.length - 1 ? 'none' : TD.borderBottom }}>
+                      {formatDate(txDate(tx))}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        transaction.type === "cashIn" 
-                          ? "bg-green-100 text-green-800" 
-                          : "bg-red-100 text-red-800"
-                      }`}>
-                        {transaction.type === "cashIn" ? "Cash In" : "Cash Out"}
-                      </span>
+                    <td style={{ ...TD, borderBottom: i === filteredTransactions.length - 1 ? 'none' : TD.borderBottom }}>
+                      {typeBadge(tx.type)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {formatCurrency(transaction.amount)}
+                    <td style={{ ...TD, textAlign: 'right', fontWeight: 700, borderBottom: i === filteredTransactions.length - 1 ? 'none' : TD.borderBottom }}>
+                      {formatCurrency(tx.amount)}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {transaction.comment}
+                    <td style={{ ...TD, borderBottom: i === filteredTransactions.length - 1 ? 'none' : TD.borderBottom }}>
+                      {tx.comment}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <td style={{ ...TD, whiteSpace: 'nowrap', borderBottom: i === filteredTransactions.length - 1 ? 'none' : TD.borderBottom }}>
                       <button
-                        onClick={() => handleDeleteTransaction(transaction.id)}
-                        className="text-red-600 hover:text-red-900 font-medium"
+                        onClick={() => setDeleteTarget(tx)}
+                        style={{
+                          background: 'none', border: 'none', cursor: 'pointer', font: 'inherit',
+                          fontSize: 12, fontWeight: 700, color: 'var(--danger)',
+                          padding: '5px 12px', borderRadius: 'var(--radius-pill)'
+                        }}
                       >
                         Delete
                       </button>
@@ -322,8 +303,18 @@ const ShopTransactions = () => {
           </table>
         </div>
       </div>
-    </div>
-  )
-}
 
-export default ShopTransactions
+      <RecurringCard scope="shop" tenantId={tenantId} />
+
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        title="Delete transaction?"
+        message={deleteTarget ? `${formatCurrency(deleteTarget.amount)} — "${deleteTarget.comment}" will be removed permanently.` : ''}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
+    </div>
+  );
+};
+
+export default ShopTransactions;

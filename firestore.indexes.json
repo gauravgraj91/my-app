@@ -77,6 +77,14 @@
       ]
     },
     {
+      "collectionGroup": "personalTransactions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "tenantId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "activityLogs",
       "queryScope": "COLLECTION",
       "fields": [

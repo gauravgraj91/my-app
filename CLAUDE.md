@@ -17,10 +17,10 @@ Your goal is to write clean, minimal, production-quality code that fits the exis
 
 ## Architecture
 - Routing: react-router in `src/App.js`. Public routes (`/login`, `/signup`), everything else wrapped in `ProtectedRoute` + `Layout`
-- Pages live in `src/pages/` (Dashboard, Tasks, Office, Settings, ShopBills, ShopTransactions, PriceList); `/shop` renders `shop.js` (a thin ~60-line shell) with nested routes → `HomeView`, `BillsView`, `ProductsView`, `PriceList`, `VendorsView`, `ShopTransactions`
+- Pages live in `src/pages/` (Dashboard, Tasks, Office, Settings, ShopBills, ShopTransactions, PersonalTransactions, Transactions, PriceList); `/shop` renders `shop.js` (a thin ~60-line shell) with nested routes → `HomeView`, `BillsView`, `ProductsView`, `PriceList`, `VendorsView`; `/transactions` renders `pages/Transactions.js` (PillTabs shell) with nested routes → `ShopTransactions` (shop ledger) and `PersonalTransactions` (personal tracker with categories/budgets/recurring); shared transaction pieces (MonthBar, RecurringCard, transactionHelpers) live in `src/components/transactions/`
 - Header + profile menu (settings, dark-mode toggle, logout): `src/components/shared/Header.js`; nav tabs: `src/components/shared/Navigation.js`
 - Data layer: one service file per collection in `src/firebase/` (`billService`, `vendorService`, `shopProductService`, …); all list queries must be tenant-scoped with `where('tenantId', '==', tenantId)` or Firestore rules deny them
-- Storage split: bills/vendors/products in Firestore; product categories (`shopCategories`), theme, table/settings prefs, and activity logs in localStorage
+- Storage split: bills/vendors/products/transactions (shop + personal + recurring templates + personal budgets) in Firestore; product categories (`shopCategories`), personal expense categories (`personalCategories`), theme, table/settings prefs, and activity logs in localStorage
 
 ## Key Files
 - `src/App.js` — route definitions

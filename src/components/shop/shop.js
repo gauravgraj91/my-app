@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { List, Grid, Tag, Users, LayoutDashboard, CreditCard } from 'lucide-react';
+import { List, Grid, Tag, Users, LayoutDashboard } from 'lucide-react';
 import './Shop.css';
 import { BillsProvider } from '../../context/BillsContext';
 import { VendorsProvider } from '../../context/VendorsContext';
@@ -11,7 +11,6 @@ const TABS = [
   { key: 'products', label: 'Products', icon: Grid },
   { key: 'price-list', label: 'Price List', icon: Tag },
   { key: 'vendors', label: 'Vendors', icon: Users },
-  { key: 'transactions', label: 'Transactions', icon: CreditCard },
 ];
 
 const Shop = () => {

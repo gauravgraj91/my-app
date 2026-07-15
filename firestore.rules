@@ -69,6 +69,28 @@ service cloud.firestore {
       allow update, delete: if isTenant();
     }
 
+    match /personalTransactions/{document} {
+      allow read: if isTenant();
+      allow create: if isAuth() && isNewTenant();
+      allow update, delete: if isTenant();
+    }
+
+    match /recurringTransactions/{document} {
+      allow read: if isTenant();
+      allow create: if isAuth() && isNewTenant();
+      allow update, delete: if isTenant();
+    }
+
+    // One budgets doc per tenant; the doc id IS the tenantId, so gate on the id —
+    // isTenant() would deny reads/listens on the not-yet-created doc.
+    match /personalBudgets/{tenantId} {
+      allow read: if isAuth() &&
+        tenantId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tenantId;
+      allow create, update: if isAuth() &&
+        tenantId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tenantId &&
+        request.resource.data.tenantId == tenantId;
+    }
+
     match /activityLogs/{document} {
       allow read: if isTenant();
       allow create: if isAuth() && isNewTenant();

@@ -66,12 +66,12 @@ const Navigation = () => {
     { path: '/shop/products', label: 'Products', icon: Package },
     { path: '/shop/price-list', label: 'Price List', icon: DollarSign },
     { path: '/shop/vendors', label: 'Vendors', icon: Users2 },
-    { path: '/shop/transactions', label: 'Transactions', icon: CreditCard },
   ];
 
   const moreItems = [
     { path: '/office', label: 'Office', icon: Briefcase },
     ...shopItems,
+    { path: '/transactions', label: 'Transactions', icon: CreditCard },
   ];
 
   // Desktop Navigation
@@ -118,6 +118,14 @@ const Navigation = () => {
             </div>
           )}
         </div>
+
+        <Link
+          to="/transactions"
+          className={`nav-item ${isActive('/transactions') ? 'active' : ''}`}
+        >
+          <CreditCard size={18} />
+          <span>Transactions</span>
+        </Link>
 
       </div>
     </nav>
