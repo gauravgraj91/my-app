@@ -23,6 +23,8 @@ import Card from '../ui/Card';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Badge from '../ui/Badge';
+import Avatar from '../ui/Avatar';
+import PillTabs from '../ui/PillTabs';
 import ErrorBoundary from '../ui/ErrorBoundary';
 import SummaryCard from '../ui/SummaryCard';
 import SortableHeader from '../ui/SortableHeader';
@@ -52,6 +54,16 @@ const STYLES = {
     borderBottom: '1px solid var(--border)', background: 'var(--secondary)',
   },
   tableCell: { padding: '12px 16px' },
+};
+
+// --- Overdue helper ---
+const isBillOverdue = (bill) => {
+  if (bill.status === 'returned') return true;
+  if (bill.status !== 'active' || !bill.dueDate) return false;
+  const due = new Date(bill.dueDate);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return due < today;
 };
 
 // --- Range filter helper ---
@@ -389,21 +401,11 @@ const BillsView = () => {
   };
 
   const getStatusBadge = (bill) => {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-
     if (bill.status === 'paid') {
       return <Badge variant="success" size="small" style={{ fontWeight: 600, fontSize: '11px' }}>Paid</Badge>;
     }
-    if (bill.status === 'returned') {
-      return <Badge variant="danger" size="small" style={{ fontWeight: 600, fontSize: '11px' }}>Overdue</Badge>;
-    }
-    if (bill.status === 'active' && bill.dueDate) {
-      const dueDate = bill.dueDate?.toDate ? bill.dueDate.toDate() :
-        bill.dueDate instanceof Date ? bill.dueDate : new Date(bill.dueDate);
-      if (dueDate < now) {
-        return <Badge variant="danger" size="small" style={{ fontWeight: 600, fontSize: '11px' }}>Overdue</Badge>;
-      }
+    if (isBillOverdue(bill)) {
+      return <Badge variant="overdue" size="small" style={{ fontWeight: 600, fontSize: '11px' }}>Overdue</Badge>;
     }
     return <Badge variant="warning" size="small" style={{ fontWeight: 600, fontSize: '11px' }}>Pending</Badge>;
   };
@@ -578,35 +580,17 @@ const BillsView = () => {
           </Button>
 
           {/* Status Tabs */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '4px',
-            background: 'var(--secondary)', borderRadius: '8px', padding: '3px',
-          }}>
-            {[
-              { key: 'all', label: 'All' },
-              { key: 'paid', label: 'Paid' },
-              { key: 'pending', label: 'Pending' },
-              { key: 'overdue', label: 'Overdue' },
-            ].map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => handleStatusTabClick(tab.key)}
-                style={{
-                  padding: '6px 16px',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontSize: '13px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s',
-                  background: activeStatusTab === tab.key ? 'var(--foreground)' : 'transparent',
-                  color: activeStatusTab === tab.key ? 'var(--background)' : 'var(--muted-foreground)',
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          <PillTabs
+            size="sm"
+            items={[
+              { value: 'all', label: 'All' },
+              { value: 'paid', label: 'Paid' },
+              { value: 'pending', label: 'Pending' },
+              { value: 'overdue', label: 'Overdue' },
+            ]}
+            value={activeStatusTab}
+            onChange={handleStatusTabClick}
+          />
         </div>
 
         {/* ===== ADVANCED FILTERS PANEL ===== */}
@@ -673,7 +657,7 @@ const BillsView = () => {
                         {/* Bill Row */}
                         <tr style={{
                           borderBottom: isExpanded ? 'none' : '1px solid var(--secondary)',
-                          background: isSelected ? 'var(--primary-soft)' : (idx % 2 === 0 ? 'var(--card)' : 'var(--muted)'),
+                          background: isSelected || isBillOverdue(bill) ? 'var(--primary-soft)' : (idx % 2 === 0 ? 'var(--card)' : 'var(--muted)'),
                           transition: 'background 0.15s',
                         }}>
                           {/* Checkbox */}
@@ -718,9 +702,12 @@ const BillsView = () => {
 
                           {/* Vendor */}
                           <td style={STYLES.tableCell}>
-                            <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--foreground)' }}>
-                              {bill.vendor || 'Unknown'}
-                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <Avatar name={bill.vendor || '?'} size={32} />
+                              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--foreground)' }}>
+                                {bill.vendor || 'Unknown'}
+                              </span>
+                            </div>
                           </td>
 
                           {/* Date */}
