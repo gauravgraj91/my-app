@@ -1,151 +1,110 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Package, TrendingUp, IndianRupee, Users,
-  FileText, Clock,
-  ChevronRight,
-  LayoutDashboard
-} from 'lucide-react';
+import { LayoutDashboard } from 'lucide-react';
 import { useBills } from '../../context/BillsContext';
-import { useVendors } from '../../context/VendorsContext';
-import { subscribeToShopProducts } from '../../firebase/shopProductService';
+import { getShopProducts } from '../../firebase/shopProductService';
 import { formatCurrency, formatDate } from '../../utils/formatters';
-import SummaryCard from '../ui/SummaryCard';
+import Avatar from '../ui/Avatar';
+import Badge from '../ui/Badge';
+import MeterBar from '../ui/MeterBar';
 import { useAuth } from '../../context/AuthContext';
 
-// --- Styles ---
-const STYLES = {
-  sectionTitle: {
-    fontSize: '15px', fontWeight: '700', color: 'var(--foreground)',
-    marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px',
-  },
-  sectionCard: {
-    background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '12px',
-    padding: '24px',
-  },
-  viewAllBtn: {
-    display: 'inline-flex', alignItems: 'center', gap: '4px',
-    fontSize: '13px', fontWeight: '600', color: 'var(--primary)',
-    background: 'none', border: 'none', cursor: 'pointer',
-    padding: '6px 12px', borderRadius: '8px',
-    transition: 'all 0.15s',
-  },
-  statusDot: {
-    width: '8px', height: '8px', borderRadius: '50%',
-    display: 'inline-block', marginRight: '8px',
-  },
+const CARD = {
+  background: 'var(--card)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-lg)',
+  padding: 24
 };
 
-const StatusRow = ({ label, count, amount, color, dotColor }) => (
-  <div style={{
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    padding: '10px 0', borderBottom: '1px solid var(--border)',
-  }}>
-    <div style={{ display: 'flex', alignItems: 'center' }}>
-      <span style={{ ...STYLES.statusDot, background: dotColor }} />
-      <span style={{ fontSize: '14px', color: 'var(--foreground)' }}>{label}</span>
-    </div>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-      <span style={{
-        fontSize: '12px', fontWeight: '600', color,
-        background: `color-mix(in srgb, ${dotColor} 12%, transparent)`, padding: '2px 10px', borderRadius: '10px',
-      }}>
-        {count}
-      </span>
-      <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--foreground)', minWidth: '90px', textAlign: 'right' }}>
-        {formatCurrency(amount)}
-      </span>
-    </div>
-  </div>
-);
+const CARD_LABEL = { fontSize: 13, fontWeight: 700, color: 'var(--muted-foreground)' };
 
-const TAB_ROUTES = { home: '/shop', bills: '/shop/bills', products: '/shop/products', pricelist: '/shop/price-list', vendors: '/shop/vendors' };
+const HERO_NUM = {
+  fontFamily: 'var(--font-display)',
+  fontWeight: 800,
+  letterSpacing: '-0.02em',
+  color: 'var(--foreground)'
+};
+
+const LINK_BTN = {
+  fontSize: 13,
+  fontWeight: 700,
+  color: 'var(--primary-accent)',
+  background: 'none',
+  border: 'none',
+  cursor: 'pointer',
+  padding: 0,
+  fontFamily: 'var(--font-sans)'
+};
+
+const billAmount = (b) => b.finalAmount || b.totalAmount || 0;
+
+const billStatus = (bill, today) => {
+  if (bill.status === 'paid') return { label: 'Paid', variant: 'success' };
+  const due = bill.dueDate ? new Date(bill.dueDate) : null;
+  const overdue = bill.status === 'returned' || (bill.status === 'active' && due && due < today);
+  return overdue ? { label: 'Overdue', variant: 'overdue' } : { label: 'Pending', variant: 'warning' };
+};
 
 const HomeView = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const tenantId = user?.tenantId;
-  const onNavigate = (tab) => navigate(TAB_ROUTES[tab] || '/shop');
   const { bills } = useBills();
-  const { vendors } = useVendors();
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
-  // Subscribe to products
   useEffect(() => {
     if (!tenantId) return;
-    const unsubscribe = subscribeToShopProducts(tenantId, (items) => {
-      setProducts(items || []);
-      setLoadingProducts(false);
-    });
-    return () => { if (typeof unsubscribe === 'function') unsubscribe(); };
+    let cancelled = false;
+    getShopProducts(tenantId)
+      .then(items => { if (!cancelled) { setProducts(items || []); setLoadingProducts(false); } })
+      .catch(err => { console.error('Error loading product stats:', err); if (!cancelled) { setProducts([]); setLoadingProducts(false); } });
+    return () => { cancelled = true; };
   }, [tenantId]);
 
-  // --- Computed stats ---
-  const billStats = useMemo(() => {
-    let paid = 0, paidAmt = 0, pending = 0, pendingAmt = 0;
-    let totalAmount = 0;
+  const today = useMemo(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  }, []);
 
+  const heroStats = useMemo(() => {
+    const now = new Date();
+    const monthLabel = now.toLocaleString('en-IN', { month: 'long' });
+    const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    let monthTotal = 0, monthCount = 0, prevTotal = 0, ytdCount = 0;
     (bills || []).forEach(b => {
-      const amt = b.finalAmount || b.totalAmount || 0;
-      totalAmount += amt;
-
-      if (b.status === 'paid') { paid++; paidAmt += amt; }
-      else { pending++; pendingAmt += amt; }
+      const d = b.date ? new Date(b.date) : null;
+      if (!d) return;
+      const amt = billAmount(b);
+      if (d.getFullYear() === now.getFullYear()) ytdCount++;
+      if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) {
+        monthTotal += amt; monthCount++;
+      } else if (d.getFullYear() === prev.getFullYear() && d.getMonth() === prev.getMonth()) {
+        prevTotal += amt;
+      }
     });
-
-    return {
-      total: (bills || []).length, totalAmount,
-      paid, paidAmt, pending, pendingAmt,
-    };
+    const deltaPct = prevTotal > 0 ? ((monthTotal - prevTotal) / prevTotal) * 100 : null;
+    const prevLabel = prev.toLocaleString('en-IN', { month: 'long' });
+    return { monthLabel, monthTotal, monthCount, prevLabel, deltaPct, ytdCount };
   }, [bills]);
+
+  const openStats = useMemo(() => {
+    let pendingAmt = 0, overdueAmt = 0, openCount = 0;
+    (bills || []).forEach(b => {
+      if (b.status === 'paid') return;
+      openCount++;
+      const { variant } = billStatus(b, today);
+      if (variant === 'overdue') overdueAmt += billAmount(b);
+      else pendingAmt += billAmount(b);
+    });
+    return { pendingAmt, overdueAmt, openCount, openTotal: pendingAmt + overdueAmt };
+  }, [bills, today]);
 
   const productStats = useMemo(() => {
     const totalValue = products.reduce((s, p) => s + (p.totalAmount || 0), 0);
     const totalProfit = products.reduce((s, p) => s + ((p.profitPerPiece || 0) * (p.totalQuantity || 0)), 0);
     return { total: products.length, totalValue, totalProfit };
   }, [products]);
-
-  const vendorStats = useMemo(() => {
-    const now = new Date();
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    let activeCount = 0;
-    let outstandingAmt = 0;
-    let overdueAmt = 0;
-
-    const vendorNames = new Set((vendors || []).map(v => v.name));
-    // Also count vendors from bills that aren't registered
-    (bills || []).forEach(b => { if (b.vendor) vendorNames.add(b.vendor); });
-    const totalCount = vendorNames.size;
-
-    // Compute per-vendor stats from bills
-    const vendorBillMap = {};
-    (bills || []).forEach(b => {
-      if (!b.vendor) return;
-      if (!vendorBillMap[b.vendor]) vendorBillMap[b.vendor] = { bills: [], lastDate: null };
-      vendorBillMap[b.vendor].bills.push(b);
-      const d = b.date ? new Date(b.date) : null;
-      if (d && (!vendorBillMap[b.vendor].lastDate || d > vendorBillMap[b.vendor].lastDate)) {
-        vendorBillMap[b.vendor].lastDate = d;
-      }
-    });
-
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    Object.values(vendorBillMap).forEach(({ bills: vBills, lastDate }) => {
-      if (lastDate && lastDate >= thirtyDaysAgo) activeCount++;
-      vBills.forEach(b => {
-        const amt = b.finalAmount || b.totalAmount || 0;
-        const dueDate = b.dueDate ? new Date(b.dueDate) : null;
-        const isOverdue = b.status === 'returned' || (b.status === 'active' && dueDate && dueDate < today);
-        if (b.status === 'active') {
-          if (isOverdue) overdueAmt += amt;
-          else outstandingAmt += amt;
-        }
-      });
-    });
-
-    return { total: totalCount, active: activeCount, outstandingAmt, overdueAmt };
-  }, [vendors, bills]);
 
   const recentBills = useMemo(() => {
     return [...(bills || [])]
@@ -157,12 +116,6 @@ const HomeView = () => {
       .slice(0, 5);
   }, [bills]);
 
-  const uniqueProductCount = useMemo(() => {
-    const names = new Set();
-    products.forEach(p => { if (p.productName) names.add(p.productName.trim().toLowerCase()); });
-    return names.size;
-  }, [products]);
-
   const topProducts = useMemo(() => {
     return [...products]
       .map(p => ({ ...p, totalProfit: (p.profitPerPiece || 0) * (p.totalQuantity || 0) }))
@@ -170,230 +123,190 @@ const HomeView = () => {
       .slice(0, 5);
   }, [products]);
 
-  const isLoading = loadingProducts;
-
-  if (isLoading) {
+  if (loadingProducts) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center' }}>
+      <div style={{ padding: 40, textAlign: 'center' }}>
         <LayoutDashboard size={48} style={{ margin: '0 auto 16px', color: 'var(--muted-foreground)' }} />
-        <div style={{ fontSize: '16px', color: 'var(--muted-foreground)' }}>Loading dashboard...</div>
+        <div style={{ fontSize: 16, color: 'var(--muted-foreground)' }}>Loading your shop…</div>
       </div>
     );
   }
 
   return (
-    <div>
-      {/* ===== TOP SUMMARY CARDS ===== */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: '16px', marginBottom: '24px',
-      }}>
-        <SummaryCard
-          label="Total Revenue"
-          value={formatCurrency(billStats.totalAmount)}
-          subtitle={`${billStats.total} bills total`}
-          icon={IndianRupee} color="var(--success)" bgColor="var(--success-soft)"
-        />
-        <SummaryCard
-          label="Total Profit"
-          value={formatCurrency(productStats.totalProfit)}
-          subtitle={`${billStats.totalAmount > 0 ? ((productStats.totalProfit / billStats.totalAmount) * 100).toFixed(1) : '0.0'}% margin`}
-          icon={TrendingUp} color="var(--warning)" bgColor="var(--warning-soft)"
-        />
-        <SummaryCard
-          label="Products"
-          value={productStats.total}
-          subtitle={`${formatCurrency(productStats.totalValue)} total value`}
-          icon={Package} color="var(--primary)" bgColor="var(--primary-soft)"
-        />
-        <SummaryCard
-          label="Vendors"
-          value={vendorStats.total}
-          subtitle={`${vendorStats.active} active in last 30 days`}
-          icon={Users} color="var(--primary)" bgColor="var(--primary-soft)"
-        />
-      </div>
-
-      {/* ===== BILLS & VENDORS OVERVIEW ===== */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: '1fr 1fr',
-        gap: '16px', marginBottom: '24px',
-      }}>
-        {/* Bills Overview */}
-        <div style={STYLES.sectionCard}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <div style={STYLES.sectionTitle}>
-              <FileText size={16} color="var(--muted-foreground)" />
-              Bills Overview
-            </div>
-            <button style={STYLES.viewAllBtn} onClick={() => onNavigate('bills')}>
-              View All <ChevronRight size={14} />
-            </button>
-          </div>
-          <StatusRow label="Total Bills" count={billStats.total} amount={billStats.totalAmount} color="var(--primary)" dotColor="var(--primary)" />
-          <StatusRow label="Paid" count={billStats.paid} amount={billStats.paidAmt} color="var(--success)" dotColor="var(--success)" />
-          <StatusRow label="Pending" count={billStats.pending} amount={billStats.pendingAmt} color="var(--warning)" dotColor="var(--warning)" />
-        </div>
-
-        {/* Vendors Overview */}
-        <div style={STYLES.sectionCard}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <div style={STYLES.sectionTitle}>
-              <Users size={16} color="var(--muted-foreground)" />
-              Vendors Overview
-            </div>
-            <button style={STYLES.viewAllBtn} onClick={() => onNavigate('vendors')}>
-              View All <ChevronRight size={14} />
-            </button>
-          </div>
-          <StatusRow label="Active Vendors" count={vendorStats.active} amount={0} color="var(--success)" dotColor="var(--success)" />
-          <StatusRow label="Outstanding" count="" amount={vendorStats.outstandingAmt} color="var(--warning)" dotColor="var(--warning)" />
-          <StatusRow label="Overdue" count="" amount={vendorStats.overdueAmt} color="var(--danger)" dotColor="var(--danger)" />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* ===== TOP ROW: hero · to collect/pay · products ===== */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.35fr 1fr 1fr', gap: 16 }}>
+        {/* Hero (solid ink) */}
+        <div style={{
+          background: 'var(--foreground)', color: 'var(--background)',
+          borderRadius: 'var(--radius-lg)', padding: 28, position: 'relative', overflow: 'hidden'
+        }}>
           <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '10px 0',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span style={{ ...STYLES.statusDot, background: 'var(--primary)' }} />
-              <span style={{ fontSize: '14px', color: 'var(--foreground)' }}>Unique Products</span>
+            position: 'absolute', right: -40, top: -40, width: 180, height: 180,
+            borderRadius: '50%', background: 'var(--primary)', opacity: 0.9
+          }} />
+          <div style={{ position: 'relative' }}>
+            <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.7, marginBottom: 10 }}>
+              {heroStats.monthLabel} so far
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ ...HERO_NUM, color: 'var(--background)', fontSize: 44, letterSpacing: '-0.03em', lineHeight: 1 }}>
+              {formatCurrency(heroStats.monthTotal)}
+            </div>
+            <div style={{ fontSize: 14, marginTop: 10, opacity: 0.85 }}>
+              purchases across {heroStats.monthCount} bill{heroStats.monthCount !== 1 ? 's' : ''} this month
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 20, flexWrap: 'wrap' }}>
+              {heroStats.deltaPct !== null && (
+                <span style={{
+                  background: 'color-mix(in srgb, var(--background) 14%, transparent)',
+                  borderRadius: 'var(--radius-pill)', padding: '6px 14px', fontSize: 12, fontWeight: 700
+                }}>
+                  {heroStats.deltaPct >= 0 ? '▲' : '▼'} {Math.abs(heroStats.deltaPct).toFixed(1)}% vs {heroStats.prevLabel}
+                </span>
+              )}
               <span style={{
-                fontSize: '12px', fontWeight: '600', color: 'var(--primary)',
-                background: 'var(--primary-soft)', padding: '2px 10px', borderRadius: '10px',
+                background: 'color-mix(in srgb, var(--background) 14%, transparent)',
+                borderRadius: 'var(--radius-pill)', padding: '6px 14px', fontSize: 12, fontWeight: 700
               }}>
-                {uniqueProductCount}
+                {heroStats.ytdCount} bills YTD
               </span>
-              <button style={{ ...STYLES.viewAllBtn, minWidth: '90px', textAlign: 'right', padding: '0' }} onClick={() => onNavigate('pricelist')}>
-                View <ChevronRight size={14} />
-              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* To collect / pay */}
+        <div style={{ ...CARD, display: 'flex', flexDirection: 'column' }}>
+          <div style={CARD_LABEL}>To collect / pay</div>
+          <div style={{ ...HERO_NUM, fontSize: 30, marginTop: 12 }}>
+            {formatCurrency(openStats.openTotal)}
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--muted-foreground)', marginTop: 4 }}>
+            across {openStats.openCount} open bill{openStats.openCount !== 1 ? 's' : ''}
+          </div>
+          <MeterBar
+            style={{ marginTop: 14 }}
+            total={openStats.openTotal}
+            segments={[
+              { value: openStats.pendingAmt, color: 'var(--warning)' },
+              { value: openStats.overdueAmt, color: 'var(--overdue)' }
+            ]}
+          />
+          <div style={{
+            display: 'flex', justifyContent: 'space-between',
+            fontSize: 12, fontWeight: 600, color: 'var(--muted-foreground)', marginTop: 8
+          }}>
+            <span><span style={{ color: 'var(--warning)' }}>●</span> pending {formatCurrency(openStats.pendingAmt)}</span>
+            <span><span style={{ color: 'var(--overdue)' }}>●</span> overdue {formatCurrency(openStats.overdueAmt)}</span>
+          </div>
+        </div>
+
+        {/* Products */}
+        <div style={{ ...CARD, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={CARD_LABEL}>Stock value</div>
+            <button style={{ ...LINK_BTN, fontSize: 12 }} onClick={() => navigate('/shop/price-list')}>Price list →</button>
+          </div>
+          <div style={{ ...HERO_NUM, fontSize: 30, marginTop: 12 }}>
+            {formatCurrency(productStats.totalValue)}
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--muted-foreground)', marginTop: 4 }}>
+            {productStats.total} product{productStats.total !== 1 ? 's' : ''} tracked
+          </div>
+          <div style={{
+            marginTop: 14, background: 'var(--muted)', borderRadius: 'var(--radius-sm)', padding: '10px 12px'
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted-foreground)', letterSpacing: '0.06em' }}>PROFIT</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--success)' }}>
+              {formatCurrency(productStats.totalProfit)}
             </div>
           </div>
         </div>
       </div>
 
-      {/* ===== RECENT BILLS & TOP PRODUCTS ===== */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: '1fr 1fr',
-        gap: '16px',
-      }}>
-        {/* Recent Bills */}
-        <div style={STYLES.sectionCard}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <div style={STYLES.sectionTitle}>
-              <Clock size={16} color="var(--muted-foreground)" />
-              Recent Bills
-            </div>
-            <button style={STYLES.viewAllBtn} onClick={() => onNavigate('bills')}>
-              View All <ChevronRight size={14} />
-            </button>
+      {/* ===== BOTTOM ROW: recent bills · top products ===== */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 16 }}>
+        {/* Recent bills */}
+        <div style={CARD}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div style={{ ...HERO_NUM, fontSize: 18, fontWeight: 700 }}>Recent bills</div>
+            <button style={LINK_BTN} onClick={() => navigate('/shop/bills')}>See all →</button>
           </div>
           {recentBills.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '24px', color: 'var(--muted-foreground)', fontSize: '14px' }}>
+            <div style={{ textAlign: 'center', padding: 24, color: 'var(--muted-foreground)', fontSize: 14 }}>
               No bills yet
             </div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr>
-                    {['#', 'Vendor', 'Amount', 'Status', 'Date'].map(h => (
-                      <th key={h} style={{
-                        padding: '8px 12px', textAlign: h === 'Amount' ? 'right' : 'left',
-                        fontSize: '11px', fontWeight: '600', color: 'var(--muted-foreground)',
-                        textTransform: 'uppercase', letterSpacing: '0.05em',
-                        borderBottom: '1px solid var(--border)',
-                      }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentBills.map(bill => {
-                    const dueDate = bill.dueDate ? new Date(bill.dueDate) : null;
-                    const now = new Date();
-                    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                    const isOverdue = bill.status === 'returned' || (bill.status === 'active' && dueDate && dueDate < today);
-                    const statusLabel = bill.status === 'paid' ? 'Paid' : isOverdue ? 'Overdue' : 'Pending';
-                    const statusColor = bill.status === 'paid' ? 'var(--success)' : isOverdue ? 'var(--danger)' : 'var(--warning)';
-                    const statusBg = bill.status === 'paid' ? 'var(--success-soft)' : isOverdue ? 'var(--danger-soft)' : 'var(--warning-soft)';
-
-                    return (
-                      <tr key={bill.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                        <td style={{ padding: '10px 12px', fontSize: '13px', fontWeight: '600', color: 'var(--foreground)' }}>
-                          {bill.billNumber || '-'}
-                        </td>
-                        <td style={{ padding: '10px 12px', fontSize: '13px', color: 'var(--foreground)' }}>
-                          {bill.vendor || '-'}
-                        </td>
-                        <td style={{ padding: '10px 12px', fontSize: '13px', fontWeight: '600', color: 'var(--foreground)', textAlign: 'right' }}>
-                          {formatCurrency(bill.finalAmount || bill.totalAmount || 0)}
-                        </td>
-                        <td style={{ padding: '10px 12px' }}>
-                          <span style={{
-                            fontSize: '11px', fontWeight: '600', color: statusColor,
-                            background: statusBg, padding: '3px 10px', borderRadius: '10px',
-                          }}>
-                            {statusLabel}
-                          </span>
-                        </td>
-                        <td style={{ padding: '10px 12px', fontSize: '13px', color: 'var(--muted-foreground)' }}>
-                          {bill.date ? formatDate(bill.date) : '-'}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {recentBills.map(bill => {
+                const status = billStatus(bill, today);
+                return (
+                  <div
+                    key={bill.id}
+                    onClick={() => navigate('/shop/bills')}
+                    style={{
+                      display: 'grid', gridTemplateColumns: '44px 1fr auto auto',
+                      alignItems: 'center', gap: 14, padding: '10px 12px',
+                      borderRadius: 'var(--radius)', cursor: 'pointer', transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--muted)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    <Avatar name={bill.vendor || '?'} size={44} />
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--foreground)' }}>
+                        {bill.vendor || 'Unknown'}
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>
+                        {bill.billNumber || '—'} · {bill.date ? formatDate(bill.date) : '—'}
+                      </div>
+                    </div>
+                    <Badge variant={status.variant} size="small">{status.label}</Badge>
+                    <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--foreground)' }}>
+                      {formatCurrency(billAmount(bill))}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
 
-        {/* Top Products by Profit */}
-        <div style={STYLES.sectionCard}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <div style={STYLES.sectionTitle}>
-              <TrendingUp size={16} color="var(--muted-foreground)" />
-              Top Products by Profit
-            </div>
-            <button style={STYLES.viewAllBtn} onClick={() => onNavigate('products')}>
-              View All <ChevronRight size={14} />
-            </button>
+        {/* Top products */}
+        <div style={CARD}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <div style={{ ...HERO_NUM, fontSize: 18, fontWeight: 700 }}>Top products</div>
+            <button style={LINK_BTN} onClick={() => navigate('/shop/products')}>See all →</button>
           </div>
           {topProducts.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '24px', color: 'var(--muted-foreground)', fontSize: '14px' }}>
+            <div style={{ textAlign: 'center', padding: 24, color: 'var(--muted-foreground)', fontSize: 14 }}>
               No products yet
             </div>
           ) : (
-            <div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {topProducts.map((p, i) => (
                 <div key={p.id} style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '10px 0', borderBottom: i < topProducts.length - 1 ? '1px solid var(--border)' : 'none',
+                  padding: '9px 10px', borderRadius: 'var(--radius)'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <span style={{
-                      width: '24px', height: '24px', borderRadius: '6px',
+                      width: 26, height: 26, borderRadius: 8,
                       background: 'var(--secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '12px', fontWeight: '700', color: 'var(--muted-foreground)',
+                      fontSize: 12, fontWeight: 700, color: 'var(--muted-foreground)'
                     }}>
                       {i + 1}
                     </span>
                     <div>
-                      <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--foreground)' }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--foreground)' }}>
                         {p.productName || 'Unnamed'}
                       </div>
-                      <div style={{ fontSize: '12px', color: 'var(--muted-foreground)' }}>
-                        {p.category || '-'} · Qty: {p.totalQuantity || 0}
+                      <div style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>
+                        qty {p.totalQuantity || 0}
                       </div>
                     </div>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--success)' }}>
-                      {formatCurrency(p.totalProfit)}
-                    </div>
-                    <div style={{ fontSize: '12px', color: 'var(--muted-foreground)' }}>
-                      {formatCurrency(p.profitPerPiece || 0)}/pc
-                    </div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--success)' }}>
+                    {formatCurrency(p.totalProfit)}
                   </div>
                 </div>
               ))}
