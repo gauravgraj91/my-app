@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard } from 'lucide-react';
 import { useBills } from '../../context/BillsContext';
 import { getShopProducts } from '../../firebase/shopProductService';
 import { formatCurrency, formatDate } from '../../utils/formatters';
@@ -123,15 +122,6 @@ const HomeView = () => {
       .slice(0, 5);
   }, [products]);
 
-  if (loadingProducts) {
-    return (
-      <div style={{ padding: 40, textAlign: 'center' }}>
-        <LayoutDashboard size={48} style={{ margin: '0 auto 16px', color: 'var(--muted-foreground)' }} />
-        <div style={{ fontSize: 16, color: 'var(--muted-foreground)' }}>Loading your shop…</div>
-      </div>
-    );
-  }
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* ===== TOP ROW: hero · to collect/pay · products ===== */}
@@ -207,17 +197,17 @@ const HomeView = () => {
             <button style={{ ...LINK_BTN, fontSize: 12 }} onClick={() => navigate('/shop/price-list')}>Price list →</button>
           </div>
           <div style={{ ...HERO_NUM, fontSize: 30, marginTop: 12 }}>
-            {formatCurrency(productStats.totalValue)}
+            {loadingProducts ? '—' : formatCurrency(productStats.totalValue)}
           </div>
           <div style={{ fontSize: 13, color: 'var(--muted-foreground)', marginTop: 4 }}>
-            {productStats.total} product{productStats.total !== 1 ? 's' : ''} tracked
+            {loadingProducts ? 'loading products…' : `${productStats.total} product${productStats.total !== 1 ? 's' : ''} tracked`}
           </div>
           <div style={{
             marginTop: 14, background: 'var(--muted)', borderRadius: 'var(--radius-sm)', padding: '10px 12px'
           }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted-foreground)', letterSpacing: '0.06em' }}>PROFIT</div>
             <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--success)' }}>
-              {formatCurrency(productStats.totalProfit)}
+              {loadingProducts ? '—' : formatCurrency(productStats.totalProfit)}
             </div>
           </div>
         </div>
@@ -279,7 +269,7 @@ const HomeView = () => {
           </div>
           {topProducts.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 24, color: 'var(--muted-foreground)', fontSize: 14 }}>
-              No products yet
+              {loadingProducts ? 'Loading products…' : 'No products yet'}
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>

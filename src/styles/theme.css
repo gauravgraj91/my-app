@@ -21,7 +21,7 @@
   --primary:           #c2502e;  /* buttons, active nav, links */
   --primary-hover:     #a8431f;
   --primary-foreground:#fff6ef;
-  --primary-soft:      #fdf0e8;  /* tinted chip / overdue row fill */
+  --primary-soft:      #fdf0e8;  /* tinted chip / selected row fill */
   --primary-accent:    #c2502e;  /* text/icon accent (same as primary in light) */
 
   /* Neutrals */

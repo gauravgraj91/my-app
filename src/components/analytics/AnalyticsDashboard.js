@@ -270,7 +270,7 @@ const AnalyticsDashboard = () => {
             total={transactionStats.cashIn + transactionStats.cashOut}
             segments={[
               { value: transactionStats.cashIn, color: 'var(--success)' },
-              { value: transactionStats.cashOut, color: 'var(--overdue)' }
+              { value: transactionStats.cashOut, color: 'var(--danger)' }
             ]}
           />
         </div>

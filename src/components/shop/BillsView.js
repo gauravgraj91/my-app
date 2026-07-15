@@ -639,7 +639,7 @@ const BillsView = () => {
                         {/* Bill Row */}
                         <tr style={{
                           borderBottom: isExpanded ? 'none' : '1px solid var(--secondary)',
-                          background: isSelected || isBillOverdue(bill) ? 'var(--primary-soft)' : (idx % 2 === 0 ? 'var(--card)' : 'var(--muted)'),
+                          background: isSelected ? 'var(--primary-soft)' : isBillOverdue(bill) ? 'color-mix(in srgb, var(--overdue) 12%, transparent)' : (idx % 2 === 0 ? 'var(--card)' : 'var(--muted)'),
                           transition: 'background 0.15s',
                         }}>
                           {/* Checkbox */}
