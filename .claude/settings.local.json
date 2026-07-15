@@ -146,7 +146,8 @@
       "Bash($HOME/.claude/plugins/cache/claude-plugins-official/superpowers/6.1.1/skills/subagent-driven-development/scripts/review-package c97256d *)",
       "Bash(/Users/gauravraj/.claude/plugins/cache/claude-plugins-official/superpowers/6.1.1/skills/subagent-driven-development/scripts/review-package b99785b *)",
       "Bash($HOME/.claude/plugins/cache/claude-plugins-official/superpowers/6.1.1/skills/subagent-driven-development/scripts/review-package eff2e7c *)",
-      "Bash(BROWSER=none npm start *)"
+      "Bash(BROWSER=none npm start *)",
+      "Bash(command -v vercel)"
     ]
   }
 }
