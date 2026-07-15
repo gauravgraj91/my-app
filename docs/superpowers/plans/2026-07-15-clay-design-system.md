@@ -52,7 +52,7 @@
 **Interfaces:**
 - Produces: the font families `'Bricolage Grotesque'` (400/600/700/800) and `'Hanken Grotesk'` (400/500/600/700/800) available at runtime; Task 2's `--font-display` token depends on this.
 
-- [ ] **Step 1: Update the font link in `public/index.html`**
+- [x] **Step 1: Update the font link in `public/index.html`**
 
 Replace:
 
@@ -72,7 +72,7 @@ with:
     />
 ```
 
-- [ ] **Step 2: Update the same URL in `.design-sync/ds.css`**
+- [x] **Step 2: Update the same URL in `.design-sync/ds.css`**
 
 Locate the line containing `fonts.googleapis.com` and replace the URL portion with the exact URL from Step 1 (keep the line's existing form — `@import url('…');` or `<link>`-equivalent — only the URL changes):
 
@@ -80,12 +80,12 @@ Locate the line containing `fonts.googleapis.com` and replace the URL portion wi
 https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&display=swap
 ```
 
-- [ ] **Step 3: Verify build**
+- [x] **Step 3: Verify build**
 
 Run: `npm run build`
 Expected: `Compiled successfully` (or compiled with pre-existing warnings only).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add public/index.html .design-sync/ds.css
@@ -104,7 +104,7 @@ git commit -m "feat(clay): load Bricolage Grotesque + full Hanken Grotesk weight
 - Consumes: fonts from Task 1.
 - Produces: all existing tokens with Clay values, plus new tokens `--font-display`, `--radius-pill`, `--radius-modal`, `--shadow-accent`, `--overdue`, `--overdue-foreground`. Every later task uses these names.
 
-- [ ] **Step 1: Replace the contents of `src/styles/theme.css`**
+- [x] **Step 1: Replace the contents of `src/styles/theme.css`**
 
 ```css
 /* ============================================================
@@ -216,17 +216,17 @@ h1, h2, h3 {
 }
 ```
 
-- [ ] **Step 2: Reconcile `.design-sync/conventions.md`**
+- [x] **Step 2: Reconcile `.design-sync/conventions.md`**
 
 Open `.design-sync/conventions.md`. It enumerates the theme tokens for the design agent. Update that enumeration to match the file above: same token names as before plus the six new ones (`--font-display`, `--radius-pill`, `--radius-modal`, `--shadow-accent`, `--overdue`, `--overdue-foreground`), and update any prose describing the palette (indigo → clay orange, cool grays → warm cream/cocoa, "no colored glows" → "clay glow on primary button only"). Do not change anything else in the file.
 
-- [ ] **Step 3: Verify build and visual smoke-check**
+- [x] **Step 3: Verify build and visual smoke-check**
 
 Run: `npm run build`
 Expected: `Compiled successfully`.
 Then run `npm start`, open http://localhost:3000, and confirm: cream page background, clay-orange primary buttons/links, dark-mode toggle produces warm cocoa (not gray/blue) surfaces. Do a full page reload after theme change (not HMR).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/styles/theme.css .design-sync/conventions.md
@@ -246,7 +246,7 @@ git commit -m "feat(clay): remap theme tokens to Dukaan Clay palette"
 - Consumes: `--radius-lg`, `--shadow-lg`, `--card`, `--card-foreground`, `--border` from Task 2.
 - Produces: `Card` (default export) with unchanged props API `{ children, className, padding = 24, shadow = 'default', style, ...props }` — but `style` now MERGES with card chrome instead of replacing it. `StatCard` (which always passes `style`) starts rendering correctly with no changes of its own.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `src/components/ui/__tests__/Card.test.js`:
 
@@ -272,12 +272,12 @@ describe('Card', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `CI=true npx react-scripts test --watchAll=false src/components/ui/__tests__/Card.test.js`
 Expected: FAIL — first test fails because `{...props}` re-applies `style={{marginTop: 4}}` after `style={cardStyle}`, wiping `background`; second fails on `borderRadius: 12`.
 
-- [ ] **Step 3: Rewrite `src/components/ui/Card.js`**
+- [x] **Step 3: Rewrite `src/components/ui/Card.js`**
 
 ```js
 import React from 'react';
@@ -323,12 +323,12 @@ export default Card;
 
 (Key changes: `style` is destructured out of `...props` so it can't clobber; `{...props}` moves BEFORE `style`; radius 12 → `var(--radius-lg)`; all default shadows → `none` per Clay's flat-card rule; the shadow-transition line is dropped since cards no longer elevate.)
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `CI=true npx react-scripts test --watchAll=false src/components/ui/__tests__/Card.test.js`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Update `CLAUDE.md`**
+- [x] **Step 5: Update `CLAUDE.md`**
 
 In `## Gotchas`, delete the line:
 
@@ -338,7 +338,7 @@ In `## Gotchas`, delete the line:
 
 In `### P2 — Medium`, change the `Fix Card prop-spread order` item from `- [ ]` to `- [x]` and append ` — DONE 2026-07-15 as part of Clay adoption.` to it.
 
-- [ ] **Step 6: Verify build and commit**
+- [x] **Step 6: Verify build and commit**
 
 Run: `npm run build` → expected `Compiled successfully`.
 
@@ -359,7 +359,7 @@ git commit -m "fix(ui): Card style prop no longer wipes card chrome; Clay card s
 - Consumes: `--radius-pill`, `--shadow-accent`, `--primary*` tokens from Task 2.
 - Produces: `Button` (default export) with unchanged props API `{ children, variant = 'primary'|'secondary'|'success'|'danger'|'outline', size = 'small'|'medium'|'large', icon, loading, className, style, ...props }`. Callers need no changes.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `src/components/ui/__tests__/Button.test.js`:
 
@@ -384,12 +384,12 @@ describe('Button', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `CI=true npx react-scripts test --watchAll=false src/components/ui/__tests__/Button.test.js`
 Expected: FAIL — `borderRadius` is currently `8px` and primary has no boxShadow.
 
-- [ ] **Step 3: Edit `src/components/ui/Button.js`**
+- [x] **Step 3: Edit `src/components/ui/Button.js`**
 
 Replace the `variants` object (lines 13–39) with:
 
@@ -436,12 +436,12 @@ Replace the `sizes` object (lines 41–45) with Clay's paddings:
 
 In `buttonStyle`, change `borderRadius: 8` → `borderRadius: 'var(--radius-pill)'` and `fontWeight: 600` → `fontWeight: 700`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `CI=true npx react-scripts test --watchAll=false src/components/ui/__tests__/Button.test.js`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Verify build and commit**
+- [x] **Step 5: Verify build and commit**
 
 Run: `npm run build` → expected `Compiled successfully`.
 
@@ -462,7 +462,7 @@ git commit -m "feat(ui): Clay pill buttons with accent glow on primary"
 - Consumes: `--overdue`, `--overdue-foreground`, `--radius-pill` from Task 2.
 - Produces: `Badge` (default export), existing variants unchanged (`default|primary|success|warning|danger|info`) plus new `overdue` (solid clay bg, cream text — Clay spec: overdue is the only solid status pill). Existing call sites keep working; bill screens can adopt `variant="overdue"` during screen polish.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `src/components/ui/__tests__/Badge.test.js`:
 
@@ -486,12 +486,12 @@ describe('Badge', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `CI=true npx react-scripts test --watchAll=false src/components/ui/__tests__/Badge.test.js`
 Expected: FAIL — radius is `12px` and `overdue` is not a variant (falls through to undefined styles).
 
-- [ ] **Step 3: Edit `src/components/ui/Badge.js`**
+- [x] **Step 3: Edit `src/components/ui/Badge.js`**
 
 Add to the `variants` object (after `danger`):
 
@@ -504,12 +504,12 @@ Add to the `variants` object (after `danger`):
 
 In `badgeStyle`, change `borderRadius: 12` → `borderRadius: 'var(--radius-pill)'` and `fontWeight: 500` → `fontWeight: 700`. In `sizes`, change `medium` padding `'4px 8px'` → `'4px 12px'`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `CI=true npx react-scripts test --watchAll=false src/components/ui/__tests__/Badge.test.js`
 Expected: PASS (2 tests).
 
-- [ ] **Step 5: Verify build and commit**
+- [x] **Step 5: Verify build and commit**
 
 Run: `npm run build` → expected `Compiled successfully`.
 
@@ -534,7 +534,7 @@ git commit -m "feat(ui): Clay pill badges + solid overdue variant"
 - Consumes: `--radius-sm`, `--radius-lg`, `--radius-modal`, `--radius-pill`, `--shadow-lg` from Task 2.
 - Produces: no API changes anywhere — pure style-value edits.
 
-- [ ] **Step 1: Apply the radius/shadow edits**
+- [x] **Step 1: Apply the radius/shadow edits**
 
 Exact substitutions (all are single-value changes on the listed lines; line numbers are pre-edit):
 
@@ -555,16 +555,16 @@ Exact substitutions (all are single-value changes on the listed lines; line numb
 
 (Leave `SummaryCard.js:11`'s 40px icon tile at `'10px'` — small tiles keep a small radius; Clay's vendor tiles use 12px, close enough to revisit in screen polish.)
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `npm run build`
 Expected: `Compiled successfully`.
 
-- [ ] **Step 3: Visual smoke-check**
+- [x] **Step 3: Visual smoke-check**
 
 `npm start` → open a bill-create modal (Shop → Bills → create) and a confirm dialog; confirm 24px-radius modals with the large warm shadow, 12px inputs, pill dialog buttons, and that nothing overflows.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/components/ui/Input.js src/components/ui/Select.js src/components/ui/Textarea.js src/components/ui/Modal.js src/components/ui/ConfirmDialog.js src/components/ui/SummaryCard.js
@@ -593,7 +593,7 @@ git commit -m "feat(ui): Clay radii and overlay shadows for controls, modals, su
   - `Toast({ children, fixed = true })` — ink pill, bottom-center when fixed.
   - All four exported from the `src/components/ui` barrel.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `src/components/ui/__tests__/ClayComponents.test.js`:
 
@@ -642,12 +642,12 @@ describe('Toast', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `CI=true npx react-scripts test --watchAll=false src/components/ui/__tests__/ClayComponents.test.js`
 Expected: FAIL — `Toggle` etc. are not exported from the barrel.
 
-- [ ] **Step 3: Create the four components**
+- [x] **Step 3: Create the four components**
 
 `src/components/ui/Toggle.js`:
 
@@ -753,7 +753,7 @@ const Toast = ({ children, fixed = true }) => (
 export default Toast;
 ```
 
-- [ ] **Step 4: Register in the barrel**
+- [x] **Step 4: Register in the barrel**
 
 Append to `src/components/ui/index.js`:
 
@@ -764,7 +764,7 @@ export { default as Avatar } from './Avatar';
 export { default as Toast } from './Toast';
 ```
 
-- [ ] **Step 5: Register in `.design-sync/config.json`**
+- [x] **Step 5: Register in `.design-sync/config.json`**
 
 Add to `componentSrcMap` (after the `"ConfirmDialog"` entry, keeping valid JSON):
 
@@ -786,12 +786,12 @@ Also add a preview override for the fixed-position Toast (pattern from `.design-
 
 (`entry.js` needs no change — it re-exports the barrel.)
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 Run: `CI=true npx react-scripts test --watchAll=false src/components/ui/__tests__/ClayComponents.test.js`
 Expected: PASS (5 tests).
 
-- [ ] **Step 7: Verify build and commit**
+- [x] **Step 7: Verify build and commit**
 
 Run: `npm run build` → expected `Compiled successfully`.
 
@@ -811,7 +811,7 @@ git commit -m "feat(ui): add Clay Toggle, PillTabs, Avatar, Toast components"
 - Consumes: `--radius-pill`, `--secondary`, `--foreground`, `--background`, `--radius-lg`, `--shadow-lg` from Task 2.
 - Produces: no JS/API changes — `Navigation.js` class names are untouched; only the stylesheet changes. (This CSS file predates the inline-styles rule; restyling it in place is the minimal move — do NOT rewrite it to inline styles in this task.)
 
-- [ ] **Step 1: Restyle the desktop nav to Clay's segmented pill bar**
+- [x] **Step 1: Restyle the desktop nav to Clay's segmented pill bar**
 
 In `src/components/shared/Navigation.css`, replace the blocks for `.desktop-nav`, `.nav-container`, `.nav-item`, `.nav-item:hover`, `.nav-item.active`, and `.nav-item.active::after` (lines 1–54) with:
 
@@ -864,7 +864,7 @@ In `src/components/shared/Navigation.css`, replace the blocks for `.desktop-nav`
 
 (The `::after` underline indicator is removed entirely — the ink pill IS the active indicator.)
 
-- [ ] **Step 2: Warm up the dropdown and mobile sheet radii**
+- [x] **Step 2: Warm up the dropdown and mobile sheet radii**
 
 Still in `Navigation.css`:
 - `.dropdown-menu`: `border-radius: 12px` → `border-radius: var(--radius-lg)`
@@ -874,12 +874,12 @@ Still in `Navigation.css`:
 
 Leave the mobile bottom bar structure as-is (already token-driven; Clay has no mobile spec — the prototype is 1320px desktop).
 
-- [ ] **Step 3: Verify build and visual check**
+- [x] **Step 3: Verify build and visual check**
 
 Run: `npm run build` → expected `Compiled successfully`.
 `npm start` → confirm: desktop nav is a single cream pill track; active tab is a solid ink pill with cream text; Shop dropdown still opens/closes and highlights; mobile (narrow window) bottom nav still works; dark mode shows a cocoa pill track with light ink pill.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/components/shared/Navigation.css
@@ -898,7 +898,7 @@ git commit -m "feat(nav): Clay segmented pill bar with ink active tab"
 - Consumes: `--font-display`, `--primary-accent` from Task 2.
 - Produces: header brand renders the Clay wordmark — lowercase `dukaan` in Bricolage Grotesque 800 with a clay asterisk (`dukaan*`). Per the Clay readme: the wordmark is plain type; do NOT invent a logo mark. Dark-mode toggle and profile menu are untouched.
 
-- [ ] **Step 1: Replace the brand block in `Header.js`**
+- [x] **Step 1: Replace the brand block in `Header.js`**
 
 Replace:
 
@@ -921,7 +921,7 @@ with:
 
 Then remove `LayoutDashboard` from the lucide-react import on line 2 (grep the file for other uses first; there are none as of this writing).
 
-- [ ] **Step 2: Add wordmark styles in `Header.css`**
+- [x] **Step 2: Add wordmark styles in `Header.css`**
 
 Find the existing `.app-title` rule and replace it with (and delete any `.brand-logo` rule):
 
@@ -940,12 +940,12 @@ Find the existing `.app-title` rule and replace it with (and delete any `.brand-
 }
 ```
 
-- [ ] **Step 3: Verify build and visual check**
+- [x] **Step 3: Verify build and visual check**
 
 Run: `npm run build` → expected `Compiled successfully` (an unused-import warning for `LayoutDashboard` means Step 1's import cleanup was missed — fix it).
 `npm start` → header shows `dukaan*` with the clay asterisk in both themes.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/components/shared/Header.js src/components/shared/Header.css
@@ -964,12 +964,12 @@ git commit -m "feat(header): Clay dukaan* wordmark"
 - Consumes: everything above.
 - Produces: a verified, documented Clay baseline on the `clay-design` branch, ready for the screen-polish follow-up plan.
 
-- [ ] **Step 1: Run all task test files together**
+- [x] **Step 1: Run all task test files together**
 
 Run: `CI=true npx react-scripts test --watchAll=false src/components/ui/__tests__/Card.test.js src/components/ui/__tests__/Button.test.js src/components/ui/__tests__/Badge.test.js src/components/ui/__tests__/ClayComponents.test.js`
 Expected: PASS (11 tests). (Do NOT gate on the full suite — known ~191-failure baseline predates this work.)
 
-- [ ] **Step 2: Full visual pass against the prototype**
+- [x] **Step 2: Full visual pass against the prototype**
 
 `npm start`, side-by-side with `/Users/gauravraj/Downloads/App design improvement clay/Clay Prototype v2.dc.html`. Walk Home → Tasks → Office → Shop (Overview, Bills, Products, Price List, Vendors, Transactions) → Settings, in light AND dark mode (full page reload after toggling, not HMR). Checklist:
 - Cream/cocoa surfaces everywhere; no leftover indigo or cool grays (screens with hardcoded colors, if any surface, get logged for the screen-polish plan — not fixed here).
@@ -978,7 +978,7 @@ Expected: PASS (11 tests). (Do NOT gate on the full suite — known ~191-failure
 - Headings render in Bricolage Grotesque (check network tab loaded both font families).
 - Modals: 24px radius, large warm shadow.
 
-- [ ] **Step 3: Update `CLAUDE.md`**
+- [x] **Step 3: Update `CLAUDE.md`**
 
 In `## Coding Rules`, update the theme-token bullet's examples if they mention indigo, and add one bullet:
 
@@ -992,13 +992,13 @@ In `## Instructions`, add:
 - Design language is "Dukaan Clay" — source package at `~/Downloads/App design improvement clay/` (readme.md = rules, Clay Prototype v2.dc.html = visual ground truth)
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add CLAUDE.md
 git commit -m "docs: record Clay design system conventions"
 ```
 
-- [ ] **Step 5: Hand off**
+- [x] **Step 5: Hand off**
 
 Use superpowers:finishing-a-development-branch to decide merge/PR. Follow-up plan to write next: **screen-level Clay polish** (Dashboard/HomeView layout per prototype, chunky CSS bar charts replacing any ad-hoc viz, Avatar adoption in VendorsView, Badge `overdue` adoption in BillsView, PillTabs adoption for in-page filters, copy/voice pass).
