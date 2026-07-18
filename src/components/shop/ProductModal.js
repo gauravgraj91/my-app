@@ -34,6 +34,7 @@ const ProductModal = ({
     category: '',
     vendor: '',
     date: todayStr(),
+    expiryDate: '',
     mrp: '',
     totalQuantity: '',
     pricePerPiece: '',
@@ -53,6 +54,7 @@ const ProductModal = ({
         category: product.category || '',
         vendor: product.vendor || '',
         date: toDateStr(product.date),
+        expiryDate: product.expiryDate ? toDateStr(product.expiryDate) : '',
         mrp: product.mrp != null ? roundTo2(product.mrp).toString() : '',
         totalQuantity: product.totalQuantity?.toString() || '',
         pricePerPiece: product.pricePerPiece != null ? roundTo2(product.pricePerPiece).toString() : '',
@@ -79,6 +81,7 @@ const ProductModal = ({
         category: '',
         vendor: '',
         date: todayStr(),
+        expiryDate: '',
         mrp: '',
         totalQuantity: '',
         pricePerPiece: '',
@@ -210,7 +213,8 @@ const ProductModal = ({
         totalAmount: roundTo2(parseFloat(formData.totalAmount)),
         billId: formData.billId,
         billNumber: formData.billNumber,
-        date: new Date(formData.date)
+        date: new Date(formData.date),
+        expiryDate: formData.expiryDate ? new Date(formData.expiryDate) : null
       };
 
       if (mode === 'edit' && product?.id && onSave) {
@@ -370,6 +374,20 @@ const ProductModal = ({
                 value={formData.date}
                 onChange={(e) => handleChange('date', e.target.value)}
                 error={errors.date}
+                disabled={loading}
+                containerStyle={{ marginBottom: 0 }}
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <Input
+                label={
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <Calendar size={14} /> Expiry Date (optional)
+                  </span>
+                }
+                type="date"
+                value={formData.expiryDate}
+                onChange={(e) => handleChange('expiryDate', e.target.value)}
                 disabled={loading}
                 containerStyle={{ marginBottom: 0 }}
               />

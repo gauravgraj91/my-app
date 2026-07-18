@@ -9,7 +9,15 @@ import { BillModel } from '../../firebase/billService';
 import { useBills } from '../../context/BillsContext';
 import { useVendors } from '../../context/VendorsContext';
 
-const emptyProduct = () => ({ productName: '', mrp: '', quantity: '', totalAmount: '' });
+const emptyProduct = () => ({ productName: '', mrp: '', quantity: '', totalAmount: '', expiryDate: '' });
+
+const toExpiryStr = (date) => {
+  if (!date) return '';
+  try {
+    const d = date?.toDate ? date.toDate() : date instanceof Date ? date : new Date(date);
+    return isNaN(d.getTime()) ? '' : d.toISOString().split('T')[0];
+  } catch { return ''; }
+};
 
 const BillCreateModal = ({
   isOpen,
@@ -71,7 +79,8 @@ const BillCreateModal = ({
           productName: p.productName || '',
           mrp: String(p.mrp || ''),
           quantity: String(p.totalQuantity || p.quantity || ''),
-          totalAmount: String(p.totalAmount || '')
+          totalAmount: String(p.totalAmount || ''),
+          expiryDate: toExpiryStr(p.expiryDate)
         })));
       } else {
         setProducts([emptyProduct()]);
@@ -476,6 +485,19 @@ const BillCreateModal = ({
                       />
                     </div>
                   </div>
+
+                  <Input
+                    label={
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        <Calendar size={14} /> Expiry Date (optional)
+                      </span>
+                    }
+                    type="date"
+                    value={product.expiryDate}
+                    onChange={(e) => handleProductChange(index, 'expiryDate', e.target.value)}
+                    disabled={loading}
+                    containerStyle={{ marginBottom: 12 }}
+                  />
 
                   {/* Per-product auto-calculated values */}
                   <div style={{

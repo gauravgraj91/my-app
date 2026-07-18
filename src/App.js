@@ -18,6 +18,7 @@ const BillsView = React.lazy(() => import('./components/shop/BillsView'));
 const ProductsView = React.lazy(() => import('./components/shop/ProductsView'));
 const PriceList = React.lazy(() => import('./components/shop/PriceList'));
 const VendorsView = React.lazy(() => import('./components/shop/VendorsView'));
+const ExpiryView = React.lazy(() => import('./components/shop/ExpiryView'));
 const ShopTransactions = React.lazy(() => import('./pages/ShopTransactions'));
 const Transactions = React.lazy(() => import('./pages/Transactions'));
 const PersonalTransactions = React.lazy(() => import('./pages/PersonalTransactions'));
@@ -53,6 +54,7 @@ function App() {
                     <Route path="products" element={<ProductsView />} />
                     <Route path="price-list" element={<PriceList />} />
                     <Route path="vendors" element={<VendorsView />} />
+                    <Route path="expiry" element={<ExpiryView />} />
                     <Route path="transactions" element={<Navigate to="/transactions/shop" replace />} />
                   </Route>
                   <Route path="/transactions" element={<Transactions />}>

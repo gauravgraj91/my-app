@@ -1,4 +1,5 @@
 import { getBillWithProducts } from './billService';
+import { formatDate } from '../utils/formatters';
 
 export const exportBillToCSV = async (billId) => {
   try {
@@ -8,7 +9,7 @@ export const exportBillToCSV = async (billId) => {
     }
 
     const headers = [
-      'Bill Number', 'Date', 'Vendor', 'Product Name', 'Category',
+      'Bill Number', 'Date', 'Vendor', 'Product Name', 'Category', 'Expiry Date',
       'MRP', 'Quantity', 'Price Per Piece', 'Total Amount',
       'Profit Per Piece', 'Total Profit'
     ];
@@ -22,7 +23,7 @@ export const exportBillToCSV = async (billId) => {
         new Date(billWithProducts.date).toLocaleDateString(),
       billWithProducts.vendor,
       '--- BILL SUMMARY ---',
-      '', '',
+      '', '', '',
       billWithProducts.totalQuantity || 0,
       '',
       billWithProducts.totalAmount || 0,
@@ -41,6 +42,7 @@ export const exportBillToCSV = async (billId) => {
         billWithProducts.vendor,
         product.productName || '',
         product.category || '',
+        product.expiryDate ? formatDate(product.expiryDate) : '',
         product.mrp || 0,
         product.totalQuantity || 0,
         product.pricePerPiece || 0,
@@ -79,7 +81,7 @@ export const exportMultipleBillsToCSV = async (billIds) => {
     }
 
     const headers = [
-      'Bill Number', 'Date', 'Vendor', 'Product Name', 'Category',
+      'Bill Number', 'Date', 'Vendor', 'Product Name', 'Category', 'Expiry Date',
       'MRP', 'Quantity', 'Price Per Piece', 'Total Amount',
       'Profit Per Piece', 'Total Profit', 'Bill Total Amount', 'Bill Total Profit'
     ];
@@ -101,7 +103,7 @@ export const exportMultipleBillsToCSV = async (billIds) => {
             new Date(billWithProducts.date).toLocaleDateString(),
           billWithProducts.vendor,
           '--- BILL SUMMARY ---',
-          '', '', billWithProducts.totalQuantity || 0,
+          '', '', '', billWithProducts.totalQuantity || 0,
           '', '', '', '',
           billWithProducts.totalAmount || 0,
           billWithProducts.totalProfit || 0
@@ -116,6 +118,7 @@ export const exportMultipleBillsToCSV = async (billIds) => {
             billWithProducts.vendor,
             product.productName || '',
             product.category || '',
+            product.expiryDate ? formatDate(product.expiryDate) : '',
             product.mrp || 0,
             product.totalQuantity || 0,
             product.pricePerPiece || 0,

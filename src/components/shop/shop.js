@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { List, Grid, Tag, Users, LayoutDashboard } from 'lucide-react';
+import { List, Grid, Tag, Users, LayoutDashboard, CalendarClock } from 'lucide-react';
 import './Shop.css';
 import PillTabs from '../ui/PillTabs';
 import { BillsProvider } from '../../context/BillsContext';
@@ -12,6 +12,7 @@ const TABS = [
   { key: 'products', label: 'Products', icon: Grid },
   { key: 'price-list', label: 'Price List', icon: Tag },
   { key: 'vendors', label: 'Vendors', icon: Users },
+  { key: 'expiry', label: 'Expiry', icon: CalendarClock },
 ];
 
 const Shop = () => {

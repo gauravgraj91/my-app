@@ -1,6 +1,6 @@
 import React from 'react';
 import { Package, AlertTriangle } from 'lucide-react';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, formatDate, getExpiryStatus } from '../../utils/formatters';
 
 const STYLES = {
   subHeaderCell: {
@@ -29,6 +29,9 @@ const BillExpandedRow = ({ bill, products }) => (
                 </th>
                 <th style={STYLES.subHeaderCell}>
                   Category
+                </th>
+                <th style={STYLES.subHeaderCell}>
+                  Expiry
                 </th>
                 <th style={{ ...STYLES.subHeaderCell, textAlign: 'right' }}>
                   Qty
@@ -67,6 +70,17 @@ const BillExpandedRow = ({ bill, products }) => (
                     }}>
                       {product.category || '-'}
                     </span>
+                  </td>
+                  <td style={STYLES.subTableCell}>
+                    {(() => {
+                      const status = getExpiryStatus(product.expiryDate);
+                      const color = status === 'expired' ? 'var(--danger)' : status === 'expiring' ? 'var(--warning)' : 'var(--muted-foreground)';
+                      return (
+                        <span style={{ fontSize: '12px', fontWeight: status && status !== 'ok' ? '600' : '400', color }}>
+                          {product.expiryDate ? formatDate(product.expiryDate) : '-'}
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td style={{ ...STYLES.subTableCell, textAlign: 'right' }}>
                     <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--foreground)' }}>

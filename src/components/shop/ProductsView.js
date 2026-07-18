@@ -19,7 +19,7 @@ import {
   moveProductToBill,
   removeProductFromBill
 } from '../../firebase/shopProductService';
-import { formatCurrency, formatDate } from '../../utils/formatters';
+import { formatCurrency, formatDate, getExpiryStatus } from '../../utils/formatters';
 import { addLog } from '../../utils/activityLog';
 import { useAuth } from '../../context/AuthContext';
 
@@ -77,6 +77,7 @@ const ProductsView = () => {
   const [filterPriceMin, setFilterPriceMin] = useState('');
   const [filterPriceMax, setFilterPriceMax] = useState('');
   const [filterBillStatus, setFilterBillStatus] = useState('');
+  const [filterExpiry, setFilterExpiry] = useState('all');
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [productsToAssign, setProductsToAssign] = useState([]);
   const [assignMode, setAssignMode] = useState('single');
@@ -310,8 +311,12 @@ const ProductsView = () => {
         if (filterBillStatus === 'linked') return !!row.billId;
         if (filterBillStatus === 'standalone') return !row.billId;
         return true;
+      })
+      .filter(row => {
+        if (!filterExpiry || filterExpiry === 'all') return true;
+        return getExpiryStatus(row.expiryDate) === filterExpiry;
       }),
-    [data, search, filterCategory, filterPriceMin, filterPriceMax, filterBillStatus]
+    [data, search, filterCategory, filterPriceMin, filterPriceMax, filterBillStatus, filterExpiry]
   );
 
   const sortedData = useMemo(() => {
@@ -320,6 +325,14 @@ const ProductsView = () => {
       let aValue = a[sortColumn];
       let bValue = b[sortColumn];
       if (sortColumn === 'date') { aValue = new Date(aValue); bValue = new Date(bValue); }
+      if (sortColumn === 'expiryDate') {
+        const toMillis = (v) => {
+          if (!v) return Number.MAX_SAFE_INTEGER;
+          const d = v?.toDate ? v.toDate() : v instanceof Date ? v : new Date(v);
+          return isNaN(d.getTime()) ? Number.MAX_SAFE_INTEGER : d.getTime();
+        };
+        aValue = toMillis(aValue); bValue = toMillis(bValue);
+      }
       if (typeof aValue === 'string' && typeof bValue === 'string') {
         aValue = aValue.toLowerCase(); bValue = bValue.toLowerCase();
       }
@@ -345,11 +358,11 @@ const ProductsView = () => {
 
   const handleExportVisible = () => {
     if (!processedData.length) return;
-    const headers = ['Bill Number', 'Date', 'Product Name', 'Category', 'MRP', 'Qty / Units', 'Nett Amount', 'Price per Unit', 'Profit per Unit', 'Total Profit'];
+    const headers = ['Bill Number', 'Date', 'Expiry Date', 'Product Name', 'Category', 'MRP', 'Qty / Units', 'Nett Amount', 'Price per Unit', 'Profit per Unit', 'Total Profit'];
     const csv = [
       headers.join(','),
       ...processedData.map(row =>
-        [row.billNumber, formatDate(row.date), row.productName, row.category,
+        [row.billNumber, formatDate(row.date), row.expiryDate ? formatDate(row.expiryDate) : '', row.productName, row.category,
         row.mrp, row.totalQuantity, row.totalAmount, row.pricePerPiece,
         row.profitPerPiece, (row.profitPerPiece * row.totalQuantity),
         ].map(val => `"${val ?? ''}"`).join(',')
@@ -568,9 +581,22 @@ const ProductsView = () => {
                 aria-label="Maximum MRP"
               />
             </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--muted-foreground)', marginBottom: '6px' }}>Expiry</label>
+              <select
+                value={filterExpiry}
+                onChange={e => setFilterExpiry(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', color: 'var(--foreground)', background: 'var(--card)', outline: 'none' }}
+                aria-label="Filter by expiry status"
+              >
+                <option value="all">All</option>
+                <option value="expiring">Expiring Soon</option>
+                <option value="expired">Expired</option>
+              </select>
+            </div>
             <div style={{ display: 'flex', alignItems: 'flex-end' }}>
               <button
-                onClick={() => { setFilterCategory(''); setFilterPriceMin(''); setFilterPriceMax(''); setFilterBillStatus(''); }}
+                onClick={() => { setFilterCategory(''); setFilterPriceMin(''); setFilterPriceMax(''); setFilterBillStatus(''); setFilterExpiry('all'); }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '6px',
                   padding: '8px 14px', borderRadius: '8px',
@@ -609,6 +635,7 @@ const ProductsView = () => {
                   </th>
                   <SortableHeader field="billNumber" label="Bill #" handleSort={handleSort} sortField={sortColumn} sortDirection={sortDirection} />
                   <SortableHeader field="date" label="Date" handleSort={handleSort} sortField={sortColumn} sortDirection={sortDirection} />
+                  <SortableHeader field="expiryDate" label="Expiry" handleSort={handleSort} sortField={sortColumn} sortDirection={sortDirection} />
                   <SortableHeader field="productName" label="Product Name" handleSort={handleSort} sortField={sortColumn} sortDirection={sortDirection} />
                   <SortableHeader field="category" label="Category" handleSort={handleSort} sortField={sortColumn} sortDirection={sortDirection} />
                   <SortableHeader field="vendor" label="Vendor" handleSort={handleSort} sortField={sortColumn} sortDirection={sortDirection} />
@@ -662,6 +689,21 @@ const ProductsView = () => {
                         <span style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>
                           {formatDate(row.date) || <span style={{ color: 'var(--muted-foreground)' }}>&mdash;</span>}
                         </span>
+                      </td>
+                      <td style={{ padding: '12px 16px' }}>
+                        {(() => {
+                          const status = getExpiryStatus(row.expiryDate);
+                          if (!status) return <span style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>&mdash;</span>;
+                          const color = status === 'expired' ? 'var(--danger)' : status === 'expiring' ? 'var(--warning)' : 'var(--muted-foreground)';
+                          return (
+                            <span style={{
+                              fontSize: '13px', fontWeight: status === 'ok' ? '400' : '600', color,
+                              ...(status !== 'ok' && { background: `color-mix(in srgb, ${color} 12%, transparent)`, padding: '3px 8px', borderRadius: 'var(--radius-pill)' })
+                            }}>
+                              {formatDate(row.expiryDate)}
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td style={{ padding: '12px 16px' }}>
                         <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--foreground)' }}>
@@ -739,7 +781,7 @@ const ProductsView = () => {
               </tbody>
               <tfoot>
                 <tr style={{ borderTop: '2px solid var(--border)' }}>
-                  <td style={{ padding: '12px 16px' }} colSpan={6}>
+                  <td style={{ padding: '12px 16px' }} colSpan={7}>
                     <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--foreground)' }}>Total</span>
                   </td>
                   <td style={{ padding: '12px 16px', textAlign: 'right' }}>
@@ -772,11 +814,11 @@ const ProductsView = () => {
             <Package size={48} style={{ margin: '0 auto 16px', color: 'var(--muted-foreground)' }} />
             <h3 style={{ fontSize: '18px', color: 'var(--foreground)', marginBottom: '8px' }}>No products found</h3>
             <p style={{ color: 'var(--muted-foreground)', marginBottom: '24px' }}>
-              {search || filterCategory || filterPriceMin || filterPriceMax || filterBillStatus
+              {search || filterCategory || filterPriceMin || filterPriceMax || filterBillStatus || filterExpiry !== 'all'
                 ? 'Try adjusting your search or filters'
                 : 'Add your first product to get started'}
             </p>
-            {!search && !filterCategory && !filterPriceMin && !filterPriceMax && !filterBillStatus && (
+            {!search && !filterCategory && !filterPriceMin && !filterPriceMax && !filterBillStatus && filterExpiry === 'all' && (
               <button
                 onClick={handleAddRow}
                 style={{
