@@ -1,7 +1,8 @@
 import React from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { List, Grid, Tag, Users, LayoutDashboard } from 'lucide-react';
 import './Shop.css';
+import PillTabs from '../ui/PillTabs';
 import { BillsProvider } from '../../context/BillsContext';
 import { VendorsProvider } from '../../context/VendorsContext';
 
@@ -15,6 +16,7 @@ const TABS = [
 
 const Shop = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const getActiveTab = () => {
     const path = location.pathname.replace(/\/$/, '');
@@ -31,22 +33,12 @@ const Shop = () => {
         <div className="dashboard-container">
           <div className="dashboard-card dashboard-header">
             <h1 className="dashboard-title">Shop Dashboard</h1>
-            <div className="flex items-center bg-gray-100 rounded-lg p-1">
-              {TABS.map(({ key, label, icon: Icon }) => (
-                <Link
-                  key={key}
-                  to={key ? `/shop/${key}` : '/shop'}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                    activeTab === key ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'
-                  }`}
-                  style={{ textDecoration: 'none' }}
-                  aria-label={`${label} View`}
-                >
-                  <Icon size={16} />
-                  {label}
-                </Link>
-              ))}
-            </div>
+            <PillTabs
+              size="sm"
+              items={TABS.map(({ key, label, icon }) => ({ value: key, label, icon, ariaLabel: `${label} View` }))}
+              value={activeTab}
+              onChange={(key) => navigate(key ? `/shop/${key}` : '/shop')}
+            />
           </div>
 
           <Outlet />
