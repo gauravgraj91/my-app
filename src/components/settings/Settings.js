@@ -123,6 +123,33 @@ const Settings = () => {
     setCategories(categories.filter(c => c !== name));
   };
 
+  // Personal Transaction Categories State
+  const defaultTxCategories = ['food', 'travel', 'shopping', 'bills', 'health', 'entertainment', 'other'];
+
+  const [txCategories, setTxCategories] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('personalCategories'));
+      if (Array.isArray(saved) && saved.length > 0) return saved;
+    } catch (e) { /* fall through to defaults */ }
+    return defaultTxCategories;
+  });
+  const [newTxCategory, setNewTxCategory] = useState('');
+
+  useEffect(() => {
+    localStorage.setItem('personalCategories', JSON.stringify(txCategories));
+  }, [txCategories]);
+
+  const handleAddTxCategory = () => {
+    const name = newTxCategory.trim().toLowerCase();
+    if (!name || txCategories.includes(name)) return;
+    setTxCategories([...txCategories, name]);
+    setNewTxCategory('');
+  };
+  const handleRemoveTxCategory = (name) => {
+    if (name === 'other') return;
+    setTxCategories(txCategories.filter(c => c !== name));
+  };
+
   // Activity Log state
   const [logFilter, setLogFilter] = useState('All');
   const [logs, setLogs] = useState([]);
@@ -332,6 +359,49 @@ const Settings = () => {
                   <option key={category} value={category}>{category}</option>
                 ))}
               </select>
+            </div>
+          </div>
+
+          {/* Transaction Categories Card */}
+          <div className="settings-card" style={{ padding: '24px' }}>
+            <h4 className="subsection-title">Transaction Categories</h4>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--muted-foreground)', margin: '0 0 12px' }}>
+              Used for personal transactions. Removing one keeps it on existing entries.
+            </p>
+            <div className="tags-container">
+              {txCategories.map(category => (
+                <span key={category} className="tag-item">
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                  {category !== 'other' && (
+                    <button
+                      className="tag-remove"
+                      onClick={() => handleRemoveTxCategory(category)}
+                      title="Remove category"
+                    >
+                      &times;
+                    </button>
+                  )}
+                </span>
+              ))}
+            </div>
+
+            <div className="add-item-row">
+              <input
+                type="text"
+                value={newTxCategory}
+                onChange={e => setNewTxCategory(e.target.value)}
+                placeholder="Add category..."
+                className="setting-select"
+                style={{ flex: 1, minWidth: 0 }}
+                onKeyDown={e => { if (e.key === 'Enter') handleAddTxCategory(); }}
+              />
+              <button
+                className="dashboard-btn-secondary"
+                onClick={handleAddTxCategory}
+                style={{ padding: '8px 16px', fontSize: '0.875rem' }}
+              >
+                Add
+              </button>
             </div>
           </div>
         </div>
