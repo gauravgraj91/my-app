@@ -74,9 +74,11 @@ export const updateTransaction = async (transactionId, updateData) => {
 };
 
 // Real-time listener for transactions
-export const subscribeToTransactions = (tenantId, callback) => {
-  const q = query(collection(db, COLLECTION_NAME), where('tenantId', '==', tenantId), orderBy('createdAt', 'desc'));
-  
+// orderBy must stay on 'date' — it matches the deployed composite index
+// (tenantId ASC, date DESC) in firestore.indexes.json
+export const subscribeToTransactions = (tenantId, callback, onError) => {
+  const q = query(collection(db, COLLECTION_NAME), where('tenantId', '==', tenantId), orderBy('date', 'desc'));
+
   return onSnapshot(q, (querySnapshot) => {
     const transactions = [];
     querySnapshot.forEach((doc) => {
@@ -86,5 +88,8 @@ export const subscribeToTransactions = (tenantId, callback) => {
       });
     });
     callback(transactions);
+  }, (error) => {
+    console.error('Error subscribing to transactions: ', error);
+    if (onError) onError(error);
   });
-}; 
+};

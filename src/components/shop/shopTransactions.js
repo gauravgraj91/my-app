@@ -13,15 +13,24 @@ const ShopTransactions = () => {
   const [comment, setComment] = useState("")
   const [filter, setFilter] = useState("all")
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const { showSuccess, showError } = useNotifications()
 
   // Subscribe to real-time updates
   useEffect(() => {
-    if (!tenantId) return;
+    if (!tenantId) {
+      setLoading(false)
+      setLoadError("Your account is missing a shop association. Please log out and back in, or contact support.")
+      return;
+    }
+    setLoadError(null)
     const unsubscribe = subscribeToTransactions(tenantId, (transactions) => {
       setTransactions(transactions)
       setLoading(false)
+    }, (error) => {
+      setLoading(false)
+      setLoadError("Failed to load transactions. Please refresh the page or try again later.")
     })
 
     return () => unsubscribe()
@@ -104,6 +113,17 @@ const ShopTransactions = () => {
     return (
       <div className="max-w-4xl mx-auto p-4">
         <div className="text-center text-lg">Loading transactions...</div>
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className="max-w-4xl mx-auto p-4">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <div className="text-lg font-semibold text-red-700 mb-2">Unable to load transactions</div>
+          <div className="text-sm text-red-600">{loadError}</div>
+        </div>
       </div>
     )
   }
