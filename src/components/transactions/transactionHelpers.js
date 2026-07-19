@@ -46,6 +46,31 @@ export const spendByCategory = (transactions) => {
     .sort((a, b) => b.total - a.total);
 };
 
+// Last n Mon–Sun weeks (oldest first): [{ start, end, label: '06–12 Jul', totalOut }]
+export const lastNWeeks = (transactions, n = 4, now = new Date()) => {
+  const day = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const mondayOffset = (day.getDay() + 6) % 7;
+  const currentMonday = new Date(day.getFullYear(), day.getMonth(), day.getDate() - mondayOffset);
+  const weeks = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const start = new Date(currentMonday);
+    start.setDate(start.getDate() - i * 7);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    const dayNum = (d) => String(d.getDate()).padStart(2, '0');
+    const label = `${dayNum(start)}–${dayNum(end)} ${end.toLocaleString('en-IN', { month: 'short' })}`;
+    weeks.push({ start, end, label, totalOut: 0 });
+  }
+  transactions.forEach((tx) => {
+    if (tx.type !== 'cashOut') return;
+    const d = txDate(tx);
+    if (!d) return;
+    const week = weeks.find((w) => d >= w.start && d < new Date(w.end.getFullYear(), w.end.getMonth(), w.end.getDate() + 1));
+    if (week) week.totalOut += parseFloat(tx.amount) || 0;
+  });
+  return weeks;
+};
+
 const csvEscape = (value) => {
   const s = value == null ? '' : String(value);
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;

@@ -1,6 +1,6 @@
 import React from 'react';
-import AnalyticsDashboard from '../components/analytics/AnalyticsDashboard';
+import HomeDashboard from '../components/analytics/HomeDashboard';
 
 export default function Dashboard() {
-  return <AnalyticsDashboard />;
+  return <HomeDashboard />;
 }

@@ -55,6 +55,14 @@
 
   --font-sans: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
   --font-display: 'Bricolage Grotesque', var(--font-sans);
+
+  /* Raw ramp — charts & decoration only (static across themes;
+     use semantic tokens above for status meaning) */
+  --clay-500: #c2502e;
+  --clay-300: #d97b4a;
+  --clay-200: #ffb08e;
+  --gold-600: #9c6b13;
+  --amber-400: #e8a13c;
 }
 
 .dark {

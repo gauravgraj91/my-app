@@ -7,7 +7,7 @@ import { getShopProducts } from '../firebase/shopProductService';
  */
 
 // Bill-based analytics calculations (pure function, takes data as input)
-const calculateBillAnalyticsFromData = (bills) => {
+export const calculateBillAnalyticsFromData = (bills) => {
   if (!bills || bills.length === 0) {
     return {
       totalBills: 0,
@@ -87,7 +87,7 @@ const calculateBillAnalyticsFromData = (bills) => {
   };
 };
 
-const calculateProductAnalyticsFromData = (products) => {
+export const calculateProductAnalyticsFromData = (products) => {
   if (!products || products.length === 0) {
     return {
       totalProducts: 0,

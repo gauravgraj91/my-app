@@ -33,7 +33,7 @@ const Shop = () => {
       <VendorsProvider>
         <div className="dashboard-container">
           <div className="dashboard-card dashboard-header">
-            <h1 className="dashboard-title">Shop Dashboard</h1>
+            <h1 className="dashboard-title">Shop dashboard</h1>
             <PillTabs
               size="sm"
               items={TABS.map(({ key, label, icon }) => ({ value: key, label, icon, ariaLabel: `${label} View` }))}

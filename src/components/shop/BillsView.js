@@ -144,6 +144,14 @@ const BillsView = () => {
       initialSearchApplied.current = true;
     }
   }, [location.state]);
+
+  // Auto-open the create modal when navigated with { state: { openCreate: true } } (e.g. Home "New bill")
+  useEffect(() => {
+    if (location.state?.openCreate) {
+      setShowCreateModal(true);
+      window.history.replaceState({}, '');
+    }
+  }, [location.state]);
   const [showFilters, setShowFilters] = useState(false);
   const [activeStatusTab, setActiveStatusTab] = useState('all');
 

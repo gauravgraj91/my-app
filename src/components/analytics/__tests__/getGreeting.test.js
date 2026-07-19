@@ -1,4 +1,4 @@
-import { getGreeting } from '../AnalyticsDashboard';
+import { getGreeting } from '../../../utils/greeting';
 
 describe('getGreeting', () => {
   it('returns Good morning before noon', () => {

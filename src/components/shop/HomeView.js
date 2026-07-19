@@ -7,6 +7,7 @@ import Avatar from '../ui/Avatar';
 import Badge from '../ui/Badge';
 import MeterBar from '../ui/MeterBar';
 import { useAuth } from '../../context/AuthContext';
+import useIsNarrow from '../../hooks/useIsNarrow';
 
 const CARD = {
   background: 'var(--card)',
@@ -15,7 +16,7 @@ const CARD = {
   padding: 24
 };
 
-const CARD_LABEL = { fontSize: 13, fontWeight: 700, color: 'var(--muted-foreground)' };
+const CARD_LABEL = { fontSize: 15, fontWeight: 700, color: 'var(--foreground)' };
 
 const HERO_NUM = {
   fontFamily: 'var(--font-display)',
@@ -48,6 +49,7 @@ const HomeView = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const tenantId = user?.tenantId;
+  const isNarrow = useIsNarrow(900);
   const { bills } = useBills();
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -125,52 +127,53 @@ const HomeView = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* ===== TOP ROW: hero · to collect/pay · products ===== */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.35fr 1fr 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isNarrow ? '1fr' : '1.15fr 0.85fr 0.85fr', gap: 16 }}>
         {/* Hero (solid ink) */}
         <div style={{
           background: 'var(--foreground)', color: 'var(--background)',
-          borderRadius: 'var(--radius-lg)', padding: 28, position: 'relative', overflow: 'hidden'
+          borderRadius: 'var(--radius-lg)', padding: 24, position: 'relative', overflow: 'hidden',
+          display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 24
         }}>
           <div style={{
-            position: 'absolute', right: -40, top: -40, width: 180, height: 180,
-            borderRadius: '50%', background: 'var(--primary)', opacity: 0.9
+            position: 'absolute', right: -50, top: -70, width: 230, height: 230,
+            borderRadius: '50%', background: 'var(--primary)', opacity: 0.92
           }} />
           <div style={{ position: 'relative' }}>
-            <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.7, marginBottom: 10 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, opacity: 0.85 }}>
               {heroStats.monthLabel} so far
             </div>
-            <div style={{ ...HERO_NUM, color: 'var(--background)', fontSize: 44, letterSpacing: '-0.03em', lineHeight: 1 }}>
+            <div style={{ ...HERO_NUM, color: 'var(--background)', fontSize: 44, letterSpacing: '-0.02em', lineHeight: 1, marginTop: 10 }}>
               {formatCurrency(heroStats.monthTotal)}
             </div>
-            <div style={{ fontSize: 14, marginTop: 10, opacity: 0.85 }}>
+            <div style={{ fontSize: 14, marginTop: 8, opacity: 0.8 }}>
               purchases across {heroStats.monthCount} bill{heroStats.monthCount !== 1 ? 's' : ''} this month
             </div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 20, flexWrap: 'wrap' }}>
-              {heroStats.deltaPct !== null && (
-                <span style={{
-                  background: 'color-mix(in srgb, var(--background) 14%, transparent)',
-                  borderRadius: 'var(--radius-pill)', padding: '6px 14px', fontSize: 12, fontWeight: 700
-                }}>
-                  {heroStats.deltaPct >= 0 ? '▲' : '▼'} {Math.abs(heroStats.deltaPct).toFixed(1)}% vs {heroStats.prevLabel}
-                </span>
-              )}
+          </div>
+          <div style={{ position: 'relative', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {heroStats.deltaPct !== null && (
               <span style={{
-                background: 'color-mix(in srgb, var(--background) 14%, transparent)',
-                borderRadius: 'var(--radius-pill)', padding: '6px 14px', fontSize: 12, fontWeight: 700
+                display: 'inline-block', background: 'color-mix(in srgb, var(--background) 14%, transparent)',
+                borderRadius: 'var(--radius-pill)', padding: '8px 18px', fontSize: 13, fontWeight: 700
               }}>
-                {heroStats.ytdCount} bills YTD
+                {heroStats.deltaPct >= 0 ? '▲' : '▼'} {Math.abs(heroStats.deltaPct).toFixed(1)}% vs {heroStats.prevLabel}
               </span>
-            </div>
+            )}
+            <span style={{
+              display: 'inline-block', background: 'color-mix(in srgb, var(--background) 14%, transparent)',
+              borderRadius: 'var(--radius-pill)', padding: '8px 18px', fontSize: 13, fontWeight: 700
+            }}>
+              {heroStats.ytdCount} bills YTD
+            </span>
           </div>
         </div>
 
         {/* To collect / pay */}
         <div style={{ ...CARD, display: 'flex', flexDirection: 'column' }}>
           <div style={CARD_LABEL}>To collect / pay</div>
-          <div style={{ ...HERO_NUM, fontSize: 30, marginTop: 12 }}>
+          <div style={{ ...HERO_NUM, fontSize: 36, marginTop: 12 }}>
             {formatCurrency(openStats.openTotal)}
           </div>
-          <div style={{ fontSize: 13, color: 'var(--muted-foreground)', marginTop: 4 }}>
+          <div style={{ fontSize: 14, color: 'var(--muted-foreground)', marginTop: 4 }}>
             across {openStats.openCount} open bill{openStats.openCount !== 1 ? 's' : ''}
           </div>
           <MeterBar
@@ -182,8 +185,8 @@ const HomeView = () => {
             ]}
           />
           <div style={{
-            display: 'flex', justifyContent: 'space-between',
-            fontSize: 12, fontWeight: 600, color: 'var(--muted-foreground)', marginTop: 8
+            display: 'flex', gap: 16,
+            fontSize: 13, fontWeight: 600, color: 'var(--muted-foreground)', marginTop: 8
           }}>
             <span><span style={{ color: 'var(--warning)' }}>●</span> pending {formatCurrency(openStats.pendingAmt)}</span>
             <span><span style={{ color: 'var(--overdue)' }}>●</span> overdue {formatCurrency(openStats.overdueAmt)}</span>
@@ -194,19 +197,22 @@ const HomeView = () => {
         <div style={{ ...CARD, display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <div style={CARD_LABEL}>Stock value</div>
-            <button style={{ ...LINK_BTN, fontSize: 12 }} onClick={() => navigate('/shop/price-list')}>Price list →</button>
+            <button style={LINK_BTN} onClick={() => navigate('/shop/price-list')}>Price list →</button>
           </div>
-          <div style={{ ...HERO_NUM, fontSize: 30, marginTop: 12 }}>
+          <div style={{ ...HERO_NUM, fontSize: 36, marginTop: 12 }}>
             {loadingProducts ? '—' : formatCurrency(productStats.totalValue)}
           </div>
-          <div style={{ fontSize: 13, color: 'var(--muted-foreground)', marginTop: 4 }}>
+          <div style={{ fontSize: 14, color: 'var(--muted-foreground)', marginTop: 4 }}>
             {loadingProducts ? 'loading products…' : `${productStats.total} product${productStats.total !== 1 ? 's' : ''} tracked`}
           </div>
           <div style={{
-            marginTop: 14, background: 'var(--muted)', borderRadius: 'var(--radius-sm)', padding: '10px 12px'
+            marginTop: 'auto', background: 'var(--success-soft)', borderRadius: 14, padding: '12px 16px'
           }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted-foreground)', letterSpacing: '0.06em' }}>PROFIT</div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--success)' }}>
+            <div style={{
+              fontSize: 11, fontWeight: 700, color: 'var(--success)',
+              textTransform: 'uppercase', letterSpacing: '0.08em'
+            }}>Profit</div>
+            <div style={{ ...HERO_NUM, fontSize: 20, color: 'var(--success)', marginTop: 4 }}>
               {loadingProducts ? '—' : formatCurrency(productStats.totalProfit)}
             </div>
           </div>
@@ -214,11 +220,11 @@ const HomeView = () => {
       </div>
 
       {/* ===== BOTTOM ROW: recent bills · top products ===== */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isNarrow ? '1fr' : '1.15fr 0.85fr', gap: 16 }}>
         {/* Recent bills */}
         <div style={CARD}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <div style={{ ...HERO_NUM, fontSize: 18, fontWeight: 700 }}>Recent bills</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <div style={{ ...HERO_NUM, fontSize: 20 }}>Recent bills</div>
             <button style={LINK_BTN} onClick={() => navigate('/shop/bills')}>See all →</button>
           </div>
           {recentBills.length === 0 ? (
@@ -235,7 +241,7 @@ const HomeView = () => {
                     onClick={() => navigate('/shop/bills')}
                     style={{
                       display: 'grid', gridTemplateColumns: '44px 1fr auto auto',
-                      alignItems: 'center', gap: 14, padding: '10px 12px',
+                      alignItems: 'center', gap: 16, padding: '14px 12px',
                       borderRadius: 'var(--radius)', cursor: 'pointer', transition: 'background 0.2s'
                     }}
                     onMouseEnter={e => { e.currentTarget.style.background = 'var(--muted)'; }}
@@ -243,15 +249,15 @@ const HomeView = () => {
                   >
                     <Avatar name={bill.vendor || '?'} size={44} />
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--foreground)' }}>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--foreground)' }}>
                         {bill.vendor || 'Unknown'}
                       </div>
-                      <div style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>
+                      <div style={{ fontSize: 13, color: 'var(--muted-foreground)', marginTop: 2 }}>
                         {bill.billNumber || '—'} · {bill.date ? formatDate(bill.date) : '—'}
                       </div>
                     </div>
                     <Badge variant={status.variant} size="small">{status.label}</Badge>
-                    <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--foreground)' }}>
+                    <span style={{ ...HERO_NUM, fontSize: 17, minWidth: 100, textAlign: 'right' }}>
                       {formatCurrency(billAmount(bill))}
                     </span>
                   </div>
@@ -263,8 +269,8 @@ const HomeView = () => {
 
         {/* Top products */}
         <div style={CARD}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <div style={{ ...HERO_NUM, fontSize: 18, fontWeight: 700 }}>Top products</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <div style={{ ...HERO_NUM, fontSize: 20 }}>Top products</div>
             <button style={LINK_BTN} onClick={() => navigate('/shop/products')}>See all →</button>
           </div>
           {topProducts.length === 0 ? (
@@ -274,29 +280,32 @@ const HomeView = () => {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {topProducts.map((p, i) => (
-                <div key={p.id} style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '9px 10px', borderRadius: 'var(--radius)'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span style={{
-                      width: 26, height: 26, borderRadius: 8,
-                      background: 'var(--secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 12, fontWeight: 700, color: 'var(--muted-foreground)'
-                    }}>
-                      {i + 1}
-                    </span>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--foreground)' }}>
-                        {p.productName || 'Unnamed'}
-                      </div>
-                      <div style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>
-                        qty {p.totalQuantity || 0}
-                      </div>
+                <div
+                  key={p.id}
+                  style={{
+                    display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center',
+                    gap: 14, padding: '10px 12px', borderRadius: 'var(--radius)', transition: 'background 0.2s'
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--muted)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                >
+                  <span style={{
+                    width: 32, height: 32, borderRadius: 10,
+                    background: 'var(--secondary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 13, fontWeight: 800, color: 'var(--muted-foreground)'
+                  }}>
+                    {i + 1}
+                  </span>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--foreground)' }}>
+                      {p.productName || 'Unnamed'}
+                    </div>
+                    <div style={{ fontSize: 13, color: 'var(--muted-foreground)', marginTop: 2 }}>
+                      qty {p.totalQuantity || 0}
                     </div>
                   </div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--success)' }}>
-                    {formatCurrency(p.totalProfit)}
+                  <div style={{ ...HERO_NUM, fontSize: 16 }}>
+                    {formatCurrency(p.totalAmount || 0)}
                   </div>
                 </div>
               ))}
